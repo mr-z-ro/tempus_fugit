@@ -1,0 +1,223 @@
+// ---------------------------
+//   Header
+// ---------------------------
+
+.main-header {
+  position: relative;
+  max-height: @navbar-height * 2;
+  z-index: 1030;
+
+  // Navbar
+  > .navbar {
+    .transition(margin-left @transition-speed @transition-fn);
+    margin-bottom: 0;
+    margin-left: @sidebar-width;
+    border: none;
+    min-height: @navbar-height;
+    border-radius: 0;
+  }
+
+  // Navbar custom menu
+  .navbar-custom-menu,
+  .navbar-right {
+    float: right;
+    @media (max-width: @screen-sm-max) {
+       a {
+        color: inherit;
+        background: transparent;
+      }
+    }
+  }
+
+  .navbar-right {
+    @media (max-width: @screen-header-collapse) {
+      float: none;
+      .navbar-collapse & {
+        margin: 7.5px -15px;
+      }
+      > li {
+        color: inherit;
+        border: 0;
+      }
+    }
+  }
+
+  // Sidebar toggle button
+  .sidebar-toggle {
+    float: left;
+    background-color: transparent;
+    background-image: none;
+    padding: @navbar-padding-vertical @navbar-padding-horizontal;
+    font-family: fontAwesome;
+
+    &:before {
+      content: "\f0c9";
+    }
+    &:hover {
+      color: #fff;
+    }
+    &:focus,
+    &:active {
+      background: transparent;
+    }
+  }
+  .sidebar-toggle .icon-bar {
+    display: none;
+  }
+
+  // Navbar User Menu
+  .navbar .nav > li.user > a {
+    > .fa,
+    > .glyphicon,
+    > .ion {
+      margin-right: 5px;
+    }
+  }
+
+  // Labels in navbar
+  .navbar .nav > li > a > .label {
+    position: absolute;
+    top: 9px;
+    right: 7px;
+    text-align: center;
+    font-size: 9px;
+    padding: 2px 3px;
+    line-height: .9;
+  }
+
+  // Logo bar
+  .logo {
+    .transition(width @transition-speed @transition-fn);
+    display: block;
+    float: left;
+    height: @navbar-height;
+    font-size: 14px;
+    line-height: @navbar-height;
+    text-align: center;
+    width: @sidebar-width;
+    font-family: @headings-font-family;
+    font-weight: @headings-font-weight;
+    padding: 0 15px;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    height: 66px;
+  }
+}
+
+// Content Header (sub header)
+.content-header {
+  position: relative;
+  padding: 30px;
+  padding-right: 15px;
+  .box-shadow(0 1px 3px rgba(0,0,0,0.12), 0 3px 6px rgba(0,0,0,0.24););
+  // Header Text
+  h1 {
+    margin: 0;
+    font-size: 24px;
+
+    small {
+      font-family: @font-family-base;
+    }
+  }
+
+  .breadcrumb {
+    background: transparent;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 12px;
+    padding: 7px 5px;
+    .border-radius(2px);
+    > li > a {
+      text-decoration: none;
+      display: inline-block;
+      > .fa, > .glyphicon, > .ion {
+        margin-right: 5px;
+      }
+    }
+
+    > li + li:before {
+      content: '>\00a0';
+    }
+  }
+
+  @media (max-width: @screen-sm-max) {
+    padding: 15px;
+    .breadcrumb {
+      margin-top: 5px;
+    }
+  }
+}
+
+.navbar-toggle {
+  color: #fff;
+  border: 0;
+  margin: 0;
+  padding: @navbar-padding-vertical @navbar-padding-horizontal;
+}
+
+// Control navbar scaffolding on x-small screens
+@media (max-width: @screen-sm-max) {
+  .navbar-custom-menu .navbar-nav > li {
+    float: left;
+  }
+
+  .navbar-custom-menu .navbar-nav {
+    margin: 0;
+    float: left;
+  }
+
+  .navbar-custom-menu .navbar-nav > li > a {
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: @navbar-height;
+  }
+}
+
+// Collapse header
+@media (max-width: @screen-header-collapse) {
+  .main-header {
+    position: relative;
+    .logo,
+    .navbar {
+      width: 100%;
+      float: none;
+    }
+    .navbar {
+      margin: 0;
+    }
+    .navbar-custom-menu {
+      float: right;
+    }
+  }
+}
+
+.navbar-collapse.pull-left {
+  @media(max-width: 1400px) {
+    float: none!important;
+    + .navbar-custom-menu {
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 40px;
+    }
+  }
+}
+
+
+@media (max-width: @screen-sm-max) {
+  .nav {
+    > li {
+      a {
+        padding: 10px 20px;
+      }
+    }
+  }
+
+  .main-header {
+    .sidebar-toggle {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+  }
+}

@@ -1,0 +1,142 @@
+{% extends "layout.nunjucks" %}
+
+{% block content %}
+<div class="content-wrapper chartjs-page">
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <h1>
+      ChartJS
+      <small>Demo of ChartJS 2.0</small>
+    </h1>
+    <ol class="breadcrumb">
+      <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+      <li><a href="#">Charts</a></li>
+      <li class="active">ChartJS</li>
+    </ol>
+  </section>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="row">
+      <div class="col-md-6">
+        <!-- AREA CHART -->
+        <div class="box box-primary" data-aos="fade-up">
+          <div class="box-header with-border">
+            <h3 class="box-title">Multi-Line Chart</h3>
+            <div class="box-tools pull-right">
+              <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+              <button class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+            </div>
+          </div>
+          <div class="box-body">
+            <div class="chart">
+              <canvas id="barChartMulti" style="height:250px"></canvas>
+            </div>
+          </div><!-- /.box-body -->
+
+          <div class="box-footer">
+            <div class="text-center">
+              <button id="refreshBarChartMulti" class="btn btn-default">
+                <i class="fa fa-refresh"></i>
+                Refresh Data
+              </button>
+            </div>
+
+          </div>
+        </div><!-- /.box -->
+
+        <div class="box box-danger" data-aos="fade-up">
+          <div class="box-header with-border">
+            <h3 class="box-title">Bubble Chart</h3>
+            <div class="box-tools pull-right">
+              <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+              <button class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+            </div>
+          </div>
+          <div class="box-body">
+              <canvas id="bubbleChart" style="height:220px"></canvas>
+          </div><!-- /.box-body -->
+        </div><!-- /.box -->
+
+
+
+      </div><!-- /.col (LEFT) -->
+
+
+      <div class="col-md-6">
+
+        <div class="box box-danger" data-aos="fade-up">
+          <div class="box-header with-border">
+            <h3 class="box-title">Polar Area Chart</h3>
+            <div class="box-tools pull-right">
+              <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+              <button class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+            </div>
+          </div>
+          <div class="box-body">
+              <canvas id="polar-area-chart" style="height:350px"></canvas>
+          </div><!-- /.box-body -->
+        </div><!-- /.box -->
+
+
+
+        <!-- BAR CHART -->
+        <div class="box box-success" data-aos="fade-up">
+          <div class="box-header with-border">
+            <h3 class="box-title">Radar Chart</h3>
+            <div class="box-tools pull-right">
+              <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+              <button class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+            </div>
+          </div>
+          <div class="box-body">
+            <div class="chart">
+              <canvas id="radarChart" style="height:230px"></canvas>
+            </div>
+          </div><!-- /.box-body -->
+
+          <div class="box-footer">
+            <div class="text-center">
+              <button id="refreshRadar" class="btn btn-default">
+                <i class="fa fa-refresh"></i>
+                Refresh Data
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /.box -->
+
+      </div><!-- /.col (RIGHT) -->
+    </div><!-- /.row -->
+
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="box box-primary" data-aos="fade-up">
+          <div class="box-header with-border">
+            <h3 class="box-title">Multi-Line Chart</h3>
+            <div class="box-tools pull-right">
+              <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+              <button class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+            </div>
+          </div>
+          <div class="box-body">
+            <div class="chart">
+              <canvas id="multiLine" style="height:250px"></canvas>
+            </div>
+          </div><!-- /.box-body -->
+        </div><!-- /.box -->
+      </div>
+    </div><!-- /.row -->
+
+  </section><!-- /.content -->
+</div><!-- /.content-wrapper -->
+{% endblock %}
+
+
+{% block customScripts %}
+<!--build:js /js/chartjs-chart.min.js -->
+  <script src="/plugins/chartjs-2/Chart.min.js"></script>
+  <script src="/js/pages/chartjs.js"></script>
+<!-- endbuild -->
+{% endblock %}

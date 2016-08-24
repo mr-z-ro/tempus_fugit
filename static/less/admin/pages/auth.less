@@ -1,0 +1,61 @@
+// ---------------------------
+//   Login & Signup
+// ---------------------------
+
+.login-logo,
+.register-logo {
+  font-size: 35px;
+  text-align: center;
+  font-weight: 300;
+  background: @light-blue;
+  padding-bottom: 12px;
+  a {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #fff;
+    font-weight: 700;
+  }
+}
+
+.login-page,
+.register-page {
+  background: @md-grey-200;
+}
+
+.login-box,
+.register-box {
+  width: 360px;
+  margin: 4% auto;
+  box-shadow: @box-boxshadow;
+  @media (max-width: @screen-sm) {
+    width: 90%;
+    margin-top: 20px;
+  }
+}
+
+.login-box-body,
+.register-box-body {
+  background: #fff;
+  padding: 20px;
+  border-top: 0;
+  color: #666;
+  .form-control-feedback {
+    color: #777;
+  }
+}
+.login-box-msg,
+.register-box-msg {
+  margin: 0;
+  text-align: center;
+  padding: 0 20px 20px 20px;
+}
+.social-auth-links {
+  margin: 10px 0;
+}
+
+.login-box-footer {
+  padding: 24px 0 12px 0;
+  margin-top: 24px;
+  border-top: 1px solid @md-grey-100;
+}

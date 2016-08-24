@@ -1,0 +1,23 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+
+# [START handlers]
+handlers:
+- url: /css
+  static_dir: static/css
+- url: /fonts
+  static_dir: static/fonts
+- url: /images
+  static_dir: static/images
+- url: /js
+  static_dir: static/js
+- url: /less
+  static_dir: static/less
+- url: /plugins
+  static_dir: static/plugins
+- url: /templates
+  static_dir: static/templates
+- url: /.*
+  script: main.app
+# [END handlers]

@@ -1,0 +1,99 @@
+// ---------------------------
+//   Skin: Deep Blue
+// ---------------------------
+
+.skin-deep-blue {
+  .main-header {
+    .navbar {
+      .navbar-variant(
+        #fff;
+        #000;
+        #232323;
+        #f1f1f1
+      );
+
+      @media (max-width: @screen-header-collapse) {
+        .dropdown-menu {
+          li {
+            &.divider {
+              background-color: rgba(255, 255, 255, 0.1);
+            }
+            a {
+              color: #fff;
+              &:hover {
+                background: darken(@light-blue, 5%);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    //Logo
+    .logo {
+      .logo-variant(@md-grey-50);
+    }
+
+    .user-menu .dropdown-menu {
+      border-color: @light-blue;
+    }
+
+    li.user-header {
+      background-color: @light-blue;
+    }
+  }
+
+  .header-form-variant(lighten(@light-blue, 3%));
+
+  .content-header {
+    background: @light-blue;
+    color: #fff;
+    small {
+      color: @md-blue-400;
+    }
+  }
+
+  .breadcrumb {
+    > li > a {
+      color: @md-blue-300;
+    }
+    > .active {
+      color: @md-blue-100;
+    }
+  }
+
+  .page-loader {
+    .preloader-lg {
+      &:after {
+        border-top: 3px solid @md-teal-800;
+      }
+    }
+  }
+
+  .skin-dark-sidebar(@light-blue);
+
+  // Navs
+  .nav-pills {
+    > li.active > a,
+    > li.active > a:hover,
+    > li.active > a:focus {
+      border-top-color: @light-blue;
+    }
+  }
+
+  .nav-stacked {
+    > li.active > a,
+    > li.active > a:hover {
+      border-left-color: @light-blue;
+    }
+  }
+
+  .nav-tabs-custom {
+    > .nav-tabs {
+      > li.active {
+        border-top-color: @light-blue;
+      }
+    }
+  }
+
+}

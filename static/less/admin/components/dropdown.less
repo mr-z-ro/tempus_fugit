@@ -1,0 +1,281 @@
+// ---------------------------
+//   Dropdown
+// ---------------------------
+
+.dropdown-menu {
+  box-shadow: none;
+  border-color: #eee;
+  > li > a {
+    color: #777;
+  }
+  > li > a > .glyphicon,
+  > li > a > .fa,
+  > li > a > .ion{
+    margin-right: 10px;
+  }
+  > li > a:hover {
+    background-color: lighten(@gray, 5%);
+    color: #333;
+  }
+  > .divider {
+    background-color: #eee;
+  }
+}
+
+// Navbar custom dropdowns
+.navbar-nav > .notifications-menu,
+.navbar-nav > .messages-menu,
+.navbar-nav > .tasks-menu {
+  //fix width and padding
+  > .dropdown-menu {
+    > li {
+      position: relative;
+    }
+    width: 280px;
+    padding: 0;
+    margin: 0;
+    top: 100%;
+  }
+
+  // header
+  > .dropdown-menu > li.header {
+    .border-radius(4px; 4px; 0; 0);
+    background-color: #ffffff;
+    padding: 7px 10px;
+    border-bottom: 1px solid #f4f4f4;
+    color: #444444;
+    font-size: 14px;
+  }
+
+  // footer
+  > .dropdown-menu > li.footer > a {
+    .border-radius(0; 0; 4px; 4px);
+    font-size: 12px;
+    background-color: #fff;
+    padding: 7px 10px;
+    border-bottom: 1px solid #eeeeee;
+    color: #444!important;
+    @media (max-width: @screen-sm-max) {
+      background: #fff!important;
+      color: #444!important;
+    }
+    text-align: center;
+    &:hover {
+      text-decoration: none;
+      font-weight: normal;
+    }
+  }
+
+  > .dropdown-menu > li .menu {
+    max-height: 200px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: hidden;
+    > li > a {
+      display: block;
+      white-space: nowrap;
+      border-bottom: 1px solid #f4f4f4;
+      &:hover {
+        background: #f4f4f4;
+        text-decoration: none;
+      }
+    }
+  }
+}
+
+// Notifications menu
+.navbar-nav > .notifications-menu {
+  > .dropdown-menu > li .menu {
+    > li > a {
+      color: #444444;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 10px;
+      > .glyphicon,
+      > .fa,
+      > .ion {
+        width: 20px;
+      }
+    }
+
+  }
+}
+
+// Messages menu
+.navbar-nav > .messages-menu {
+  > .dropdown-menu > li .menu {
+    > li > a {
+      margin: 0;
+      padding: 10px 10px;
+
+      // User image
+      > div > img {
+        margin: auto 10px auto auto;
+        width: 40px;
+        height: 40px;
+      }
+
+      // Message heading
+      > h6 {
+        padding: 0;
+        margin: 0 0 0 45px;
+        color: #444444;
+        position: relative;
+
+        // time display
+        > small {
+          color: #999999;
+          font-size: 10px;
+          position: absolute;
+          top: 0;
+          right: 0;
+        }
+      }
+
+      > p {
+        margin: 0 0 0 45px;
+        font-size: 12px;
+        color: #888888;
+      }
+      .clearfix();
+    }
+  }
+}
+
+// Tasks menu
+.navbar-nav > .tasks-menu {
+  > .dropdown-menu > li .menu {
+    > li > a {
+      padding: 10px;
+
+      > h3 {
+        font-size: 14px;
+        padding: 0;
+        margin: 0 0 10px 0;
+        color: #666666;
+      }
+
+      > .progress {
+        padding: 0;
+        margin: 0;
+      }
+    }
+  }
+}
+
+// User profile menu
+.navbar-nav > .user-menu {
+  > .dropdown-menu {
+    .border-top-radius(0);
+    padding: 0 0 0 0;
+    border-top-width: 0;
+    width: 280px;
+
+    &,
+    > .user-body {
+      .border-bottom-radius(2px);
+    }
+
+    > li.user-header {
+      height: 175px;
+      padding: 10px;
+      text-align: center;
+
+      // User image
+      > img {
+        z-index: 5;
+        height: 90px;
+        width: 90px;
+        border: 3px solid;
+        border-color: transparent;
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      > p {
+        z-index: 5;
+        color: #fff;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 17px;
+        margin-top: 10px;
+        > small {
+          display: block;
+          font-size: 12px;
+        }
+      }
+    }
+
+    // Menu Body (with bg color)
+    > .user-body {
+      padding: 15px;
+      border-bottom: 1px solid #f4f4f4;
+      border-top: 1px solid #dddddd;
+      .clearfix();
+      a {
+        color: #444 !important;
+        @media (max-width: @screen-sm-max) {
+          background: #fff !important;
+          color: #444 !important;
+        }
+      }
+    }
+
+    // Menu Footer
+    > .user-footer {
+      background-color: #f9f9f9;
+      padding: 10px;
+      .clearfix();
+      .btn-default {
+        color: #666666;
+        &:hover {
+          @media (max-width: @screen-sm-max) {
+            background-color: #f9f9f9;
+          }
+        }
+      }
+    }
+  }
+
+  .user-image {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    margin-right: 10px;
+    float: left;
+    @media (max-width: @screen-xs-max) {
+      margin-right: 0;
+    }
+
+    @media (max-width: @screen-sm-max) {
+      float: none;
+    }
+  }
+}
+
+
+.navbar-custom-menu > .navbar-nav {
+  > li {
+    position: relative;
+    > .dropdown-menu {
+      position: absolute;
+      right: 0;
+      left: auto;
+    }
+  }
+}
+
+@media (max-width: @screen-sm-max) {
+  .navbar-custom-menu > .navbar-nav {
+    float: right;
+    > li {
+      position: static;
+      > .dropdown-menu {
+        position: absolute;
+        right: 5%;
+        left: auto;
+        border: 1px solid #ddd;
+        background: #fff;
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+// ---------------------------
+//   Alert
+// ---------------------------
+
+.alert {
+  border: none;
+  h4 {
+    font-weight: 600;
+  }
+  .icon {
+    margin-right: 10px;
+  }
+  .close {
+    color: #000;
+    .opacity(.2);
+    &:hover {
+      .opacity(.5);
+    }
+  }
+  a {
+    color: #fff;
+    text-decoration: underline;
+  }
+}
+
+// Variants
+.alert-success {
+  &:extend(.bg-green);
+}
+
+.alert-danger,
+.alert-error {
+  &:extend(.bg-red);
+}
+
+.alert-warning {
+  &:extend(.bg-yellow);
+}
+
+.alert-info {
+  &:extend(.bg-aqua);
+}
