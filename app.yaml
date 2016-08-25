@@ -6,18 +6,18 @@ threadsafe: true
 handlers:
 - url: /css
   static_dir: static/css
+- url: /email_templates
+  static_dir: static/email_templates
+- url: /font-awesome
+  static_dir: static/font-awesome
 - url: /fonts
   static_dir: static/fonts
-- url: /images
-  static_dir: static/images
+- url: /img
+  static_dir: static/img
 - url: /js
   static_dir: static/js
-- url: /less
-  static_dir: static/less
-- url: /plugins
-  static_dir: static/plugins
-- url: /templates
-  static_dir: static/templates
+- url: /locales
+  static_dir: static/locales
 - url: /.*
   script: main.app
 # [END handlers]
