@@ -19,8 +19,13 @@ import logging
 from flask import Flask, render_template, request
 # [END imports]
 
-app = Flask(__name__)
+app = Flask(__name__,instance_relative_config=True)
 
+# access config.py variables
+app.config.from_object('config') # normal config.py
+# Now we can access the configuration variables via app.config["VAR_NAME"].
+
+app.config.from_pyfile('config.py') # instance/config.py access to secret keys
 
 # [START 404]
 @app.errorhandler(404)
@@ -66,6 +71,11 @@ def home():
     return render_template('home.html')
 # [END home]
 
+# [START Trials]
+@app.route('/trial/')
+def trial():
+	# To access my USERNAME >> app.config["USERNAME"]
+	return "BCRYPT_LEVEL: {}".format(app.config["BCRYPT_LEVEL"])
 
 #############################################
 #
