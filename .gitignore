@@ -130,7 +130,6 @@ env/
 ehthumbs.db
 Thumbs.db
 
-#	Personal Files 	  #
+#	Secret Files 	  #
 #######################
-config.py
 instance/
