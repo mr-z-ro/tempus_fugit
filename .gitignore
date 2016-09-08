@@ -133,3 +133,7 @@ Thumbs.db
 #	Secret Files 	  #
 #######################
 instance/
+
+#	PyCharm config	  #
+#######################
+.idea
