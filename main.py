@@ -118,7 +118,7 @@ my_company = app.config['COMPANY']
 # to use CSRF enable secret_key
 secret_key = app.config['SECRET_KEY']
 
-
+# create a dummy user
 user = User(
 			username ='',
 			password = '',
@@ -133,20 +133,6 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 
-'''
-# create a dummy user
-#user = User(username='xyz@xyz.com',password='No password',company=my_company)
-
-
-@app.before_request
-def before_request():
-    g.user= current_user
-
-@login_manager.user_loader
-def load_user(username):
-    return session['username']#User.get(username)
-    #return User.get(User.username==userid).first()
-'''
 def login_required(func):
     """Requires standard login credentials"""
     @wraps(func)
@@ -275,22 +261,6 @@ def login():
 		username=username,
 		password=password)
 	# [END render_template]
-
-'''
-# [START home]
-@app.route('/')
-@login_required
-def home():
-	return render_template('home.html',username="Martinique")
-# [END home]
-
- [START Trials]
- '''
-@app.route('/trial/')
-@login_required
-def trial():
-	# To access my USERNAME >> app.config["USERNAME"]
-	return "BCRYPT_LEVEL: {}".format(app.config["BCRYPT_LEVEL"])
 
 
 #############################################
