@@ -30,15 +30,19 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
 from functools import wraps
 import pdb
+from os import urandom
+
 # [END imports]
 
 app = Flask(__name__)
 
 # secret_key enables us to use csrf
 secret_key = app.config['SECRET_KEY']
-
-# set a timeout for the session  to 10 seconds of inactivity /this  can change 
-app.permanent_session_lifetime = timedelta(seconds=30)
+if not secret_key:
+	secret_key = urandom(24)
+	
+# set a timeout for the session  to 5 days of inactivity /this  can change 
+app.permanent_session_lifetime = timedelta(seconds=432000)
 
 # to prevent back button if logged out from opening previous page, ensure no caching happens
 resp = Response("")
@@ -117,6 +121,8 @@ my_company = app.config['COMPANY']
 
 # to use CSRF enable secret_key
 secret_key = app.config['SECRET_KEY']
+
+
 
 # create a dummy user
 user = User(
@@ -211,8 +217,6 @@ def login():
 		password = form.password.data
 		remember_me = False #** need to implement on form
 
-		flash("valid form inputs")
-
 		if 'remember_me' in request.form:
 			remember_me = True
             
@@ -226,11 +230,10 @@ def login():
 		
 		#make a call to the wrapper
 		json_obj = call_wrapper(key=netsuite_key,uname=username,pword=password, company=my_company)
-		flash("json_obj : {}".format(json_obj['response']['Auth']['@status']))
+		#flash("json_obj : {}".format(json_obj['response']['Auth']['@status']))
 		Auth = True if (json_obj['response']['Auth']['@status'])=='0' else False
 		# set authentication on the user instance
 		user.set_authentication(Auth)
-		flash('The user object '.format(user.username))
 
 		if user.is_authenticated():
 			print "is_authenticated***********************************************************************************************************"
