@@ -550,8 +550,11 @@ def file_manager():
 
 # [START forgot_password]
 @app.route('/forgot_password.html')
+@app.route('/forgot')
 def forgot_password():
-	return render_template('forgot_password.html')
+	# redirect to the Netsuite OpenAir forgot password page 
+	return redirect('https://www.openair.com/index.pl?action=lost_info;')
+	#return render_template('forgot_password.html')
 # [END forgot_password]
 
 
@@ -944,7 +947,6 @@ def projects():
 def register():
 	return render_template('register.html')
 # [END register]
-
 
 # [START resizeable_panels]
 @app.route('/resizeable_panels.html')

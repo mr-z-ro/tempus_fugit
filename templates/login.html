@@ -8,11 +8,11 @@
 
     <title>Tempus Fugit | Login</title>
 
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/font-awesome/css/font-awesome.css" rel="stylesheet">
 
-    <link href="/static/css/animate.css" rel="stylesheet">
-    <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/css/animate.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
 
 </head>
 
@@ -25,11 +25,11 @@
                 <h1 class="logo-name">BFA</h1>
 
             </div>
-            <h3>Welcome to Tempus Fugit</h3>
-            <p>Perfectly designed and precisely prepared admin theme with over 50 pages with extra new web app views.
+            <h3 id='welcome_tempus'>Welcome to Tempus Fugit</h3>
+            <p>Use your BFA Email address and Netsuite OpenAir password to login.
                 <!--Continually expanded and constantly improved Tempus Fugit Admin Them (IN+)-->
             </p>
-            <p>Login in. To see it in action.</p>
+            <!--<p>Login in. To see it in action.</p> -->
 			{% for message in get_flashed_messages()%}
 			<p style="color:red;">{{message}}</p>
 			{% endfor %}
@@ -37,16 +37,18 @@
                 <div class="form-group">
                     <!--<input type="email" class="form-control" placeholder="Username" name="username" required=""> -->
 					{{form.csrf_token }}
-					{{form.username(id="username",type="email",class="form-control", placeholder="Username", required="")}}
+					{{form.username(id="username",type="email",class="form-control", placeholder="BFA email address", required="")}}
                 </div>
                 <div class="form-group">
-                    <input type="password" class="form-control" placeholder="Password" name="password" required="">
+                    <input type="password" class="form-control" placeholder="Netsuite Open Air password" name="password" required="">
                 </div>
                 <button type="submit" class="btn btn-primary block full-width m-b">Login</button>
 
-                <a href="#"><small>Forgot password?</small></a>
+                <a href="forgot"><small>Forgot password?</small></a>
+				<!--
                 <p class="text-muted text-center"><small>Do not have an account?</small></p>
                 <a class="btn btn-sm btn-white btn-block" href="register.html">Create an account</a>
+				-->
             </form>
             <p class="m-t"> <small>Tempus Fugit web app framework based on Bootstrap 3 &copy; 2014</small> </p>
         </div>

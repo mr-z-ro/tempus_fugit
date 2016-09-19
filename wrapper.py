@@ -5,6 +5,7 @@ from oaxmlapi import connections, datatypes, commands
 import simplejson as json
 from oaxmlapi import *
 
+
 def call_wrapper(key, uname, pword, company=''):
     app = connections.Application('Tempus Fugit', '1.0', 'default', key)
     auth = connections.Auth(company, uname, pword)
