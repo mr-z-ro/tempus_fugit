@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>Tempus Fugit | Dashboard</title>
+    <title>Tempus Fugit | {% if session['username'] %}{{session['username']}}{% else %}Dashboards{% endif %}</title>
 
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
@@ -21,6 +21,7 @@
     <link href="css/animate.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
+
 </head>
 
 <body>
@@ -30,10 +31,11 @@
                 <ul class="nav metismenu" id="side-menu">
                     <li class="nav-header">
                         <div class="dropdown profile-element"> <span>
+
                             <img alt="image" class="img-circle" src="img/profile_small.jpg" />
                              </span>
                             <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">David Del Ser</strong>
+                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['username'] %} {{session["username"]}} {% else %}David Del Ser{% endif %}</strong>
                              </span> <span class="text-muted text-xs block">Practice Director <b class="caret"></b></span> </span> </a>
                             <ul class="dropdown-menu animated fadeInRight m-t-xs">
                                 <li><a href="profile.html">Profile</a></li>
@@ -44,7 +46,7 @@
                             </ul>
                         </div>
                         <div class="logo-element">
-                            IN+
+                            Tempus Fugit
                         </div>
                     </li>
                     <li class="active">
@@ -265,7 +267,7 @@
         </div>
             <ul class="nav navbar-top-links navbar-right">
                 <li>
-                    <span class="m-r-sm text-muted welcome-message">Welcome to Tempus Fugit+ Admin Theme.</span>
+                    <span class="m-r-sm text-muted welcome-message">Welcome to Tempus Fugit+ [{% for message in get_flashed_messages()%} {{message}} {% endfor %}].</span>
                 </li>
                 <li class="dropdown">
                     <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
@@ -275,7 +277,9 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
+
                                     <img alt="image" class="img-circle" src="img/a7.jpg">
+
                                 </a>
                                 <div class="media-body">
                                     <small class="pull-right">46h ago</small>
@@ -288,7 +292,9 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
+
                                     <img alt="image" class="img-circle" src="img/a4.jpg">
+
                                 </a>
                                 <div class="media-body ">
                                     <small class="pull-right text-navy">5h ago</small>
@@ -302,6 +308,7 @@
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
                                     <img alt="image" class="img-circle" src="img/profile.jpg">
+
                                 </a>
                                 <div class="media-body ">
                                     <small class="pull-right">23h ago</small>
@@ -471,7 +478,7 @@
                         <div class="col-lg-4">
                             <div class="ibox float-e-margins">
                                 <div class="ibox-title">
-                                    <h5>New data for the report</h5> <span class="label label-primary">IN+</span>
+                                    <h5>New data for the report</h5> <span class="label label-primary">Tempus Fugit</span>
                                     <div class="ibox-tools">
                                         <a class="collapse-link">
                                             <i class="fa fa-chevron-up"></i>
@@ -575,7 +582,9 @@
 
                                                 <div class="feed-element">
                                                     <a href="profile.html" class="pull-left">
+
                                                         <img alt="image" class="img-circle" src="img/profile.jpg">
+
                                                     </a>
                                                     <div class="media-body ">
                                                         <small class="pull-right">5m ago</small>
@@ -587,7 +596,9 @@
 
                                                 <div class="feed-element">
                                                     <a href="profile.html" class="pull-left">
+
                                                         <img alt="image" class="img-circle" src="img/a2.jpg">
+
                                                     </a>
                                                     <div class="media-body ">
                                                         <small class="pull-right">2h ago</small>
@@ -597,7 +608,9 @@
                                                 </div>
                                                 <div class="feed-element">
                                                     <a href="profile.html" class="pull-left">
+
                                                         <img alt="image" class="img-circle" src="img/a3.jpg">
+
                                                     </a>
                                                     <div class="media-body ">
                                                         <small class="pull-right">2h ago</small>
@@ -607,6 +620,7 @@
                                                 </div>
                                                 <div class="feed-element">
                                                     <a href="profile.html" class="pull-left">
+
                                                         <img alt="image" class="img-circle" src="img/a4.jpg">
                                                     </a>
                                                     <div class="media-body ">
@@ -621,7 +635,9 @@
                                                 </div>
                                                 <div class="feed-element">
                                                     <a href="profile.html" class="pull-left">
+
                                                         <img alt="image" class="img-circle" src="img/a5.jpg">
+
                                                     </a>
                                                     <div class="media-body ">
                                                         <small class="pull-right">2h ago</small>
@@ -638,7 +654,9 @@
                                                 </div>
                                                 <div class="feed-element">
                                                     <a href="profile.html" class="pull-left">
+
                                                         <img alt="image" class="img-circle" src="img/profile.jpg">
+
                                                     </a>
                                                     <div class="media-body ">
                                                         <small class="pull-right">23h ago</small>
@@ -648,7 +666,9 @@
                                                 </div>
                                                 <div class="feed-element">
                                                     <a href="profile.html" class="pull-left">
+
                                                         <img alt="image" class="img-circle" src="img/a7.jpg">
+
                                                     </a>
                                                     <div class="media-body ">
                                                         <small class="pull-right">46h ago</small>
@@ -924,7 +944,9 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
+
                                         <img alt="image" class="img-circle message-avatar" src="img/a1.jpg">
+
 
                                         <div class="m-t-xs">
                                             <i class="fa fa-star text-warning"></i>
@@ -942,7 +964,9 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
+
                                         <img alt="image" class="img-circle message-avatar" src="img/a2.jpg">
+
                                     </div>
                                     <div class="media-body">
                                         The point of using Lorem Ipsum is that it has a more-or-less normal.
@@ -972,7 +996,9 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
+
                                         <img alt="image" class="img-circle message-avatar" src="img/a4.jpg">
+
                                     </div>
 
                                     <div class="media-body">
@@ -985,7 +1011,9 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
+
                                         <img alt="image" class="img-circle message-avatar" src="img/a8.jpg">
+
                                     </div>
                                     <div class="media-body">
 
@@ -998,7 +1026,9 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
+
                                         <img alt="image" class="img-circle message-avatar" src="img/a7.jpg">
+
                                     </div>
                                     <div class="media-body">
                                         Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
@@ -1028,7 +1058,9 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
+
                                         <img alt="image" class="img-circle message-avatar" src="img/a4.jpg">
+
                                     </div>
                                     <div class="media-body">
                                         Uncover many web sites still in their infancy. Various versions have.
@@ -1274,6 +1306,7 @@
     </div>
 
     <!-- Mainly scripts -->
+
     <script src="js/jquery-2.1.1.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/plugins/metisMenu/jquery.metisMenu.js"></script>
