@@ -25,7 +25,7 @@ def call_wrapper(key, uname, pword, company=''):
 
     # Perform the request
     req = urllib2.Request(url='https://www.openair.com/api.pl', data=xml_req)
-    res = urllib2.urlopen(req)
+    res = urllib2.urlopen(req, timeout=60)
     xml_res = res.read()
 
     # might be easier working with json data
