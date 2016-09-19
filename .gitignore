@@ -136,4 +136,7 @@ instance/
 
 #	PyCharm config	  #
 #######################
+=======
+*.pyc
+
 .idea
