@@ -31,6 +31,7 @@ from datetime import timedelta
 from functools import wraps
 import pdb
 from os import urandom
+from datetime import datetime
 
 # [END imports]
 
@@ -47,6 +48,31 @@ app.permanent_session_lifetime = timedelta(seconds=432000)
 # to prevent back button if logged out from opening previous page, ensure no caching happens
 resp = Response("")
 resp.headers.add('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
+
+#########################################################################################################################################
+# the runtime process gave a bad HTTP response: got more than 65536 bytes when reading header line
+# to avoid the error above we set _MAXLINE to 65536
+# maximal amount of data to read at one time in _safe_read
+MAXAMOUNT = 1048576
+
+# maximal line length when calling readline().
+_MAXLINE = 65536
+
+#########################################################################################################################################
+#format date value into a sensible value
+def reformatDate(dictval):
+    print 'dictval: {}'.format(dictval)
+    simpledate = {}
+    for attr in ['year', 'month', 'day', 'hour', 'minute', 'second']:
+        print 'attr {}'.format(attr)
+        simpledate[attr] = dictval[attr]
+        print 'simpledate {} {} {}'.format(attr, (simpledate[attr]), (dictval[attr]))
+
+    myDate = "{}.{}.{} {}:{}:{}".format(simpledate['day'], simpledate['month'], simpledate['year'], simpledate['hour'], simpledate['minute'], simpledate['second'])
+
+    return myDate
+
+
 #########################################################################################################################################
 #       models.py
 #########################################################################################################################################
@@ -230,7 +256,7 @@ def login():
 		
 		#make a call to the wrapper
 		json_obj = call_wrapper(key=netsuite_key,uname=username,pword=password, company=my_company)
-		#flash("json_obj : {}".format(json_obj['response']['Auth']['@status']))
+		flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
 		Auth = True if (json_obj['response']['Auth']['@status'])=='0' else False
 		# set authentication on the user instance
 		user.set_authentication(Auth)
@@ -252,7 +278,23 @@ def login():
 			
 			# user should be an instance of your 'User' class
 			#login_user(user,remember=True)
-			return redirect(next or (url_for('index')))
+			# redirect to projects page
+			#return redirect(next or (url_for('index')))
+
+			# prepare a project list to pass to projects page
+			projectslist = []
+			for project in json_obj['response']['Read']['Project']:
+				print "json_obj['response']['Read']['Project'] =",json_obj['response']['Read']['Project']
+				projectslist.append('{}|{}'.format(project['name'],reformatDate(project['updated']['Date'])))
+				#projectslist[project['name']] = reformatDate(project['updated'])#['Date']
+
+			session['projects'] = projectslist
+			#flash("session Projects : {}".format(session['projects']))
+			if next:
+				session['currentpage'] = (next.split('/')[-1:]).split('.')[:1]
+			else:
+				session['currentpage'] = 'projects'
+			return redirect(next or url_for('projects'))
 		flash('Sorry! Your password or username is invalid. Kindly try again..')
 	return render_template('login.html',form=form)
 
@@ -727,7 +769,7 @@ def idle_timer():
 
 
 # [START index]
-@app.route('/',methods=['GET','POST'])
+
 @app.route('/index',methods=['GET','POST'])
 @app.route('/index.html',methods=['GET','POST'])
 @login_required
@@ -935,6 +977,8 @@ def project_detail():
 
 
 # [START projects]
+@app.route('/',methods=['GET','POST'])
+@app.route('/projects')
 @app.route('/projects.html')
 @login_required
 def projects():

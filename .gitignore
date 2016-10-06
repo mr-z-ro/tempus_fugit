@@ -140,3 +140,7 @@ instance/
 *.pyc
 
 .idea
+
+#     test files       #
+########################
+Api_Tester.py
