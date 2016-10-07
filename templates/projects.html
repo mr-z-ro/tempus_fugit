@@ -414,7 +414,7 @@
                                             <span class="label label-primary">Active</span>
                                         </td>
                                         <td class="project-title">
-                                            <a href="{{ url_for('project_detail', projectid = project.split('|')[1]) }}">{{ project.split('|')[1] }}</a>
+                                            <a href="{{ url_for('project_detail', projectid = project.split('|')[0]) }}">{{ project.split('|')[1] }}</a>
                                             <br/>
                                             <small>Last update on {{ project.split('|')[2] }}</small>
                                         </td>
