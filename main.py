@@ -208,10 +208,12 @@ def logout():
 	
 	session['username']=''
 	session['password'] = ''
+	session['projects'] = ''
 	session['logged_in']=''
 	session.pop('username',None)
 	session.pop('password', None)
 	session.pop('logged_in',None)
+	session.pop('projects', None)
 	session.clear()
 	#if all this does not clear the session
 	# set a timeout for the session  to 1 seconds of inactivity /this  can change 
@@ -282,10 +284,10 @@ def login():
 			projectslist = []
 			for project in json_obj['response']['Read']['Project']:
 				print "json_obj['response']['Read']['Project'] =",json_obj['response']['Read']['Project']
-				if project['userid'] != '9':
+				#if project['userid'] != '9':
 					# remove projects that include: Internal, PTO, UnAllocated Time, Meetings - Internal and PUT
 					# format of list items is [projectid, project_name, last_update_date]
-					projectslist.append("{}|{}|{}".format(project['userid'],project['name'],reformatDate(project['updated']['Date'])))
+				projectslist.append("{}|{}|{}".format(project['userid'],project['name'],reformatDate(project['updated']['Date'])))
 				#projectslist[project['name']] = reformatDate(project['updated'])#['Date']
 
 			session['projects'] = projectslist
@@ -1005,10 +1007,10 @@ def project_detail():
 		projectslist = []
 		for project in json_obj['response']['Read']['Project']:
 			print "json_obj['response']['Read']['Project'] =", json_obj['response']['Read']['Project']
-			if project['userid'] != '9':
+			#if project['userid'] != '9':
 				# remove projects that include: Internal, PTO, UnAllocated Time, Meetings - Internal and PUT
 				# format of list items is [projectid, project_name, last_update_date]
-				projectslist.append(
+			projectslist.append(
 					"{}|{}|{}".format(project['userid'], project['name'], reformatDate(project['updated']['Date'])))
 			# projectslist[project['name']] = reformatDate(project['updated'])#['Date']
 
