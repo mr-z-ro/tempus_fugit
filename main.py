@@ -37,6 +37,17 @@ from datetime import datetime
 
 app = Flask(__name__)
 
+##########################################################################################################################################
+# global variables from config.py and instance/config.py
+app.config.from_object('config') # normal config.py
+
+app.config.from_pyfile('config.py') # instance/config.py access to secret keys
+# Now we can access the configuration variables via app.config["VAR_NAME"].
+
+# read company info from the config file out of verion control
+my_company = app.config['COMPANY']
+netsuite_key = app.config['NETSUITE_API_KEY'] # Retrieve key from instance/config file
+
 # secret_key enables us to use csrf
 secret_key = app.config['SECRET_KEY']
 if not secret_key:
@@ -136,25 +147,13 @@ class LoginForm(Form):
 #################################################################################################################################################
 # views.py
 #################################################################################################################################################    
-# variables from config.py and instance/config.py
-app.config.from_object('config') # normal config.py
-
-app.config.from_pyfile('config.py') # instance/config.py access to secret keys
-# Now we can access the configuration variables via app.config["VAR_NAME"].
-
-# read company info from the config file out of verion control
-my_company = app.config['COMPANY']
-
-# to use CSRF enable secret_key
-secret_key = app.config['SECRET_KEY']
-
 
 
 # create a dummy user
 user = User(
-			username ='',
-			password = '',
-			company = ''
+			username =None,
+			password = None,
+			company = my_company
 		)
 
 
@@ -208,8 +207,10 @@ def logout():
 	session['logged_in'] = False
 	
 	session['username']=''
+	session['password'] = ''
 	session['logged_in']=''
 	session.pop('username',None)
+	session.pop('password', None)
 	session.pop('logged_in',None)
 	session.clear()
 	#if all this does not clear the session
@@ -243,16 +244,12 @@ def login():
 		password = form.password.data
 		remember_me = False #** need to implement on form
 
+		# store username and password in encrypted session???
+		session['username'] = username
+		session['password'] = password
+
 		if 'remember_me' in request.form:
 			remember_me = True
-            
-		user = User(
-			username = form.username.data,
-			password = form.password.data,
-			company = my_company
-		)
-		
-		netsuite_key = app.config['NETSUITE_API_KEY'] # Retrieve key from instance/config file
 		
 		#make a call to the wrapper
 		json_obj = call_wrapper(key=netsuite_key,uname=username,pword=password, company=my_company)
@@ -285,27 +282,24 @@ def login():
 			projectslist = []
 			for project in json_obj['response']['Read']['Project']:
 				print "json_obj['response']['Read']['Project'] =",json_obj['response']['Read']['Project']
-				projectslist.append('{}|{}'.format(project['name'],reformatDate(project['updated']['Date'])))
+				if project['userid'] != '9':
+					# remove projects that include: Internal, PTO, UnAllocated Time, Meetings - Internal and PUT
+					# format of list items is [projectid, project_name, last_update_date]
+					projectslist.append("{}|{}|{}".format(project['userid'],project['name'],reformatDate(project['updated']['Date'])))
 				#projectslist[project['name']] = reformatDate(project['updated'])#['Date']
 
 			session['projects'] = projectslist
 			#flash("session Projects : {}".format(session['projects']))
 			if next:
-				session['currentpage'] = (next.split('/')[-1:]).split('.')[:1]
+				session['currentpage'] = str(str(next).split('//')[-1:]).split('.')[:1]
 			else:
 				session['currentpage'] = 'projects'
 			return redirect(next or url_for('projects'))
 		flash('Sorry! Your password or username is invalid. Kindly try again..')
 	return render_template('login.html',form=form)
 
-	# [END submitted]
-	# [START render_template]
-	return render_template(
-		'submitted_form.html',
-		company=company,
-		username=username,
-		password=password)
-	# [END render_template]
+# [END login submitted]
+
 
 
 #############################################
@@ -969,12 +963,64 @@ def profile_2():
 
 
 # [START project_detail]
+"""
 @app.route('/project_detail.html')
 @login_required
 def project_detail():
 	return render_template('project_detail.html')
 # [END project_detail]
+"""
+@app.route('/project_detail/<projectid>')
+@login_required
+def project_detail():
+	# call getTasks(key, uname, pword, company='', projectid = '')
 
+	json_obj = getTasks(key=netsuite_key, uname=session['username'], pword=session['password'], company=my_company)
+	flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
+	Auth = True if (json_obj['response']['Auth']['@status']) == '0' else False
+	# set authentication on the user instance
+	user.set_authentication(Auth)
+
+	if user.is_authenticated():
+		print "is_authenticated***********************************************************************************************************"
+		# save the username to a session
+		session['username'] = form.username.data.split('@')[0]  # Generate ID from email address
+		# login_user(user)
+		session['logged_in'] = True
+		# for session timeout to work we must set session permanent to True
+		# session.permanent = True
+		flash('Logged in successfully.')
+		next = request.args.get('next')
+		# next_is_valid should check if the user has validate
+		# permission to access the 'next' url
+		# if not next_is_valid(next):
+		#	return abort(400)
+
+		# user should be an instance of your 'User' class
+		# login_user(user,remember=True)
+		# redirect to projects page
+		# return redirect(next or (url_for('index')))
+
+		# prepare a project list to pass to projects page
+		projectslist = []
+		for project in json_obj['response']['Read']['Project']:
+			print "json_obj['response']['Read']['Project'] =", json_obj['response']['Read']['Project']
+			if project['userid'] != '9':
+				# remove projects that include: Internal, PTO, UnAllocated Time, Meetings - Internal and PUT
+				# format of list items is [projectid, project_name, last_update_date]
+				projectslist.append(
+					"{}|{}|{}".format(project['userid'], project['name'], reformatDate(project['updated']['Date'])))
+			# projectslist[project['name']] = reformatDate(project['updated'])#['Date']
+
+		session['projects'] = projectslist
+		# flash("session Projects : {}".format(session['projects']))
+		if next:
+			session['currentpage'] = str(str(next).split('//')[-1:]).split('.')[:1]
+		else:
+			session['currentpage'] = 'projects'
+		return redirect(next or url_for('projects'))
+	flash('Sorry! Your password or username is invalid. Kindly try again..')
+	return render_template('project_detail.html')
 
 # [START projects]
 @app.route('/',methods=['GET','POST'])

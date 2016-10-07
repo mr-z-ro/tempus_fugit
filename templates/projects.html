@@ -260,7 +260,7 @@
         </div>
             <ul class="nav navbar-top-links navbar-right">
                 <li>
-                    <span class="m-r-sm text-muted welcome-message">Welcome to Tempus Fugit+ [{% for message in get_flashed_messages()%} {{message}} {% endfor %}] {% if session['currentpage']%} {{ session['currentpage'] }} {% endif %}.</span>
+                    <span class="m-r-sm text-muted welcome-message">Welcome to Tempus Fugit+  {% if session['currentpage'] %} {{ session['currentpage'] }} {% endif %}.</span>
                 </li>
                 <li class="dropdown">
                     <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
@@ -414,9 +414,9 @@
                                             <span class="label label-primary">Active</span>
                                         </td>
                                         <td class="project-title">
-                                            <a href="project_detail.html">{{ project.split('|')[0] }}</a>
+                                            <a href="{{ url_for('project_detail', projectid = project.split('|')[1]) }}">{{ project.split('|')[1] }}</a>
                                             <br/>
-                                            <small>Last update on {{ project.split('|')[1] }}</small>
+                                            <small>Last update on {{ project.split('|')[2] }}</small>
                                         </td>
                                         <td class="project-completion">
                                                 <small>Completion with: {{  project.split('|')[2] }} 52%</small>
@@ -424,6 +424,7 @@
                                                     <div style="width: 52%;" class="progress-bar"></div>
                                                 </div>
                                         </td>
+                                        <!--
                                         <td class="project-people">
                                             <a href=""><img alt="image" class="img-circle" src="img/a3.jpg"></a>
                                             <a href=""><img alt="image" class="img-circle" src="img/a1.jpg"></a>
@@ -431,6 +432,7 @@
                                             <a href=""><img alt="image" class="img-circle" src="img/a4.jpg"></a>
                                             <a href=""><img alt="image" class="img-circle" src="img/a5.jpg"></a>
                                         </td>
+                                        -->
                                         <td class="project-actions">
                                             <a href="#" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> View </a>
                                             <a href="#" class="btn btn-white btn-sm"><i class="fa fa-pencil"></i> Edit </a>
