@@ -255,7 +255,7 @@ def login():
 		
 		#make a call to the wrapper
 		json_obj = call_wrapper(key=netsuite_key,uname=username,pword=password, company=my_company)
-		flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
+		#flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
 		Auth = True if (json_obj['response']['Auth']['@status'])=='0' else False
 		# set authentication on the user instance
 		user.set_authentication(Auth)
