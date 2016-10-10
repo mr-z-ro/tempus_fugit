@@ -37,7 +37,7 @@ def call_wrapper(key, uname, pword, company=''):
 
     #modified read to return uprate
     xml_data.append(
-        commands.Read('Project', 'equal to', {'limit': '500'}, [filter2], ['projectid', 'userid', 'name','updated','planned_hours']).read())
+        commands.Read('Project', 'equal to', {'limit': '500'}, [filter2], ['projectid', 'userid', 'name','updated','planned_hours','active']).read())
     xml_req = connections.Request(app, auth, xml_data).tostring()
 
     # Perform the request
@@ -65,7 +65,7 @@ def getTasks(key, uname, pword, company='', projectid = ''):
     # Filter just FIBR tasks
     task = datatypes.Datatype('Task', {'projectid': projectid})  # 1544 prev, Filter by FIBR
 
-    project = datatypes.Datatype('Project',{'projectid':projectid}) # Filter by Project ID provided
+    project = datatypes.Datatype('Project',{'projectid': '%s' % projectid}) # Filter by Project ID provided
     #filter2 = commands.Read.Filter(None, None, task).getFilter()
 
     # modified filter 2 to use uprate
@@ -75,8 +75,13 @@ def getTasks(key, uname, pword, company='', projectid = ''):
     xml_data = []
 
     xml_data.append(
-        commands.Read('Task', 'equal to', {'limit': '1000'}, [filter1, filter2], ['id', 'timesheetid','name']).read())
+        commands.Read('Task', 'equal to', {'limit': '500'}, [filter1], ['id', 'name', 'updated',
+        'priority', 'percent_complete']).read())
     """
+            , 'task_budget_cost', 'is_a_phase', 'calculated_finishes', 'calculated_starts',
+        'starts', 'estimated_hours', 'project_name', 'closed', 'task_budget_revenue', 'planned_hours', 'projectid',
+        'project_task_assign', 'assign_user_names', 'fnlt_date', 'active']).read())
+
     xml_data.append(
         commands.Read('Project', 'equal to', {'limit': '1000'}, [filter1, filter2], ['id', 'timesheetid']).read())
 
@@ -87,7 +92,7 @@ def getTasks(key, uname, pword, company='', projectid = ''):
     xml_req = connections.Request(app, auth, xml_data).tostring()
 
     # Perform the request
-    req = urllib2.Request(url='https://www.openair.com/api.pl', data=xml_req)
+    req = urllib2.Request(url='https://www.openair.com/api.pl', data = xml_req)
     res = urllib2.urlopen(req, timeout=60)
     xml_res = res.read()
     #print 'Response %s' % xml_res

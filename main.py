@@ -33,6 +33,8 @@ import pdb
 from os import urandom
 from datetime import datetime
 
+from associates_details import getEmployeeDetails
+
 # [END imports]
 
 app = Flask(__name__)
@@ -263,7 +265,8 @@ def login():
 		if user.is_authenticated():
 			print "is_authenticated***********************************************************************************************************"
 			# save the username to a session
-			session['username'] = form.username.data.split('@')[0] # Generate ID from email address
+			#session['username'] = form.username.data.split('@')[0] # Generate ID from email address
+			session['associate'], session['associatetitle'], Location = getEmployeeDetails(username)
 			#login_user(user)
 			session['logged_in'] = True
 			# for session timeout to work we must set session permanent to True
@@ -287,7 +290,10 @@ def login():
 				#if project['userid'] != '9':
 					# remove projects that include: Internal, PTO, UnAllocated Time, Meetings - Internal and PUT
 					# format of list items is [projectid, project_name, last_update_date]
-				projectslist.append("{}|{}|{}".format(project['userid'],project['name'],reformatDate(project['updated']['Date'])))
+				if project['active'] != '1':
+					# filter out inactive projects
+					continue
+				projectslist.append("{}|{}|{}|{}".format(project['userid'],project['name'],reformatDate(project['updated']['Date']),project['active']))
 				#projectslist[project['name']] = reformatDate(project['updated'])#['Date']
 
 			session['projects'] = projectslist
@@ -972,12 +978,12 @@ def project_detail():
 	return render_template('project_detail.html')
 # [END project_detail]
 """
-@app.route('/project_detail/<projectid>')
+@app.route('/project_detail/<projectidnum>')
 @login_required
-def project_detail():
+def project_detail(projectidnum):
 	# call getTasks(key, uname, pword, company='', projectid = '')
 
-	json_obj = getTasks(key=netsuite_key, uname=session['username'], pword=session['password'], company=my_company)
+	json_obj = getTasks(key=netsuite_key, uname=session['username'], pword=session['password'], company=my_company, projectid = projectidnum)
 	flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
 	Auth = True if (json_obj['response']['Auth']['@status']) == '0' else False
 	# set authentication on the user instance
@@ -986,7 +992,7 @@ def project_detail():
 	if user.is_authenticated():
 		print "is_authenticated***********************************************************************************************************"
 		# save the username to a session
-		session['username'] = form.username.data.split('@')[0]  # Generate ID from email address
+		#session['username'] = form.username.data.split('@')[0]  # Generate ID from email address
 		# login_user(user)
 		session['logged_in'] = True
 		# for session timeout to work we must set session permanent to True
@@ -1020,9 +1026,11 @@ def project_detail():
 			session['currentpage'] = str(str(next).split('//')[-1:]).split('.')[:1]
 		else:
 			session['currentpage'] = 'projects'
-		return redirect(next or url_for('projects'))
+		session['currentpage'] = 'Project Details'
+		return redirect(next or url_for('project_detail', projectidnum = projectidnum))
+
 	flash('Sorry! Your password or username is invalid. Kindly try again..')
-	return render_template('project_detail.html')
+	return render_template(url_for('project'))
 
 # [START projects]
 @app.route('/',methods=['GET','POST'])
