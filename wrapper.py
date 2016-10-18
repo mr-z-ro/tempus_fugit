@@ -13,16 +13,18 @@ def call_wrapper(key, uname, pword, company=''):
     # Filter just this year
     date = datatypes.Datatype('Date', {'month': '01', 'day': '01', 'year': '2016'})
     filter1 = commands.Read.Filter('newer-than', 'Date', date).getFilter()
+
     # Filter just FIBR tasks
     task = datatypes.Datatype('Task', {'projectid': '313'})  # 1544 prev, Filter by FIBR
+
     # modified task with uprate
-    #uprate = datatypes.Datatype('Uprate',{'userid':uname})
+    # uprate = datatypes.Datatype('Uprate',{'userid':uname})
     project = datatypes.Datatype('Project',{'projectid':'16632'}) # Filter by Projects, Tempus Fugit
-    #filter2 = commands.Read.Filter(None, None, task).getFilter()
+    # filter2 = commands.Read.Filter(None, None, task).getFilter()
 
     # modified filter 2 to use uprate
-    #filter2 = commands.Read.Filter(None, None, uprate).getFilter()
-    #filter2 = commands.Read.Filter(None, None, task).getFilter()
+    # filter2 = commands.Read.Filter(None, None, uprate).getFilter()
+    # filter2 = commands.Read.Filter(None, None, task).getFilter()
     filter2 = commands.Read.Filter(None, None, project).getFilter()
 
     # Prepare the request
@@ -35,7 +37,7 @@ def call_wrapper(key, uname, pword, company=''):
         commands.Read('Project', 'equal to', {'limit': '1000'}, [filter1, filter2], ['id', 'timesheetid']).read())
     """
 
-    #modified read to return uprate
+    # modified read to return uprate
     xml_data.append(
         commands.Read('Project', 'equal to', {'limit': '500'}, [filter2], ['projectid', 'userid', 'name','updated','planned_hours','active']).read())
     xml_req = connections.Request(app, auth, xml_data).tostring()
@@ -44,7 +46,7 @@ def call_wrapper(key, uname, pword, company=''):
     req = urllib2.Request(url='https://www.openair.com/api.pl', data=xml_req)
     res = urllib2.urlopen(req, timeout=60)
     xml_res = res.read()
-    #print 'Response %s' % xml_res
+    # print 'Response %s' % xml_res
 
     # might be easier working with json data
     json_string = utilities.xml2json(xml_res, strip=True)
@@ -54,6 +56,7 @@ def call_wrapper(key, uname, pword, company=''):
     # print "json_obj: {}".format(json_obj['response']['Auth']['@status'])
 
     return json_obj
+
 
 def getTasks(key, uname, pword, company='', projectid = ''):
     app = connections.Application('Tempus Fugit', '1.0', 'default', key)
@@ -66,7 +69,7 @@ def getTasks(key, uname, pword, company='', projectid = ''):
     task = datatypes.Datatype('Task', {'projectid': projectid})  # 1544 prev, Filter by FIBR
 
     project = datatypes.Datatype('Project',{'projectid': '%s' % projectid}) # Filter by Project ID provided
-    #filter2 = commands.Read.Filter(None, None, task).getFilter()
+    # filter2 = commands.Read.Filter(None, None, task).getFilter()
 
     # modified filter 2 to use uprate
     filter2 = commands.Read.Filter(None, None, task).getFilter()
@@ -95,7 +98,7 @@ def getTasks(key, uname, pword, company='', projectid = ''):
     req = urllib2.Request(url='https://www.openair.com/api.pl', data = xml_req)
     res = urllib2.urlopen(req, timeout=60)
     xml_res = res.read()
-    #print 'Response %s' % xml_res
+    # print 'Response %s' % xml_res
 
     # might be easier working with json data
     json_string = utilities.xml2json(xml_res, strip=True)
