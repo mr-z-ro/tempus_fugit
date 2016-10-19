@@ -1,50 +1,57 @@
 # utilities to interface with the OAXMLAPI Netsuite API wrapper
 # import modules from Python wrapper around the NetSuite OpenAir XML API
 import urllib2
+import google.appengine.api.urlfetch_errors.DownloadError
 from oaxmlapi import connections, datatypes, commands
 import simplejson as json
 from oaxmlapi import *
 
 
-def call_wrapper(key, uname, pword, company=''):
-    app = connections.Application('Tempus Fugit', '1.0', 'default', key)
-    auth = connections.Auth(company, uname, pword)
+###########################################
+# Begin Monkey-Patch for bad server implementation
+# (see http://stackoverflow.com/questions/14149100/incompleteread-using-httplib)
+###########################################
+def patch_http_response_read(func):
+    def inner(*args):
+        httplib.HTTPConnection._http_vsn = 10
+        httplib.HTTPConnection._http_vsn_str = 'HTTP/1.0'
+        try:
+            return func(*args)
+        except httplib.IncompleteRead, e:
+            return e.partial
 
-    # Filter just this year
-    date = datatypes.Datatype('Date', {'month': '01', 'day': '01', 'year': '2016'})
-    filter1 = commands.Read.Filter('newer-than', 'Date', date).getFilter()
-    # Filter just FIBR tasks
-    task = datatypes.Datatype('Task', {'projectid': '313'})  # 1544 prev, Filter by FIBR
-    # modified task with uprate
-    #uprate = datatypes.Datatype('Uprate',{'userid':uname})
-    project = datatypes.Datatype('Project',{'projectid':'16632'}) # Filter by Projects, Tempus Fugit
-    #filter2 = commands.Read.Filter(None, None, task).getFilter()
+    return inner
+###########################################
+# End Monkey-Patch for bad server implementation
+###########################################
 
-    # modified filter 2 to use uprate
-    #filter2 = commands.Read.Filter(None, None, uprate).getFilter()
-    #filter2 = commands.Read.Filter(None, None, task).getFilter()
-    filter2 = commands.Read.Filter(None, None, project).getFilter()
+
+# Private method to make the final call including all the general parameters
+# NOTE: This method should be called by all subsequent methods in this file
+def _call_wrapper(key, un, pw, company, xml_data):
+    # Monkey Patch
+    # urllib2.urlopen = patch_http_response_read(urllib2.urlopen)
+    # httplib.HTTPResponse.read = patch_http_response_read(httplib.HTTPResponse.read)
 
     # Prepare the request
-    xml_data = []
-    """
-    xml_data.append(
-        commands.Read('Task', 'equal to', {'limit': '1000'}, [filter1, filter2], ['id', 'timesheetid']).read())
-
-    xml_data.append(
-        commands.Read('Project', 'equal to', {'limit': '1000'}, [filter1, filter2], ['id', 'timesheetid']).read())
-    """
-
-    #modified read to return uprate
-    xml_data.append(
-        commands.Read('Project', 'equal to', {'limit': '500'}, [filter2], ['userid', 'user_id', 'name','updated','active', 'id', 'budget', 'budget_time', 'task']).read())
+    app = connections.Application('Tempus Fugit', '1.0', 'default', key)
+    auth = connections.Auth(company, un, pw)
     xml_req = connections.Request(app, auth, xml_data).tostring()
-
-    # Perform the request
     req = urllib2.Request(url='https://www.openair.com/api.pl', data=xml_req)
-    res = urllib2.urlopen(req, timeout=60)
+    # print 'Request url=%s' % req.get_full_url()
+    # print 'Request req=%s' % xml_req
+    # print 'Request data=%s' % xml_data
+
+    # Perform the request
+    try:
+        res = urllib2.urlopen(req, timeout=60)
+    except google.appengine.api.urlfetch_errors.DownloadError as e:
+        import pdb
+        pdb.post_mortem()
+    # except urlfetch.DownloadError, e:
+    #    res = e.partial
     xml_res = res.read()
-    #print 'Response %s' % xml_res
+    # print 'Response %s' % xml_res
 
     # might be easier working with json data
     json_string = utilities.xml2json(xml_res, strip=True)
@@ -52,70 +59,61 @@ def call_wrapper(key, uname, pword, company=''):
     # create a json object
     json_obj = json.loads(json_string)
     # print "json_obj: {}".format(json_obj['response']['Auth']['@status'])
-
     return json_obj
 
-def getTasks(key, uname, pword, company='', projectid = ''):
-    app = connections.Application('Tempus Fugit', '1.0', 'default', key)
-    auth = connections.Auth(company, uname, pword)
+
+# Get auth info from server
+def get_whoami(key, un, pw, company):
+
+    auth = connections.Auth(company, un, pw)
+    whoami_req = connections.Whoami(auth).whoami()
+
+    # Prepare the request
+    xml_data = [whoami_req]
+
+    return _call_wrapper(key, un, pw, company, xml_data)
+
+
+# Get the time from the server
+def get_time(key, un, pw, company):
+
+    time_req = commands.Time().time()
+
+    # Prepare the request
+    xml_data = [time_req]
+
+    return _call_wrapper(key, un, pw, company, xml_data)
+
+
+# Get a list of projects from the server
+def get_projects(key, un, pw, company='', userid = ''):
+
+    project = datatypes.Datatype('Project', {'active': '1'})
+    filter1 = commands.Read.Filter(None, None, project).getFilter()
+
+    # Prepare the request
+    xml_data = [commands.Read('Project', 'equal to', {'limit': '1000'}, [filter1], None).read()]
+
+    return _call_wrapper(key, un, pw, company, xml_data)
+
+
+# Get a list of tasks by project id from the server
+def get_tasks(key, un, pw, company='', projectid = ''):
 
     # Filter just this year
     date = datatypes.Datatype('Date', {'month': '01', 'day': '01', 'year': '2016'})
-
-
     filter1 = commands.Read.Filter('newer-than', 'Date', date).getFilter()
-    # Filter just tasks for provided projectid
-    #task = datatypes.Datatype('Task', {'project_id': u'{0}'.format(projectid)}) # '1544'})  # 1544 prev, Filter by FIBR, 16632
-    projecttask = project = datatypes.Datatype('Projecttask', {'project_id': '{0}'.format(projectid)})
 
-    #project = datatypes.Datatype('project', {'projectid': u'{0}'.format(projectid)})
-
-    filter1 = commands.Read.Filter('newer-than', 'Date', date).getFilter()
-    filter2 = commands.Read.Filter('equal to', None, projecttask).getFilter()
+    # Filter just tasks for the project
+    task = datatypes.Datatype('Task', {'projectid': projectid})  # 1544 prev, Filter by FIBR
+    filter2 = commands.Read.Filter(None, None, task).getFilter()
 
     # Prepare the request
-    xml_data = []
+    xml_data = [commands.Read('Task',
+                              'equal to',
+                              {'limit': '500'},
+                              [filter1, filter2],
+                              ['id', 'name', 'updated', 'priority', 'percent_complete']
+                              ).read()]
 
-    xml_data.append(commands.Read('Projecttask', 'equal to', {'limit': '500'}, [filter2], ['id', 'parent_id', 'ancestry',
-        'cost_center_id', 'projecttask_type_id', 'name', 'projectid', 'planned_hours', 'estimated_hours', 'completed_days',
-        'priority', 'percent_complete', 'task_budget_cost', 'customer_name', 'calculated_finishes', 'calculated_starts', 'start_date', 'currency']).read())
-    """
-            , 'task_budget_cost', 'is_a_phase', 'calculated_finishes', 'calculated_starts',
-        'starts', 'estimated_hours', 'project_name', 'closed', 'task_budget_revenue', 'planned_hours', 'projectid',
-        'project_task_assign', 'assign_user_names', 'fnlt_date', 'active']).read())
-
-    """
-
-    xml_req = connections.Request(app, auth, xml_data).tostring()
-
-    # Perform the request
-    req = urllib2.Request(url = 'https://www.openair.com/api.pl', data = xml_req)
-    res = urllib2.urlopen(req, timeout=60)
-    xml_res = res.read()
-    #print 'Response %s' % xml_res
-
-    # might be easier working with json data
-    json_string = utilities.xml2json(xml_res, strip=True)
-
-    # create a json object
-    json_obj = json.loads(json_string)
-    # print "json_obj: {}".format(json_obj['response']['Auth']['@status'])
-
-    return json_obj
-
-"""
->>> import urllib2
->>> from oaxmlapi import connections, datatypes, commands
->>> app = connections.Application('test app', '1.0', 'default', 'uniquekey')
->>> auth = connections.Auth('My Company', 'JAdmin', 'p@ssw0rd')
->>> date = datatypes.Datatype('Date', {'month': '03', 'day': '14', 'year': '2012'})
->>> task = datatypes.Datatype('Task', {'projectid': '13'})
->>> filter1 = commands.Read.Filter('newer-than', 'date', date).getFilter()
->>> filter2 = commands.Read.Filter(None, None, task).getFilter()
->>> xml_data = []
->>> xml_data.append(commands.Read('Task', 'equal to', {'limit': '1000'}, [filter1, filter2], ['id', 'timesheetid']).read())
->>> xml_req = connections.Request(app, auth, xml_data).tostring()
->>> req = urllib2.Request(url='https://www.openair.com/api.pl', data=xml_req)
->>> res = urllib2.urlopen(req)
->>> xml_res = res.read()
-"""
+    return _call_wrapper(key, un, pw, company, xml_data)

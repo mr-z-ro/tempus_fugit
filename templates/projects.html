@@ -29,7 +29,7 @@
                              </span>
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                             <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['associate'] %} {{ session['associate'] }} {% else %} Anonymous {% endif %}</strong>
-                             </span> <span class="text-muted text-xs block">{% if session['associatetitle'] %} {{ session['associatetitle'] }} {% else %} Unknown {% endif %} <b class="caret"></b></span> </span> </a>
+                             </span> <span class="text-muted text-xs block">{% if session['associate_title'] %} {{ session['associate_title'] }} {% else %} Unknown {% endif %} <b class="caret"></b></span> </span> </a>
                         <ul class="dropdown-menu animated fadeInRight m-t-xs">
                             <li><a href="profile.html">Profile</a></li>
                             <li><a href="contacts.html">Contacts</a></li>
@@ -455,11 +455,6 @@
 
                                         {% endfor %}
 
-
-
-
-
-
                                         <!--
                                         <td class="project-people">
                                             <a href=""><img alt="image" class="img-circle" src="img/a3.jpg"></a>
@@ -469,13 +464,13 @@
                                             <a href=""><img alt="image" class="img-circle" src="img/a5.jpg"></a>
                                         </td>
                                         -->
+
                                        <!--
                                         <td class="project-actions">
                                             <a href="#" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> View </a>
                                             <a href="#" class="btn btn-white btn-sm"><i class="fa fa-pencil"></i> Edit </a>
                                         </td>
                                         -->
-
                                     </tr>
 
                                     {% endfor %}
