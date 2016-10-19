@@ -32,24 +32,36 @@ from collections import OrderedDict
 from functools import wraps
 import pdb
 from os import urandom
+from datetime import datetime
+
+from associates_details import getEmployeeDetails
 
 # [END imports]
 
 app = Flask(__name__)
 
+##########################################################################################################################################
+# global variables from config.py and instance/config.py
+app.config.from_object('config') # normal config.py
+
+app.config.from_pyfile('config.py') # instance/config.py access to secret keys
+# Now we can access the configuration variables via app.config["VAR_NAME"].
+
+# read company info from the config file out of verion control
+my_company = app.config['COMPANY']
+netsuite_key = app.config['NETSUITE_API_KEY'] # Retrieve key from instance/config file
+
 # secret_key enables us to use csrf
 secret_key = app.config['SECRET_KEY']
 if not secret_key:
 	secret_key = urandom(24)
-	
-# set a timeout for the session  to 5 days of inactivity /this  can change 
+
+# set a timeout for the session  to 5 days of inactivity /this  can change
 app.permanent_session_lifetime = timedelta(seconds=432000)
 
 # to prevent back button if logged out from opening previous page, ensure no caching happens
 resp = Response("")
 resp.headers.add('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
-<<<<<<< Updated upstream
-=======
 
 ## create a dictionary to hold projects and tasks
 projectsdict = {'X':'test'}
@@ -86,7 +98,6 @@ def reformatDate(dictval):
 		return myDate
 
 
->>>>>>> Stashed changes
 #########################################################################################################################################
 #       models.py
 #########################################################################################################################################
@@ -96,7 +107,7 @@ class User():
         self.username = username
         self.company = company
         self.password = password
-    
+
     @property
     def is_active(self):
         """ True, as all users are active."""
@@ -123,23 +134,23 @@ class User():
     def is_anonymous(self):
         """ return False, as anonymous users aren't supported. """
         return False
-        
+
     @hybrid_property
     def password(self):
         raise AttributeError('password is not a readable attribute')
         #return self.password
-    
-        
+
+
     @password.setter
     def password(self,plaintext):
         self.password = generate_password_hash(plaintext, length=12)#bcrypt.generate_password_hash(plaintext)
 
     def __repr__(self):
-        return '<User %r>' % (self.username)    
+        return '<User %r>' % (self.username)
 
 #################################################################################################################################################
 # forms.py
-#################################################################################################################################################    
+#################################################################################################################################################
 
 class LoginForm(Form):
 	username = StringField('Username',validators=[validators.Required(),validators.Email()])
@@ -149,26 +160,14 @@ class LoginForm(Form):
 
 #################################################################################################################################################
 # views.py
-#################################################################################################################################################    
-# variables from config.py and instance/config.py
-app.config.from_object('config') # normal config.py
-
-app.config.from_pyfile('config.py') # instance/config.py access to secret keys
-# Now we can access the configuration variables via app.config["VAR_NAME"].
-
-# read company info from the config file out of verion control
-my_company = app.config['COMPANY']
-
-# to use CSRF enable secret_key
-secret_key = app.config['SECRET_KEY']
-
+#################################################################################################################################################
 
 
 # create a dummy user
 user = User(
-			username ='',
-			password = '',
-			company = ''
+			username =None,
+			password = None,
+			company = my_company
 		)
 
 
@@ -187,7 +186,7 @@ def login_required(func):
 		session.modified = True
 		try:
 			# to catch keyerrors
-			
+
 			if ('logged_in' not in session) and ('username' not in session) and (session['username']=='' or session['username']== None) and (not user.is_authenticated()) and (request.endpoint !=url_for('login')):
 				#session is non-existent but we still do the same
 				return redirect(url_for('login',next=request.url))
@@ -199,7 +198,7 @@ def login_required(func):
 @app.before_request
 def before_request():
     session.modified = True
-	
+
 # [START 404]
 @app.errorhandler(404)
 def page_not_found(e):
@@ -220,21 +219,25 @@ def logout():
 	#user = current_user;
 	user.authenticated = False
 	session['logged_in'] = False
-	
+
 	session['username']=''
+	session['password'] = ''
+	session['projects'] = ''
 	session['logged_in']=''
 	session.pop('username',None)
+	session.pop('password', None)
 	session.pop('logged_in',None)
+	session.pop('projects', None)
 	session.clear()
 	#if all this does not clear the session
-	# set a timeout for the session  to 1 seconds of inactivity /this  can change 
+	# set a timeout for the session  to 1 seconds of inactivity /this  can change
 	app.permanent_session_lifetime = timedelta(seconds=1)
-	
+
 	if 'username' not in session  or 'logged_in' not in session or session['username']=='' or session['logged_in']=='' and not user.is_authenticated():
 		return redirect(url_for('login'))
-	
-	
-	
+
+
+
 	return render_template(url_for('login'))
 
 # [START login]
@@ -257,28 +260,20 @@ def login():
 		password = form.password.data
 		remember_me = False #** need to implement on form
 
+		# store username and password in encrypted session???
+		session['username'] = username
+		session['password'] = password
+
 		if 'remember_me' in request.form:
 			remember_me = True
-            
-		user = User(
-			username = form.username.data,
-			password = form.password.data,
-			company = my_company
-		)
-		
-		netsuite_key = app.config['NETSUITE_API_KEY'] # Retrieve key from instance/config file
-		
+
 		#make a call to the wrapper
 		json_obj = call_wrapper(key=netsuite_key,uname=username,pword=password, company=my_company)
-<<<<<<< Updated upstream
-		#flash("json_obj : {}".format(json_obj['response']['Auth']['@status']))
-=======
 		json_obj_tasks = getTasks(key=netsuite_key,uname=username,pword=password, company=my_company, projectid='240')
 
 		#flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
 		#flash("json_obj : {}".format(json_obj_tasks))  # ['response']['Read']['Project']))
 		print 'json_obj_tasks: {}'.format(json_obj_tasks)
->>>>>>> Stashed changes
 		Auth = True if (json_obj['response']['Auth']['@status'])=='0' else False
 		# set authentication on the user instance
 		user.set_authentication(Auth)
@@ -286,7 +281,8 @@ def login():
 		if user.is_authenticated():
 			#print "login is_authenticated***********************************************************************************************************"
 			# save the username to a session
-			session['username'] = form.username.data.split('@')[0] # Generate ID from email address
+			#session['username'] = form.username.data.split('@')[0] # Generate ID from email address
+			session['associate'], session['associatetitle'], Location = getEmployeeDetails(username)
 			#login_user(user)
 			session['logged_in'] = True
 			# for session timeout to work we must set session permanent to True
@@ -297,12 +293,9 @@ def login():
 			# permission to access the 'next' url
 			#if not next_is_valid(next):
 			#	return abort(400)
-			
+
 			# user should be an instance of your 'User' class
 			#login_user(user,remember=True)
-<<<<<<< Updated upstream
-			return redirect(next or (url_for('index')))
-=======
 			# redirect to projects page
 			#return redirect(next or (url_for('index')))
 
@@ -415,18 +408,11 @@ def login():
 			else:
 				session['currentpage'] = 'projects'
 			return redirect(next or url_for('projects'))
->>>>>>> Stashed changes
 		flash('Sorry! Your password or username is invalid. Kindly try again..')
 	return render_template('login.html',form=form)
 
-	# [END submitted]
-	# [START render_template]
-	return render_template(
-		'submitted_form.html',
-		company=company,
-		username=username,
-		password=password)
-	# [END render_template]
+# [END login submitted]
+
 
 @app.context_processor
 def inject_projecttasks():
@@ -718,7 +704,7 @@ def file_manager():
 @app.route('/forgot_password.html')
 @app.route('/forgot')
 def forgot_password():
-	# redirect to the Netsuite OpenAir forgot password page 
+	# redirect to the Netsuite OpenAir forgot password page
 	return redirect('https://www.openair.com/index.pl?action=lost_info;')
 	#return render_template('forgot_password.html')
 # [END forgot_password]
@@ -893,7 +879,7 @@ def idle_timer():
 
 
 # [START index]
-@app.route('/',methods=['GET','POST'])
+
 @app.route('/index',methods=['GET','POST'])
 @app.route('/index.html',methods=['GET','POST'])
 @login_required
@@ -1093,14 +1079,12 @@ def profile_2():
 
 
 # [START project_detail]
+"""
 @app.route('/project_detail.html')
 @login_required
 def project_detail():
 	return render_template('project_detail.html')
 # [END project_detail]
-<<<<<<< Updated upstream
-
-=======
 """
 
 
@@ -1152,9 +1136,10 @@ def project_detail(projectidnum):
 
 	flash('Sorry! Your password or username is invalid. Kindly try again..')
 	return render_template(url_for('project'))
->>>>>>> Stashed changes
 
 # [START projects]
+@app.route('/',methods=['GET','POST'])
+@app.route('/projects')
 @app.route('/projects.html')
 @login_required
 def projects():
