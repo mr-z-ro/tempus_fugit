@@ -76,12 +76,12 @@ _MAXLINE = 65536
 
 # format date value into a sensible value
 def reformatDate(dictval):
-    print 'dictval: {}'.format(dictval)
+    # print 'dictval: {}'.format(dictval)
     simpledate = {}
     for attr in ['year', 'month', 'day', 'hour', 'minute', 'second']:
-        print 'attr {}'.format(attr)
+        # print 'attr {}'.format(attr)
         simpledate[attr] = dictval[attr]
-        print 'simpledate {} {} {}'.format(attr, (simpledate[attr]), (dictval[attr]))
+        # print 'simpledate {} {} {}'.format(attr, (simpledate[attr]), (dictval[attr]))
 
     myDate = "{}.{}.{} {}:{}:{}".format(simpledate['day'], simpledate['month'], simpledate['year'], simpledate['hour'], simpledate['minute'], simpledate['second'])
 
@@ -92,7 +92,7 @@ def reformatDate(dictval):
 #       models.py
 #########################################################################################################################################
 
-class User():
+class User:
     def __init__(self,username,password,company):
         self.username = username
         self.company = company
@@ -261,17 +261,19 @@ def login():
             remember_me = True
         
         # make a call to the wrapper
-        json_obj = call_wrapper(key=netsuite_key, uname=username, pword=password, company=my_company)
+        json_obj = get_whoami(key=netsuite_key, un=username, pw=password, company=my_company)
         # flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
         auth = True if (json_obj['response']['Auth']['@status'])=='0' else False
         # set authentication on the user instance
         user.set_authentication(auth)
-
         if user.is_authenticated():
             print "is_authenticated ***********************************************************************************"
             # save the username to a session
             # session['username'] = form.username.data.split('@')[0] # Generate ID from email address
-            session['associate'], session['associatetitle'], Location = getEmployeeDetails(username)
+            session['associate'] = '%s, %s' % (json_obj['response']['Whoami']['User']['addr']['Address']['last'], json_obj['response']['Whoami']['User']['addr']['Address']['first'])
+            session['associate_title'] = '%s' % (json_obj['response']['Whoami']['User']['type'])
+            session['associate_email'] = '%s' % (json_obj['response']['Whoami']['User']['addr']['Address']['email'])
+            session['associate_id'] = '%s' % (json_obj['response']['Whoami']['User']['id'])
             # login_user(user)
             session['logged_in'] = True
             # for session timeout to work we must set session permanent to True
@@ -282,26 +284,12 @@ def login():
             # permission to access the 'next' url
             # if not next_is_valid(next):
             #    return abort(400)
-            
+
             # user should be an instance of your 'User' class
             # login_user(user,remember=True)
             # redirect to projects page
             # return redirect(next or (url_for('index')))
 
-            # prepare a project list to pass to projects page
-            projectslist = []
-            for project in json_obj['response']['Read']['Project']:
-                print "json_obj['response']['Read']['Project'] =",json_obj['response']['Read']['Project']
-                # if project['userid'] != '9':
-                    # remove projects that include: Internal, PTO, UnAllocated Time, Meetings - Internal and PUT
-                    # format of list items is [projectid, project_name, last_update_date]
-                if project['active'] != '1':
-                    # filter out inactive projects
-                    continue
-                projectslist.append("{}|{}|{}|{}".format(project['userid'],project['name'],reformatDate(project['updated']['Date']),project['active']))
-                # projectslist[project['name']] = reformatDate(project['updated'])#['Date']
-
-            session['projects'] = projectslist
             # flash("session Projects : {}".format(session['projects']))
             if next:
                 session['currentpage'] = str(str(next).split('//')[-1:]).split('.')[:1]
@@ -313,6 +301,108 @@ def login():
 
 # [END login submitted]
 
+
+# [START project_detail]
+"""
+@app.route('/project_detail.html')
+@login_required
+def project_detail():
+    return render_template('project_detail.html')
+# [END project_detail]
+"""
+
+
+@app.route('/project_detail/<projectidnum>')
+@login_required
+def project_detail(projectidnum):
+    # call getTasks(key, un, pw, company='', projectid = '')
+
+    json_obj = get_tasks(key=netsuite_key, un=session['username'], pw=session['password'], company=my_company,
+                        projectid=projectidnum)
+    flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
+    auth = True if (json_obj['response']['Auth']['@status']) == '0' else False
+    # set authentication on the user instance
+    user.set_authentication(auth)
+
+    if user.is_authenticated():
+        print "is_authenticated****************************************************************************************"
+        # save the username to a session
+        # session['username'] = form.username.data.split('@')[0]  # Generate ID from email address
+        # login_user(user)
+        session['logged_in'] = True
+        # for session timeout to work we must set session permanent to True
+        # session.permanent = True
+        flash('Logged in successfully.')
+        next = request.args.get('next')
+        # next_is_valid should check if the user has validate
+        # permission to access the 'next' url
+        # if not next_is_valid(next):
+        #    return abort(400)
+
+        # user should be an instance of your 'User' class
+        # login_user(user,remember=True)
+        # redirect to projects page
+        # return redirect(next or (url_for('index')))
+
+        # prepare a project list to pass to projects page
+        projectslist = []
+        for project in json_obj['response']['Read']['Project']:
+            # print "json_obj['response']['Read']['Project'] =", json_obj['response']['Read']['Project']
+            # if project['userid'] != '9':
+            # remove projects that include: Internal, PTO, UnAllocated Time, Meetings - Internal and PUT
+            # format of list items is [projectid, project_name, last_update_date]
+            projectslist.append(
+                "{}|{}|{}".format(project['userid'], project['name'], reformatDate(project['updated']['Date'])))
+        # projectslist[project['name']] = reformatDate(project['updated'])#['Date']
+
+        session['projects'] = projectslist
+        # flash("session Projects : {}".format(session['projects']))
+        if next:
+            session['currentpage'] = str(str(next).split('//')[-1:]).split('.')[:1]
+        else:
+            session['currentpage'] = 'projects'
+        session['currentpage'] = 'Project Details'
+        return redirect(next or url_for('project_detail', projectidnum=projectidnum))
+
+    flash('Sorry! Your password or username is invalid. Kindly try again..')
+    return render_template(url_for('project'))
+
+
+# [START projects]
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/projects')
+@app.route('/projects.html')
+@login_required
+def projects():
+    json_obj = get_projects(key=netsuite_key,
+                            un=session['username'],
+                            pw=session['password'],
+                            company=my_company,
+                            userid=session['associate_id'])
+
+    print json_obj
+
+    # prepare a project list to pass to projects page
+    projectslist = []
+    for project in json_obj['response']['Read']['Project']:
+        # print "json_obj['response']['Read']['Project'] =", json_obj['response']['Read']['Project']
+        # if project['userid'] != '9':
+        # remove projects that include: Internal, PTO, UnAllocated Time, Meetings - Internal and PUT
+        # format of list items is [projectid, project_name, last_update_date]
+        if project['active'] != '1':
+            # filter out inactive projects
+            continue
+        projectslist.append(
+            "{}|{}|{}|{}".format(project['userid'], project['name'], reformatDate(project['updated']['Date']),
+                                 project['active']))
+    # projectslist[project['name']] = reformatDate(project['updated'])#['Date']
+
+    session['projects'] = projectslist
+
+    return render_template('projects.html')
+
+
+# [END projects]
 
 
 #############################################
@@ -976,83 +1066,12 @@ def profile_2():
 # [END profile_2]
 
 
-# [START project_detail]
-"""
-@app.route('/project_detail.html')
-@login_required
-def project_detail():
-    return render_template('project_detail.html')
-# [END project_detail]
-"""
-@app.route('/project_detail/<projectidnum>')
-@login_required
-def project_detail(projectidnum):
-    # call getTasks(key, uname, pword, company='', projectid = '')
-
-    json_obj = getTasks(key=netsuite_key, uname=session['username'], pword=session['password'], company=my_company, projectid = projectidnum)
-    flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
-    Auth = True if (json_obj['response']['Auth']['@status']) == '0' else False
-    # set authentication on the user instance
-    user.set_authentication(Auth)
-
-    if user.is_authenticated():
-        print "is_authenticated***********************************************************************************************************"
-        # save the username to a session
-        #session['username'] = form.username.data.split('@')[0]  # Generate ID from email address
-        # login_user(user)
-        session['logged_in'] = True
-        # for session timeout to work we must set session permanent to True
-        # session.permanent = True
-        flash('Logged in successfully.')
-        next = request.args.get('next')
-        # next_is_valid should check if the user has validate
-        # permission to access the 'next' url
-        # if not next_is_valid(next):
-        #    return abort(400)
-
-        # user should be an instance of your 'User' class
-        # login_user(user,remember=True)
-        # redirect to projects page
-        # return redirect(next or (url_for('index')))
-
-        # prepare a project list to pass to projects page
-        projectslist = []
-        for project in json_obj['response']['Read']['Project']:
-            print "json_obj['response']['Read']['Project'] =", json_obj['response']['Read']['Project']
-            #if project['userid'] != '9':
-                # remove projects that include: Internal, PTO, UnAllocated Time, Meetings - Internal and PUT
-                # format of list items is [projectid, project_name, last_update_date]
-            projectslist.append(
-                    "{}|{}|{}".format(project['userid'], project['name'], reformatDate(project['updated']['Date'])))
-            # projectslist[project['name']] = reformatDate(project['updated'])#['Date']
-
-        session['projects'] = projectslist
-        # flash("session Projects : {}".format(session['projects']))
-        if next:
-            session['currentpage'] = str(str(next).split('//')[-1:]).split('.')[:1]
-        else:
-            session['currentpage'] = 'projects'
-        session['currentpage'] = 'Project Details'
-        return redirect(next or url_for('project_detail', projectidnum = projectidnum))
-
-    flash('Sorry! Your password or username is invalid. Kindly try again..')
-    return render_template(url_for('project'))
-
-# [START projects]
-@app.route('/',methods=['GET','POST'])
-@app.route('/projects')
-@app.route('/projects.html')
-@login_required
-def projects():
-    return render_template('projects.html')
-# [END projects]
-
-
 # [START register]
 @app.route('/register.html')
 def register():
     return render_template('register.html')
 # [END register]
+
 
 # [START resizeable_panels]
 @app.route('/resizeable_panels.html')

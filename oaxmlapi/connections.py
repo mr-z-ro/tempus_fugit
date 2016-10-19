@@ -161,7 +161,7 @@ class Whoami(object):
         Returns an ElementTree object containing an XML Whoami tag.
 
         """
-        from components.datatypes import Datatype
+        from oaxmlapi.datatypes import Datatype
 
         whoami = ET.Element('Whoami')
         if isinstance(self.datatype, Datatype) and self.datatype.type == 'User':
