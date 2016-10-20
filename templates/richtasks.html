@@ -8,11 +8,11 @@
 
     <title>Tempus Fugit | Rich tasks page</title>
 
-    <link href="{{ url_for('static', filename= 'css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename= 'font-awesome/css/font-awesome.css') }}" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/font-awesome/css/font-awesome.css" rel="stylesheet">
 
-    <link href="{{ url_for('static', filename= 'css/animate.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename= 'css/style.css') }}" rel="stylesheet">
+    <link href="/css/animate.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
 
 </head>
 
@@ -23,7 +23,7 @@
             <ul class="nav metismenu" id="side-menu">
                 <li class="nav-header">
                     <div class="dropdown profile-element"> <span>
-                            <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/profile_small.jpg') }}" />
+                            <img alt="image" class="img-circle" src="/img/profile_small.jpg" />
                              </span>
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                             <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['associate'] %} {{ session['associate'] }} {% else %} Anonymous {% endif %}</strong>
@@ -268,7 +268,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a7.jpg') }}">
+                                    <img alt="image" class="img-circle" src="/img/a7.jpg">
                                 </a>
                                 <div>
                                     <small class="pull-right">46h ago</small>
@@ -281,7 +281,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a4.jpg') }}">
+                                    <img alt="image" class="img-circle" src="/img/a4.jpg">
                                 </a>
                                 <div>
                                     <small class="pull-right text-navy">5h ago</small>
@@ -294,7 +294,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/profile.jpg') }}">
+                                    <img alt="image" class="img-circle" src="/img/profile.jpg">
                                 </a>
                                 <div>
                                     <small class="pull-right">23h ago</small>
@@ -374,7 +374,7 @@
                             <a href="{{ url_for('projects') }}">Home</a>
                         </li>
                         <li class="active">
-                            <strong>{{ projectsdict[projectidnum]['name'] }}</strong>
+                            <strong>{{ projects_dict[project_id]['name'] }}</strong>
                         </li>
                     </ol>
                 </div>
@@ -385,10 +385,10 @@
                 <div class="ibox float-e-margins">
                     <div class="ibox-content text-center p-md">
 
-                        <h2><span class="text-navy"> {{ projectsdict[projectidnum]['tasks'][taskid]['name'] }} </span></h2>
+                        <h2><span class="text-navy"> {{ projects_dict[project_id]['tasks'][taskid]['name'] }} </span></h2>
 
                         <p>
-                            Page under construction, values represented here are provisional {{ projectsdict[projectidnum]['tasks'][taskid]['startdate']  }}.
+                            Page under construction, values represented here are provisional {{ projects_dict[project_id]['tasks'][taskid]['startdate']  }}.
                         </p>
 
 
@@ -404,7 +404,7 @@
                         <div class="ibox-content text-left">
                             <h1>Total project costs</h1>
                             <div class="m-b-sm">
-                                    <img alt="image" class="img-circle" src="img/a8.jpg">
+                                    <img alt="image" class="img-circle" src="/img/a8.jpg">
                             </div>
                                     <p class="font-bold">Budget burning chart</p>
 
@@ -426,8 +426,8 @@
                                 </div>
 
                                 <div>
-                                    <span>{{ projectsdict[projectidnum]['tasks'][taskid]['calcstartdate'] }}</span>
-                                    <small class="pull-right">{{ projectsdict[projectidnum]['tasks'][taskid]['calcenddate'] }}</small>
+                                    <span>{{ projects_dict[project_id]['tasks'][taskid]['calcstartdate'] }}</span>
+                                    <small class="pull-right">{{ projects_dict[project_id]['tasks'][taskid]['calcenddate'] }}</small>
                                 </div>
                                 <div class="progress progress-small">
                                     <div style="width: 50%;" class="progress-bar"></div>
@@ -457,7 +457,7 @@
                     <div class="col-lg-3">
                         <div class="ibox">
                             <div class="ibox-content">
-                                <h5>Income #{{ projectidnum }}</h5>
+                                <h5>Income #{{ project_id }}</h5>
                                 <h1 class="no-margins">886,200</h1>
                                 <div class="stat-percent font-bold text-navy">98% <i class="fa fa-bolt"></i></div>
                                 <small>Total income</small>
@@ -845,21 +845,21 @@
     </div>
 
     <!-- Mainly scripts -->
-    <script src="{{ url_for('static', filename= 'js/jquery-2.1.1.js') }}"></script>
-    <script src="{{ url_for('static', filename= 'js/bootstrap.min.js') }}"></script>
-    <script src="{{ url_for('static', filename= 'js/plugins/metisMenu/jquery.metisMenu.js') }}"></script>
-    <script src="{{ url_for('static', filename= 'js/plugins/slimscroll/jquery.slimscroll.min.js') }}"></script>
+    <script src="/js/jquery-2.1.1.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/plugins/metisMenu/jquery.metisMenu.js"></script>
+    <script src="/js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
 
     <!-- Sparkline -->
-    <script src="{{ url_for('static', filename= 'js/plugins/sparkline/jquery.sparkline.min.js') }}"></script>
+    <script src="/js/plugins/sparkline/jquery.sparkline.min.js"></script>
 
     <!-- Peity -->
-    <script src="{{ url_for('static', filename= 'js/plugins/peity/jquery.peity.min.js') }}"></script>
-    <script src="{{ url_for('static', filename= 'js/demo/peity-demo.js') }}"></script>
+    <script src="/js/plugins/peity/jquery.peity.min.js"></script>
+    <script src="/js/demo/peity-demo.js"></script>
 
     <!-- Custom and plugin javascript -->
-    <script src="{{ url_for('static', filename= 'js/Tempus Fugit.js') }}"></script>
-    <script src="{{ url_for('static', filename= 'js/plugins/pace/pace.min.js') }}"></script>
+    <script src="/js/inspinia.js"></script>
+    <script src="/js/plugins/pace/pace.min.js"></script>
 
     <script>
         $(document).ready(function() {

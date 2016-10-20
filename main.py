@@ -64,7 +64,7 @@ resp = Response("")
 resp.headers.add('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
 
 ## create a dictionary to hold projects and tasks
-projects_dict = {'X':'test'}
+projects_dict = {}
 
 
 #########################################################################################################################################
@@ -84,14 +84,14 @@ def reformatDate(dictval):
         myDate = 'None'
     else:
         simpledate = {}
-        print 'dictval: {}'.format(dictval)
+        # print 'dictval: {}'.format(dictval)
         for attr in [u'year', u'month', u'day', u'hour', u'minute', u'second']:
-            #print 'attr {}'.format(attr)
+            # print 'attr {}'.format(attr)
             try:
                 simpledate[attr] = dictval[attr]
             except KeyError,err:
-                print 'error:: ',err
                 # skip over missing values
+                # print 'error:: ',err
                 simpledate[attr] = ''
             # print 'simpledate {} {} {}'.format(attr, (simpledate[attr]), (dictval[attr]))
 
@@ -276,7 +276,7 @@ def login():
         # set authentication on the user instance
         user.set_authentication(auth)
         if user.is_authenticated():
-            # print "is_authenticated ***********************************************************************************"
+            # print "is_authenticated *********************************************************************************"
             # save the username to a session
             # session['username'] = form.username.data.split('@')[0] # Generate ID from email address
             session['associate'] = '%s, %s' % (json_obj['response']['Whoami']['User']['addr']['Address']['last'], json_obj['response']['Whoami']['User']['addr']['Address']['first'])
@@ -310,88 +310,71 @@ def login():
 
 # [END login submitted]
 
+
 # [START projects]
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 @app.route('/projects')
-@app.route('/projects.html')
 @login_required
 def projects():
 
     # Retrieve projects from API
     projects_json_obj = get_projects(key=netsuite_key,
-                            un=session['username'],
-                            pw=session['password'],
-                            company=my_company,
-                            userid=session['associate_id'])
+                                     un=session['username'],
+                                     pw=session['password'],
+                                     company=my_company,
+                                     userid=session['associate_id'])
 
     # Retrieve tasks from API
     tasks_json_obj = get_tasks(key=netsuite_key,
-                            un=session['username'],
-                            pw=session['password'],
-                            company=my_company,
-                            projectid='240')
+                               un=session['username'],
+                               pw=session['password'],
+                               company=my_company)
 
     # Prepare a project list to pass to projects page
-    projects_list = []
     for project in projects_json_obj['response']['Read']['Project']:
 
-        # populate the list
-        datestr = reformatDate(project['updated']['Date'])
-        projects_list.append("{}|{}|{}|{}".format(project['id'], project['name'], datestr, project['active']))
-
         # populate the dictionary
-        projects_dict[project['id']] = {'name': project['name'],
-                                       'active': project['active'],
-                                       'updated': datestr,
-                                       'tasks': {}}
+        pid = int(project['id'])
+        projects_dict[pid] = {'name': project['name'],
+                              'active': project['active'],
+                              'updated': reformatDate(project['updated']['Date']),
+                              'tasks': {}}
 
     # Prepare a task list to pass to projects page
     for project_tasks in tasks_json_obj['response']['Read']['Projecttask']:
 
+        # Retrieve project and task ids
+        pid = int(project_tasks['projectid'])
+        tid = int(project_tasks['id'])
+
         # cycle through the project_tasks and populate the dictionary with active projects only
-        if project_tasks['projectid'] in projects_list:
-            calc_start_date = reformatDate(project_tasks['calculated_starts']) if project_tasks[
-                                                                                     'calculated_starts'] != 'None' else 'None'
-            calc_end_date = reformatDate(project_tasks['calculated_finishes']) if project_tasks[
-                                                                                     'calculated_finishes'] != 'None' else 'None'
+        if pid in projects_dict:
+            calc_start_date = reformatDate(project_tasks['calculated_starts']) if project_tasks['calculated_starts'] != 'None' else 'None'
+            calc_end_date = reformatDate(project_tasks['calculated_finishes']) if project_tasks['calculated_finishes'] != 'None' else 'None'
             try:
-                projects_dict[project_tasks['projectid']]['tasks'][project_tasks['id']] = {'name': project_tasks['name'],
-                                                                                        'calcstartdate': calc_start_date,
-                                                                                        'calcenddate': calc_end_date,
-                                                                                        'priority': project_tasks[
-                                                                                            'priority'],
-                                                                                        'percent_complete':
-                                                                                              project_tasks[
-                                                                                                'percent_complete'],
-                                                                                        'estimated_hours': project_tasks[
-                                                                                            'estimated_hours'],
-                                                                                        'planned_hours': project_tasks[
-                                                                                            'planned_hours'],
-                                                                                        'updated': datestr}
+                projects_dict[pid]['tasks'][tid] = {'name': project_tasks['name'],
+                                                    'calcstartdate': calc_start_date,
+                                                    'calcenddate': calc_end_date,
+                                                    'priority': project_tasks['priority'],
+                                                    'percent_complete': project_tasks['percent_complete'],
+                                                    'estimated_hours': project_tasks['estimated_hours'],
+                                                    'planned_hours': project_tasks['planned_hours'],
+                                                    'updated': projects_dict[pid]['updated']}
             except KeyError, err:
                 print 'Errors: ', err
 
-    session['projects'] = projects_list
-    session['project_tasks'] = str(projects_dict)
+    session['projects_dict'] = str(projects_dict)
 
     # create an ordered dict
     ordered_project_tasks = OrderedDict()
     for key in sorted(projects_dict.keys()):
-        # {key: int(value) for (key,value) in Degree.items()}
-        if key not in projects:
-            # print 'key not in active projects: {}'.format(key)
-            continue  # bypass inactive projects
+
         # create an ordered dict for the task_keys
         ordered_tasks = OrderedDict()
         for task_key in sorted({int(k): v for (k, v) in projects_dict[key]['tasks'].items()}):
-            # convert task_key back to unicode
-            task_key = str(task_key).decode("utf-8")
-
-            # print 'task_key sorted : {}'.format(task_key)
             ordered_tasks[task_key] = projects_dict[key]['tasks'][task_key]
-        # print 'ordered_tasks[task_key] = {}'.format(ordered_tasks[task_key])
-        # populate the ordered_project_tasks with the ordered tasks list
 
+        # populate the ordered_project_tasks with the ordered tasks list
         try:
             # if there are existing tasks, then update
             ordered_project_tasks[key]['tasks'].update(ordered_tasks)
@@ -416,59 +399,32 @@ def projects():
     projectslist = None
     # print 'Eventual projects dict: ', projects_dict
 
-    return render_template('projects.html', projecttasks=projects_dict)
+    return render_template('projects.html')
 # [END projects]
 
 
 # [START project_detail]
-@app.route('/project_detail/<project_id>', methods=['GET', 'POST'])
+@app.route('/projects/<project_id>', methods=['GET'])
 @login_required
 def project_detail(project_id):
-    # call getTasks(key, un, pw, company='', project_id = '')
-    if project_id:
-        project_id = project_id.strip()  # remove any trailing spaces
+    if project_id and ("|" in project_id):
+
         # separate the project and task id for template processing
-        projectid, taskid = project_id.split('|')
+        project_id = project_id.strip()  # remove any trailing spaces
+        pid, tid = project_id.split('|')
+        pid = int(pid)
+        tid = int(tid)
 
-        json_obj = get_tasks(netsuite_key, session['username'], session['password'], company=my_company, projectid=project_id)
-        # flash("json_obj : {}".format(json_obj))#['response']['Read']['Project']))
-        auth = True if (json_obj['response']['Auth']['@status']) == '0' else False
-        # set authentication on the user instance
-        user.set_authentication(auth)
+        # refresh task list?
+        # json_obj = get_tasks(netsuite_key,
+        #                     session['username'],
+        #                     session['password'],
+        #                     company=my_company,
+        #                     projectid=pid)
 
-        if user.is_authenticated():
-            print "is_authenticated************************************************************************************"
-            # save the username to a session
-            # session['username'] = form.username.data.split('@')[0]  # Generate ID from email address
-            # login_user(user)
-            session['logged_in'] = True
-            # for session timeout to work we must set session permanent to True
-            # session.permanent = True
-            flash('Logged in successfully.')
-            next = request.args.get('next')
-            # next_is_valid should check if the user has validate
-            # permission to access the 'next' url
-            # if not next_is_valid(next):
-            #	return abort(400)
+        return render_template('richtasks.html', project_id=pid, taskid=tid)
 
-            # user should be an instance of your 'User' class
-            # login_user(user,remember=True)
-            # redirect to projects page
-            # return redirect(next or (url_for('index')))
-
-            # prepare a project list to pass to projects page
-
-            print 'projects list: ', projects
-            if next:
-                session['currentpage'] = str(str(next).split('//')[-1:]).split('.')[:1]
-            else:
-                session['currentpage'] = 'projects Details'
-            session['currentpage'] = 'Project Details'
-            return render_template('richtasks.html', project_id=projectid, taskid=taskid)
-            # return redirect(url_for('project_detail'))
-
-    flash('Sorry! Your password or username is invalid. Kindly try again..')
-    return render_template(url_for('project'))
+    return redirect(url_for('projects'))
 # [END project_detail]
 
 

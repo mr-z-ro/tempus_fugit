@@ -1,37 +1,14 @@
 # utilities to interface with the OAXMLAPI Netsuite API wrapper
 # import modules from Python wrapper around the NetSuite OpenAir XML API
 import urllib2
-import google.appengine.api.urlfetch_errors.DownloadError
 from oaxmlapi import connections, datatypes, commands
 import simplejson as json
 from oaxmlapi import *
 
 
-###########################################
-# Begin Monkey-Patch for bad server implementation
-# (see http://stackoverflow.com/questions/14149100/incompleteread-using-httplib)
-###########################################
-def patch_http_response_read(func):
-    def inner(*args):
-        httplib.HTTPConnection._http_vsn = 10
-        httplib.HTTPConnection._http_vsn_str = 'HTTP/1.0'
-        try:
-            return func(*args)
-        except httplib.IncompleteRead, e:
-            return e.partial
-
-    return inner
-###########################################
-# End Monkey-Patch for bad server implementation
-###########################################
-
-
 # Private method to make the final call including all the general parameters
 # NOTE: This method should be called by all subsequent methods in this file
 def _call_wrapper(key, un, pw, company, xml_data):
-    # Monkey Patch
-    # urllib2.urlopen = patch_http_response_read(urllib2.urlopen)
-    # httplib.HTTPResponse.read = patch_http_response_read(httplib.HTTPResponse.read)
 
     # Prepare the request
     app = connections.Application('Tempus Fugit', '1.0', 'default', key)
@@ -43,13 +20,7 @@ def _call_wrapper(key, un, pw, company, xml_data):
     # print 'Request data=%s' % xml_data
 
     # Perform the request
-    try:
-        res = urllib2.urlopen(req, timeout=60)
-    except google.appengine.api.urlfetch_errors.DownloadError as e:
-        import pdb
-        pdb.post_mortem()
-    # except urlfetch.DownloadError, e:
-    #    res = e.partial
+    res = urllib2.urlopen(req, timeout=60)
     xml_res = res.read()
     # print 'Response %s' % xml_res
 
@@ -100,20 +71,23 @@ def get_projects(key, un, pw, company='', userid = ''):
 # Get a list of tasks by project id from the server
 def get_tasks(key, un, pw, company='', projectid = ''):
 
-    # Filter just this year
-    date = datatypes.Datatype('Date', {'month': '01', 'day': '01', 'year': '2016'})
-    filter1 = commands.Read.Filter('newer-than', 'Date', date).getFilter()
-
-    # Filter just tasks for the project
-    task = datatypes.Datatype('Task', {'projectid': projectid})  # 1544 prev, Filter by FIBR
-    filter2 = commands.Read.Filter(None, None, task).getFilter()
+    # if filter(s) provided create an array of filters
+    filters = []
+    if projectid:
+        # Filter just tasks for the project that aren't closed
+        task = datatypes.Datatype('Projecttask', {'projectid': projectid, 'closed': '0'})
+        filter1 = commands.Read.Filter(None, None, task).getFilter()
+        filters.append(filter1)
 
     # Prepare the request
-    xml_data = [commands.Read('Task',
+    xml_data = [commands.Read('Projecttask',
                               'equal to',
                               {'limit': '500'},
-                              [filter1, filter2],
-                              ['id', 'name', 'updated', 'priority', 'percent_complete']
+                              filters,
+                              ['id', 'parent_id', 'ancestry', 'cost_center_id', 'projecttask_type_id', 'name',
+                               'projectid', 'planned_hours', 'estimated_hours', 'completed_days', 'priority',
+                               'percent_complete', 'task_budget_cost', 'customer_name', 'calculated_finishes',
+                               'calculated_starts', 'start_date', 'currency']
                               ).read()]
 
     return _call_wrapper(key, un, pw, company, xml_data)
