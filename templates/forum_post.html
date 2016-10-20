@@ -8,11 +8,11 @@
 
     <title>Tempus Fugit | Forum - post view</title>
 
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/font-awesome/css/font-awesome.css" rel="stylesheet">
 
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="/css/animate.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
 
 </head>
 
@@ -25,11 +25,11 @@
             <ul class="nav metismenu" id="side-menu">
                 <li class="nav-header">
                     <div class="dropdown profile-element"> <span>
-                            <img alt="image" class="img-circle" src="img/profile_small.jpg" />
+                            <img alt="image" class="img-circle" src="/img/profile_small.jpg" />
                              </span>
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['username'] %} {{session["username"]}} {% else %}David Del Ser{% endif %}</strong>
-                             </span> <span class="text-muted text-xs block">Practice Director <b class="caret"></b></span> </span> </a>
+                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['associate'] %} {{ session['associate'] }} {% else %} Anonymous {% endif %}</strong>
+                             </span> <span class="text-muted text-xs block">{% if session['associate_title'] %} {{ session['associate_title'] }} {% else %} Unknown {% endif %} <b class="caret"></b></span> </span> </a>
                         <ul class="dropdown-menu animated fadeInRight m-t-xs">
                             <li><a href="profile.html">Profile</a></li>
                             <li><a href="contacts.html">Contacts</a></li>
@@ -270,7 +270,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/a7.jpg">
+                                    <img alt="image" class="img-circle" src="/img/a7.jpg">
                                 </a>
                                 <div class="media-body">
                                     <small class="pull-right">46h ago</small>
@@ -283,7 +283,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/a4.jpg">
+                                    <img alt="image" class="img-circle" src="/img/a4.jpg">
                                 </a>
                                 <div class="media-body ">
                                     <small class="pull-right text-navy">5h ago</small>
@@ -296,7 +296,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/profile.jpg">
+                                    <img alt="image" class="img-circle" src="/img/profile.jpg">
                                 </a>
                                 <div class="media-body ">
                                     <small class="pull-right">23h ago</small>
@@ -390,7 +390,7 @@
                             </div>
                             <div class="media">
                                 <a class="forum-avatar" href="#">
-                                    <img src="img/a1.jpg" class="img-circle" alt="image">
+                                    <img src="/img/a1.jpg" class="img-circle" alt="image">
                                     <div class="author-info">
                                         <strong>Posts:</strong> 542<br/>
                                         <strong>Joined:</strong> April 11.2015<br/>
@@ -408,7 +408,7 @@
                             </div>
                             <div class="media">
                                 <a class="forum-avatar" href="#">
-                                    <img src="img/a2.jpg" class="img-circle" alt="image">
+                                    <img src="/img/a2.jpg" class="img-circle" alt="image">
                                     <div class="author-info">
                                         <strong>Posts:</strong> 32<br/>
                                         <strong>Joined:</strong> Dec 11.2015<br/>
@@ -424,7 +424,7 @@
                             </div>
                             <div class="media">
                                 <a class="forum-avatar" href="#">
-                                    <img src="img/a3.jpg" class="img-circle" alt="image">
+                                    <img src="/img/a3.jpg" class="img-circle" alt="image">
                                     <div class="author-info">
                                         <strong>Posts:</strong> 543<br/>
                                         <strong>Joined:</strong> June 21.2015<br/>
@@ -440,7 +440,7 @@
                             </div>
                             <div class="media">
                                 <a class="forum-avatar" href="#">
-                                    <img src="img/a4.jpg" class="img-circle" alt="image">
+                                    <img src="/img/a4.jpg" class="img-circle" alt="image">
                                     <div class="author-info">
                                         <strong>Posts:</strong> 72<br/>
                                         <strong>Joined:</strong> March 08.2015<br/>
@@ -455,7 +455,7 @@
 
                                     <div class="media">
                                         <a class="forum-avatar" href="#">
-                                            <img src="img/a7.jpg" class="img-circle" alt="image">
+                                            <img src="/img/a7.jpg" class="img-circle" alt="image">
                                             <div class="author-info">
                                                 <strong>Posts:</strong> 253<br/>
                                                 <strong>Joined:</strong> Oct 08.2015<br/>
@@ -465,8 +465,8 @@
                                             <h4 class="media-heading"> Latin words, combined with a handful of mode</h4>
                                             Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy.
                                             <div class="photos">
-                                                <a href="http://24.media.tumblr.com/20a9c501846f50c1271210639987000f/tumblr_n4vje69pJm1st5lhmo1_1280.jpg" target="_blank"> <img src="img/p1.jpg" class="forum-photo" alt="image"></a>
-                                                <a href="http://37.media.tumblr.com/9afe602b3e624aff6681b0b51f5a062b/tumblr_n4ef69szs71st5lhmo1_1280.jpg" target="_blank"> <img src="img/p3.jpg" class="forum-photo" alt="image"></a>
+                                                <a href="http://24.media.tumblr.com/20a9c501846f50c1271210639987000f/tumblr_n4vje69pJm1st5lhmo1_1280.jpg" target="_blank"> <img src="/img/p1.jpg" class="forum-photo" alt="image"></a>
+                                                <a href="http://37.media.tumblr.com/9afe602b3e624aff6681b0b51f5a062b/tumblr_n4ef69szs71st5lhmo1_1280.jpg" target="_blank"> <img src="/img/p3.jpg" class="forum-photo" alt="image"></a>
                                             </div>
 
                                             Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
@@ -477,7 +477,7 @@
                                     </div>
                                     <div class="media">
                                         <a class="forum-avatar" href="#">
-                                            <img src="img/a8.jpg" class="img-circle" alt="image">
+                                            <img src="/img/a8.jpg" class="img-circle" alt="image">
                                             <div class="author-info">
                                                 <strong>Posts:</strong> 431<br/>
                                                 <strong>Joined:</strong> March 25.2015<br/>
@@ -519,7 +519,7 @@
     <script src="js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
 
     <!-- Custom and plugin javascript -->
-    <script src="js/Tempus Fugit.js"></script>
+    <script src="js/inspinia.js"></script>
     <script src="js/plugins/pace/pace.min.js"></script>
 
 </body>

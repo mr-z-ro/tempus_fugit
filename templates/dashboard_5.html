@@ -8,11 +8,11 @@
 
     <title>Tempus Fugit | Dashboard v.5</title>
 
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/font-awesome/css/font-awesome.css" rel="stylesheet">
 
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="/css/animate.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
 
 </head>
 
@@ -23,11 +23,11 @@
             <ul class="nav metismenu" id="side-menu">
                 <li class="nav-header">
                     <div class="dropdown profile-element"> <span>
-                            <img alt="image" class="img-circle" src="img/profile_small.jpg" />
+                            <img alt="image" class="img-circle" src="/img/profile_small.jpg" />
                              </span>
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['username'] %} {{session["username"]}} {% else %}David Del Ser{% endif %}</strong>
-                             </span> <span class="text-muted text-xs block">Practice Director <b class="caret"></b></span> </span> </a>
+                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['associate'] %} {{ session['associate'] }} {% else %} Anonymous {% endif %}</strong>
+                             </span> <span class="text-muted text-xs block">{% if session['associate_title'] %} {{ session['associate_title'] }} {% else %} Unknown {% endif %} <b class="caret"></b></span> </span> </a>
                         <ul class="dropdown-menu animated fadeInRight m-t-xs">
                             <li><a href="profile.html">Profile</a></li>
                             <li><a href="contacts.html">Contacts</a></li>
@@ -268,7 +268,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/a7.jpg">
+                                    <img alt="image" class="img-circle" src="/img/a7.jpg">
                                 </a>
                                 <div>
                                     <small class="pull-right">46h ago</small>
@@ -281,7 +281,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/a4.jpg">
+                                    <img alt="image" class="img-circle" src="/img/a4.jpg">
                                 </a>
                                 <div>
                                     <small class="pull-right text-navy">5h ago</small>
@@ -294,7 +294,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/profile.jpg">
+                                    <img alt="image" class="img-circle" src="/img/profile.jpg">
                                 </a>
                                 <div>
                                     <small class="pull-right">23h ago</small>
@@ -732,7 +732,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a1.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="/img/a1.jpg">
 
                                         <div class="m-t-xs">
                                             <i class="fa fa-star text-warning"></i>
@@ -750,7 +750,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a2.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="/img/a2.jpg">
                                     </div>
                                     <div class="media-body">
                                         The point of using Lorem Ipsum is that it has a more-or-less normal.
@@ -762,7 +762,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a3.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="/img/a3.jpg">
 
                                         <div class="m-t-xs">
                                             <i class="fa fa-star text-warning"></i>
@@ -780,7 +780,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a4.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="/img/a4.jpg">
                                     </div>
 
                                     <div class="media-body">
@@ -793,7 +793,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a8.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="/img/a8.jpg">
                                     </div>
                                     <div class="media-body">
 
@@ -806,7 +806,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a7.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="/img/a7.jpg">
                                     </div>
                                     <div class="media-body">
                                         Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
@@ -818,7 +818,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a3.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="/img/a3.jpg">
 
                                         <div class="m-t-xs">
                                             <i class="fa fa-star text-warning"></i>
@@ -836,7 +836,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a4.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="/img/a4.jpg">
                                     </div>
                                     <div class="media-body">
                                         Uncover many web sites still in their infancy. Various versions have.
@@ -1097,7 +1097,7 @@
     <script src="js/plugins/flot/jquery.flot.time.js"></script>
 
     <!-- Custom and plugin javascript -->
-    <script src="js/Tempus Fugit.js"></script>
+    <script src="js/inspinia.js"></script>
     <script src="js/plugins/pace/pace.min.js"></script>
 
     <!-- Sparkline -->

@@ -8,16 +8,16 @@
 
     <title>Tempus Fugit | E-commerce</title>
 
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/font-awesome/css/font-awesome.css" rel="stylesheet">
 
-    <link href="css/plugins/summernote/summernote.css" rel="stylesheet">
-    <link href="css/plugins/summernote/summernote-bs3.css" rel="stylesheet">
+    <link href="/css/plugins/summernote/summernote.css" rel="stylesheet">
+    <link href="/css/plugins/summernote/summernote-bs3.css" rel="stylesheet">
 
-    <link href="css/plugins/datapicker/datepicker3.css" rel="stylesheet">
+    <link href="/css/plugins/datapicker/datepicker3.css" rel="stylesheet">
 
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="/css/animate.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
 
 
 
@@ -32,11 +32,11 @@
             <ul class="nav metismenu" id="side-menu">
                 <li class="nav-header">
                     <div class="dropdown profile-element"> <span>
-                            <img alt="image" class="img-circle" src="img/profile_small.jpg" />
+                            <img alt="image" class="img-circle" src="/img/profile_small.jpg" />
                              </span>
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['username'] %} {{session["username"]}} {% else %}David Del Ser{% endif %}</strong>
-                             </span> <span class="text-muted text-xs block">Practice Director <b class="caret"></b></span> </span> </a>
+                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['associate'] %} {{ session['associate'] }} {% else %} Anonymous {% endif %}</strong>
+                             </span> <span class="text-muted text-xs block">{% if session['associate_title'] %} {{ session['associate_title'] }} {% else %} Unknown {% endif %} <b class="caret"></b></span> </span> </a>
                         <ul class="dropdown-menu animated fadeInRight m-t-xs">
                             <li><a href="profile.html">Profile</a></li>
                             <li><a href="contacts.html">Contacts</a></li>
@@ -277,7 +277,7 @@
                             <li>
                                 <div class="dropdown-messages-box">
                                     <a href="profile.html" class="pull-left">
-                                        <img alt="image" class="img-circle" src="img/a7.jpg">
+                                        <img alt="image" class="img-circle" src="/img/a7.jpg">
                                     </a>
                                     <div class="media-body">
                                         <small class="pull-right">46h ago</small>
@@ -290,7 +290,7 @@
                             <li>
                                 <div class="dropdown-messages-box">
                                     <a href="profile.html" class="pull-left">
-                                        <img alt="image" class="img-circle" src="img/a4.jpg">
+                                        <img alt="image" class="img-circle" src="/img/a4.jpg">
                                     </a>
                                     <div class="media-body ">
                                         <small class="pull-right text-navy">5h ago</small>
@@ -303,7 +303,7 @@
                             <li>
                                 <div class="dropdown-messages-box">
                                     <a href="profile.html" class="pull-left">
-                                        <img alt="image" class="img-circle" src="img/profile.jpg">
+                                        <img alt="image" class="img-circle" src="/img/profile.jpg">
                                     </a>
                                     <div class="media-body ">
                                         <small class="pull-right">23h ago</small>
@@ -747,7 +747,7 @@
                                                 <tbody>
                                                 <tr>
                                                     <td>
-                                                        <img src="img/gallery/2s.jpg">
+                                                        <img src="/img/gallery/2s.jpg">
                                                     </td>
                                                     <td>
                                                         <input type="text" class="form-control" disabled value="http://mydomain.com/images/image1.png">
@@ -761,7 +761,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td>
-                                                        <img src="img/gallery/1s.jpg">
+                                                        <img src="/img/gallery/1s.jpg">
                                                     </td>
                                                     <td>
                                                         <input type="text" class="form-control" disabled value="http://mydomain.com/images/image2.png">
@@ -775,7 +775,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td>
-                                                        <img src="img/gallery/3s.jpg">
+                                                        <img src="/img/gallery/3s.jpg">
                                                     </td>
                                                     <td>
                                                         <input type="text" class="form-control" disabled value="http://mydomain.com/images/image3.png">
@@ -789,7 +789,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td>
-                                                        <img src="img/gallery/4s.jpg">
+                                                        <img src="/img/gallery/4s.jpg">
                                                     </td>
                                                     <td>
                                                         <input type="text" class="form-control" disabled value="http://mydomain.com/images/image4.png">
@@ -803,7 +803,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td>
-                                                        <img src="img/gallery/5s.jpg">
+                                                        <img src="/img/gallery/5s.jpg">
                                                     </td>
                                                     <td>
                                                         <input type="text" class="form-control" disabled value="http://mydomain.com/images/image5.png">
@@ -817,7 +817,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td>
-                                                        <img src="img/gallery/6s.jpg">
+                                                        <img src="/img/gallery/6s.jpg">
                                                     </td>
                                                     <td>
                                                         <input type="text" class="form-control" disabled value="http://mydomain.com/images/image6.png">
@@ -831,7 +831,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td>
-                                                        <img src="img/gallery/7s.jpg">
+                                                        <img src="/img/gallery/7s.jpg">
                                                     </td>
                                                     <td>
                                                         <input type="text" class="form-control" disabled value="http://mydomain.com/images/image7.png">
@@ -876,7 +876,7 @@
 <script src="js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
 
 <!-- Custom and plugin javascript -->
-<script src="js/Tempus Fugit.js"></script>
+<script src="js/inspinia.js"></script>
 <script src="js/plugins/pace/pace.min.js"></script>
 
 <!-- SUMMERNOTE -->

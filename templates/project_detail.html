@@ -8,11 +8,11 @@
 
     <title>Tempus Fugit | Projects detail</title>
 
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename= 'css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename= 'font-awesome/css/font-awesome.css') }}" rel="stylesheet">
 
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename= 'css/animate.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename= 'css/style.css') }}" rel="stylesheet">
 
 </head>
 
@@ -25,17 +25,17 @@
             <ul class="nav metismenu" id="side-menu">
                 <li class="nav-header">
                     <div class="dropdown profile-element"> <span>
-                            <img alt="image" class="img-circle" src="img/profile_small.jpg" />
+                            <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/profile_small.jpg') }}" />
                              </span>
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['username'] %} {{session["username"]}} {% else %}David Del Ser{% endif %}</strong>
-                             </span> <span class="text-muted text-xs block">Practice Director <b class="caret"></b></span> </span> </a>
+                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['associate'] %} {{ session['associate'] }} {% else %} Anonymous {% endif %}</strong>
+                             </span> <span class="text-muted text-xs block">{% if session['associate_title'] %} {{ session['associate_title'] }} {% else %} Unknown {% endif %} <b class="caret"></b></span> </span> </a>
                         <ul class="dropdown-menu animated fadeInRight m-t-xs">
                             <li><a href="profile.html">Profile</a></li>
                             <li><a href="contacts.html">Contacts</a></li>
                             <li><a href="mailbox.html">Mailbox</a></li>
                             <li class="divider"></li>
-                            <li><a href="login.html">Logout</a></li>
+                            <li><a href="{{ url_for('login') }}">Logout</a></li>
                         </ul>
                     </div>
                     <div class="logo-element">
@@ -260,7 +260,7 @@
         </div>
             <ul class="nav navbar-top-links navbar-right">
                 <li>
-                    <span class="m-r-sm text-muted welcome-message">Welcome to Tempus Fugit+ Admin Theme.</span>
+                    <span class="m-r-sm text-muted welcome-message">Welcome to Tempus Fugit+ [{% for message in get_flashed_messages()%} {{message}} {% endfor %}].</span>
                 </li>
                 <li class="dropdown">
                     <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
@@ -270,7 +270,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/a7.jpg">
+                                    <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a7.jpg') }}">
                                 </a>
                                 <div class="media-body">
                                     <small class="pull-right">46h ago</small>
@@ -283,7 +283,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/a4.jpg">
+                                    <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a4.jpg') }}">
                                 </a>
                                 <div class="media-body ">
                                     <small class="pull-right text-navy">5h ago</small>
@@ -296,7 +296,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/profile.jpg">
+                                    <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/profile.jpg') }}">
                                 </a>
                                 <div class="media-body ">
                                     <small class="pull-right">23h ago</small>
@@ -414,11 +414,11 @@
                                         <dt>Created:</dt> <dd> 	10.07.2014 23:36:57 </dd>
                                         <dt>Participants:</dt>
                                         <dd class="project-people">
-                                        <a href=""><img alt="image" class="img-circle" src="img/a3.jpg"></a>
-                                        <a href=""><img alt="image" class="img-circle" src="img/a1.jpg"></a>
-                                        <a href=""><img alt="image" class="img-circle" src="img/a2.jpg"></a>
-                                        <a href=""><img alt="image" class="img-circle" src="img/a4.jpg"></a>
-                                        <a href=""><img alt="image" class="img-circle" src="img/a5.jpg"></a>
+                                        <a href=""><img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a3.jpg') }}"></a>
+                                        <a href=""><img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a1.jpg') }}"></a>
+                                        <a href=""><img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a2.jpg') }}"></a>
+                                        <a href=""><img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a4.jpg') }}"></a>
+                                        <a href=""><img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a5.jpg') }}"></a>
                                         </dd>
                                     </dl>
                                 </div>
@@ -455,7 +455,7 @@
                                     <div class="feed-activity-list">
                                         <div class="feed-element">
                                             <a href="#" class="pull-left">
-                                                <img alt="image" class="img-circle" src="img/a2.jpg">
+                                                <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a2.jpg') }}">
                                             </a>
                                             <div class="media-body ">
                                                 <small class="pull-right">2h ago</small>
@@ -469,7 +469,7 @@
                                         </div>
                                         <div class="feed-element">
                                             <a href="#" class="pull-left">
-                                                <img alt="image" class="img-circle" src="img/a3.jpg">
+                                                <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a3.jpg') }}">
                                             </a>
                                             <div class="media-body ">
                                                 <small class="pull-right">2h ago</small>
@@ -479,7 +479,7 @@
                                         </div>
                                         <div class="feed-element">
                                             <a href="#" class="pull-left">
-                                                <img alt="image" class="img-circle" src="img/a4.jpg">
+                                                <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a4.jpg') }}">
                                             </a>
                                             <div class="media-body ">
                                                 <small class="pull-right text-navy">5h ago</small>
@@ -493,7 +493,7 @@
                                         </div>
                                         <div class="feed-element">
                                             <a href="#" class="pull-left">
-                                                <img alt="image" class="img-circle" src="img/a5.jpg">
+                                                <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a5.jpg') }}">
                                             </a>
                                             <div class="media-body ">
                                                 <small class="pull-right">2h ago</small>
@@ -507,7 +507,7 @@
                                         </div>
                                         <div class="feed-element">
                                             <a href="#" class="pull-left">
-                                                <img alt="image" class="img-circle" src="img/profile.jpg">
+                                                <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/profile.jpg') }}">
                                             </a>
                                             <div class="media-body ">
                                                 <small class="pull-right">23h ago</small>
@@ -517,7 +517,7 @@
                                         </div>
                                         <div class="feed-element">
                                             <a href="#" class="pull-left">
-                                                <img alt="image" class="img-circle" src="img/a7.jpg">
+                                                <img alt="image" class="img-circle" src="{{ url_for('static', filename= 'img/a7.jpg') }}">
                                             </a>
                                             <div class="media-body ">
                                                 <small class="pull-right">46h ago</small>
@@ -740,7 +740,7 @@
             <div class="col-lg-3">
                 <div class="wrapper wrapper-content project-manager">
                     <h4>Project description</h4>
-                    <img src="img/zender_logo.png" class="img-responsive">
+                    <img src="{{ url_for('static', filename= 'img/zender_logo.png') }}" class="img-responsive">
                     <p class="small">
                         There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look
                         even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing
@@ -783,14 +783,14 @@
         </div>
 
     <!-- Mainly scripts -->
-    <script src="js/jquery-2.1.1.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/plugins/metisMenu/jquery.metisMenu.js"></script>
-    <script src="js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
+    <script src="{{ url_for('static', filename= 'js/jquery-2.1.1.js') }}"></script>
+    <script src="{{ url_for('static', filename= 'js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename= 'js/plugins/metisMenu/jquery.metisMenu.js') }}"></script>
+    <script src="{{ url_for('static', filename= 'js/plugins/slimscroll/jquery.slimscroll.min.js') }}"></script>
 
     <!-- Custom and plugin javascript -->
-    <script src="js/Tempus Fugit.js"></script>
-    <script src="js/plugins/pace/pace.min.js"></script>
+    <script src="{{ url_for('static', filename= 'js/inspinia.js') }}"></script>
+    <script src="{{ url_for('static', filename= 'js/plugins/pace/pace.min.js') }}"></script>
 
     <script>
         $(document).ready(function(){

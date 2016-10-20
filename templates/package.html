@@ -8,11 +8,11 @@
 
     <title>Tempus Fugit | Package</title>
 
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/font-awesome/css/font-awesome.css" rel="stylesheet">
 
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="/css/animate.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
 
     <!-- Local style only for demo purpose -->
     <style>
@@ -36,11 +36,11 @@
             <ul class="nav metismenu" id="side-menu">
                 <li class="nav-header">
                     <div class="dropdown profile-element"> <span>
-                            <img alt="image" class="img-circle" src="img/profile_small.jpg" />
+                            <img alt="image" class="img-circle" src="/img/profile_small.jpg" />
                              </span>
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['username'] %} {{session["username"]}} {% else %}David Del Ser{% endif %}</strong>
-                             </span> <span class="text-muted text-xs block">Practice Director <b class="caret"></b></span> </span> </a>
+                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['associate'] %} {{ session['associate'] }} {% else %} Anonymous {% endif %}</strong>
+                             </span> <span class="text-muted text-xs block">{% if session['associate_title'] %} {{ session['associate_title'] }} {% else %} Unknown {% endif %} <b class="caret"></b></span> </span> </a>
                         <ul class="dropdown-menu animated fadeInRight m-t-xs">
                             <li><a href="profile.html">Profile</a></li>
                             <li><a href="contacts.html">Contacts</a></li>
@@ -281,7 +281,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/a7.jpg">
+                                    <img alt="image" class="img-circle" src="/img/a7.jpg">
                                 </a>
                                 <div class="media-body">
                                     <small class="pull-right">46h ago</small>
@@ -294,7 +294,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/a4.jpg">
+                                    <img alt="image" class="img-circle" src="/img/a4.jpg">
                                 </a>
                                 <div class="media-body ">
                                     <small class="pull-right text-navy">5h ago</small>
@@ -307,7 +307,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/profile.jpg">
+                                    <img alt="image" class="img-circle" src="/img/profile.jpg">
                                 </a>
                                 <div class="media-body ">
                                     <small class="pull-right">23h ago</small>
@@ -391,7 +391,7 @@
                                 <div class="row">
                                     <div class="col-lg-4">
                                         <div class="text-center m-t-lg">
-                                            <img src="img/angular_logo.png" alt="AngularJS">
+                                            <img src="/img/angular_logo.png" alt="AngularJS">
                                         </div>
                                         <div class="text-center m-t-lg">
                                             <h1>Tempus Fugit <span class="text-navy"> <br>AngularJs</span></h1>
@@ -427,7 +427,7 @@
 
                                     <div class="col-lg-4">
                                         <div class="text-center m-t-lg">
-                                            <img src="img/mvc_logo.png" alt="MVC" style="width: 120px">
+                                            <img src="/img/mvc_logo.png" alt="MVC" style="width: 120px">
                                         </div>
                                         <div class="text-center m-t-lg">
                                             <h1>Tempus Fugit <span class="text-success"><br>ASP.NET MVC5</span></h1>
@@ -462,7 +462,7 @@
                                     </div>
                                     <div class="col-lg-4">
                                         <div class="text-center m-t-lg">
-                                            <img src="img/meteor_logo.png" alt="HTML" style="width: 200px;margin-top: 20px">
+                                            <img src="/img/meteor_logo.png" alt="HTML" style="width: 200px;margin-top: 20px">
                                         </div>
 
                                         <div class="text-center m-t-lg">
@@ -505,7 +505,7 @@
 
                                     <div class="col-lg-4">
                                         <div class="text-center m-t-lg">
-                                            <img src="img/html_logo.png" alt="HTML" style="width: 100px">
+                                            <img src="/img/html_logo.png" alt="HTML" style="width: 100px">
                                         </div>
                                         <div class="text-center m-t-lg">
                                             <h1>Tempus Fugit <span class="text-danger"><br>Static HTML/JS</span></h1>
@@ -539,7 +539,7 @@
                                     </div>
                                     <div class="col-lg-4">
                                         <div class="text-center m-t-lg">
-                                            <img src="img/rails_logo.png" alt="HTML" style="width: 80px">
+                                            <img src="/img/rails_logo.png" alt="HTML" style="width: 80px">
                                         </div>
                                         <div class="text-center m-t-lg">
                                             <h1>Tempus Fugit <span class="text-warning"><br> Ruby on Rails</span></h1>
@@ -597,7 +597,7 @@
     <script src="js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
 
     <!-- Custom and plugin javascript -->
-    <script src="js/Tempus Fugit.js"></script>
+    <script src="js/inspinia.js"></script>
     <script src="js/plugins/pace/pace.min.js"></script>
 
 

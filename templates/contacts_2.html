@@ -8,11 +8,11 @@
 
     <title>Tempus Fugit | Contacts 2</title>
 
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/font-awesome/css/font-awesome.css" rel="stylesheet">
 
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="/css/animate.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
 
 </head>
 
@@ -25,11 +25,11 @@
             <ul class="nav metismenu" id="side-menu">
                 <li class="nav-header">
                     <div class="dropdown profile-element"> <span>
-                            <img alt="image" class="img-circle" src="img/profile_small.jpg" />
+                            <img alt="image" class="img-circle" src="/img/profile_small.jpg" />
                              </span>
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['username'] %} {{session["username"]}} {% else %}David Del Ser{% endif %}</strong>
-                             </span> <span class="text-muted text-xs block">Practice Director <b class="caret"></b></span> </span> </a>
+                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{% if session['associate'] %} {{ session['associate'] }} {% else %} Anonymous {% endif %}</strong>
+                             </span> <span class="text-muted text-xs block">{% if session['associate_title'] %} {{ session['associate_title'] }} {% else %} Unknown {% endif %} <b class="caret"></b></span> </span> </a>
                         <ul class="dropdown-menu animated fadeInRight m-t-xs">
                             <li><a href="profile.html">Profile</a></li>
                             <li><a href="contacts.html">Contacts</a></li>
@@ -270,7 +270,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/a7.jpg">
+                                    <img alt="image" class="img-circle" src="/img/a7.jpg">
                                 </a>
                                 <div class="media-body">
                                     <small class="pull-right">46h ago</small>
@@ -283,7 +283,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/a4.jpg">
+                                    <img alt="image" class="img-circle" src="/img/a4.jpg">
                                 </a>
                                 <div class="media-body ">
                                     <small class="pull-right text-navy">5h ago</small>
@@ -296,7 +296,7 @@
                         <li>
                             <div class="dropdown-messages-box">
                                 <a href="profile.html" class="pull-left">
-                                    <img alt="image" class="img-circle" src="img/profile.jpg">
+                                    <img alt="image" class="img-circle" src="/img/profile.jpg">
                                 </a>
                                 <div class="media-body ">
                                     <small class="pull-right">23h ago</small>
@@ -391,7 +391,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a2.jpg">
+                        <img alt="image" class="img-circle" src="/img/a2.jpg">
 
 
                         <h3 class="m-b-xs"><strong>John Smith</strong></h3>
@@ -420,7 +420,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a1.jpg">
+                        <img alt="image" class="img-circle" src="/img/a1.jpg">
 
 
                         <h3 class="m-b-xs"><strong>Alex Johnatan</strong></h3>
@@ -449,7 +449,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a3.jpg">
+                        <img alt="image" class="img-circle" src="/img/a3.jpg">
 
 
                         <h3 class="m-b-xs"><strong>Monica Smith</strong></h3>
@@ -478,7 +478,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a4.jpg">
+                        <img alt="image" class="img-circle" src="/img/a4.jpg">
 
 
                         <h3 class="m-b-xs"><strong>Michael Zimber</strong></h3>
@@ -507,7 +507,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a5.jpg">
+                        <img alt="image" class="img-circle" src="/img/a5.jpg">
 
 
                         <h3 class="m-b-xs"><strong>Sandra Smith</strong></h3>
@@ -537,7 +537,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a6.jpg">
+                        <img alt="image" class="img-circle" src="/img/a6.jpg">
 
 
                         <h3 class="m-b-xs"><strong>Janet Carton</strong></h3>
@@ -567,7 +567,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a1.jpg">
+                        <img alt="image" class="img-circle" src="/img/a1.jpg">
 
 
                         <h3 class="m-b-xs"><strong>Alex Johnatan</strong></h3>
@@ -597,7 +597,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a7.jpg">
+                        <img alt="image" class="img-circle" src="/img/a7.jpg">
 
 
                         <h3 class="m-b-xs"><strong>John Smith</strong></h3>
@@ -626,7 +626,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a2.jpg">
+                        <img alt="image" class="img-circle" src="/img/a2.jpg">
 
 
                         <h3 class="m-b-xs"><strong>John Smith</strong></h3>
@@ -655,7 +655,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a1.jpg">
+                        <img alt="image" class="img-circle" src="/img/a1.jpg">
 
 
                         <h3 class="m-b-xs"><strong>Alex Johnatan</strong></h3>
@@ -684,7 +684,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a3.jpg">
+                        <img alt="image" class="img-circle" src="/img/a3.jpg">
 
 
                         <h3 class="m-b-xs"><strong>Monica Smith</strong></h3>
@@ -713,7 +713,7 @@
 
                     <a href="profile.html">
 
-                        <img alt="image" class="img-circle" src="img/a4.jpg">
+                        <img alt="image" class="img-circle" src="/img/a4.jpg">
 
 
                         <h3 class="m-b-xs"><strong>Michael Zimber</strong></h3>
@@ -760,7 +760,7 @@
     <script src="js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
 
     <!-- Custom and plugin javascript -->
-    <script src="js/Tempus Fugit.js"></script>
+    <script src="js/inspinia.js"></script>
     <script src="js/plugins/pace/pace.min.js"></script>
 
 
