@@ -77,26 +77,28 @@ MAXAMOUNT = 1048576
 _MAXLINE = 65536
 
 #########################################################################################################################################
-# format date value into a sensible value
+#format date value into a sensible value
 def reformatDate(dictval):
-    # print 'dictval: {}'.format(dictval)
-    if dictval == 'None' or dictval == 'Null':
-        myDate = 'None'
-    else:
-        simpledate = {}
-        # print 'dictval: {}'.format(dictval)
-        for attr in [u'year', u'month', u'day', u'hour', u'minute', u'second']:
-            # print 'attr {}'.format(attr)
-            try:
-                simpledate[attr] = dictval[attr]
-            except KeyError,err:
-                # skip over missing values
-                # print 'error:: ',err
-                simpledate[attr] = ''
-            # print 'simpledate {} {} {}'.format(attr, (simpledate[attr]), (dictval[attr]))
-
-        myDate = "{}.{}.{} {}:{}:{}".format(simpledate['day'], simpledate['month'], simpledate['year'], simpledate['hour'], simpledate['minute'], simpledate['second'])
-        return myDate
+	if dictval == 'None' or dictval == 'Null':
+		myDate = 'None'
+	else:
+		simpledate = {}
+		for attr in [u'year', u'month', u'day', u'hour', u'minute', u'second']:
+			print 'attr {}'.format(attr)
+			try:
+				simpledate[attr] = dictval[attr]
+				# sanitize the value if None
+			except KeyError,err:
+				print 'error:: ',err
+				# skip over missing values
+				simpledate[attr] = ''
+		# values that are missing time, minute and second values
+		if simpledate['hour'] == None or simpledate['minute'] == None or simpledate['second'] == None:
+			# if any elements of time is missing then exclude time from date
+			myDate = "{}/{}/{}".format(simpledate['day'], simpledate['month'], simpledate['year']);print myDate
+		else:
+			myDate = "{}.{}.{} {}:{}:{}".format(simpledate['day'], simpledate['month'], simpledate['year'], simpledate['hour'], simpledate['minute'], simpledate['second']); print myDate
+		return myDate
 
 
 #########################################################################################################################################
@@ -349,8 +351,8 @@ def projects():
 
         # cycle through the project_tasks and populate the dictionary with active projects only
         if pid in projects_dict:
-            calc_start_date = reformatDate(project_tasks['calculated_starts']) if project_tasks['calculated_starts'] != 'None' else 'None'
-            calc_end_date = reformatDate(project_tasks['calculated_finishes']) if project_tasks['calculated_finishes'] != 'None' else 'None'
+            calc_start_date = reformatDate(project_tasks['calculated_starts']['Date']) if project_tasks['calculated_starts'] != 'None' else 'None'
+            calc_end_date = reformatDate(project_tasks['calculated_finishes']['Date']) if project_tasks['calculated_finishes'] != 'None' else 'None'
             try:
                 projects_dict[pid]['tasks'][tid] = {'name': project_tasks['name'],
                                                     'calcstartdate': calc_start_date,
