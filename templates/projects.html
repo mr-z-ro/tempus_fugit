@@ -35,7 +35,7 @@
                             <li><a href="contacts.html">Contacts</a></li>
                             <li><a href="mailbox.html">Mailbox</a></li>
                             <li class="divider"></li>
-                            <li><a href="login.html">Logout</a></li>
+                            <a href="logout">Logout
                         </ul>
                     </div>
                     <div class="logo-element">
@@ -410,11 +410,6 @@
                                     {% for key in projects_dict %}
 
                                     <tr>
-                                        <td class="project-status">
-                                            <span class="label label-primary">{% if projects_dict[key]['active']== '1' %}Active{% else %}Unactive{% endif %}</span>
-                                        </td>
-
-
 
                                         <td class="project-title">
                                             <a href="{{ url_for('project_detail', project_id = key) }}">{{ projects_dict[key]['name'] }}</a>
@@ -423,6 +418,10 @@
                                             <small>Project last updated on {{  projects_dict[key]['updated'] }}</small>
 
 
+                                        </td>
+
+                                        <td class="project-status">
+                                            <span class="label label-primary">{% if projects_dict[key]['active']== '1' %}Active project{% else %}Unactive{% endif %}</span>
                                         </td>
 
                                         <td class="project-actions">
