@@ -35,6 +35,7 @@ from os import urandom
 from datetime import datetime
 
 from associates_details import getEmployeeDetails
+import sys
 
 # [END imports]
 
@@ -84,7 +85,7 @@ def reformatDate(dictval):
 	else:
 		simpledate = {}
 		for attr in [u'year', u'month', u'day', u'hour', u'minute', u'second']:
-			print 'attr {}'.format(attr)
+			#print 'attr {}'.format(attr)
 			try:
 				simpledate[attr] = dictval[attr]
 				# sanitize the value if None
@@ -95,11 +96,55 @@ def reformatDate(dictval):
 		# values that are missing time, minute and second values
 		if simpledate['hour'] == None or simpledate['minute'] == None or simpledate['second'] == None:
 			# if any elements of time is missing then exclude time from date
-			myDate = "{}/{}/{}".format(simpledate['day'], simpledate['month'], simpledate['year']);print myDate
+			myDate = "{}/{}/{}".format(simpledate['day'], simpledate['month'], simpledate['year'])
 		else:
-			myDate = "{}.{}.{} {}:{}:{}".format(simpledate['day'], simpledate['month'], simpledate['year'], simpledate['hour'], simpledate['minute'], simpledate['second']); print myDate
+			myDate = "{}/{}/{} {}:{}:{}".format(simpledate['day'], simpledate['month'], simpledate['year'], simpledate['hour'], simpledate['minute'], simpledate['second'])
 		return myDate
 
+def date_percent_difference(start_date, end_date):
+    """
+    :param start_date:
+    :param end_date:
+    :return: dictionary of the form {'percent_days' : percent_days, 'days_consumed' : res_list['days_consumed'],
+    'days_remaining' : res_list['days_remaining'], 'days_diff' : res_list['days_diff']}
+    """
+    res_list ={}
+
+    curr_date = datetime.today()
+
+    if start_date != 'None':
+        day, mnth, yr = start_date[:10].split('/')
+        starting_date = datetime(year = int(yr), month = int(mnth), day = int(day))
+
+    if end_date != 'None':
+        day, mnth, yr = end_date[:10].split('/')
+        ending_date = datetime(year = int(yr), month = int(mnth), day = int(day))
+
+    # verify that arguments passed have non-Nones
+    if start_date == 'None' and end_date == 'None':
+        res_list['days_consumed'] = 'Unknown'
+        res_list['days_diff'] = 'Unknown'
+        res_list['days_remaining'] = 'Unknown'
+    elif start_date == 'None' and end_date != 'None':
+        res_list['days_consumed'] = 'Unknown'
+        res_list['days_diff'] = 'Unknown'
+        res_list['days_remaining'] = (ending_date - curr_date).days
+    elif start_date != 'None' and end_date == 'None':
+        res_list['days_consumed'] = (curr_date - starting_date).days
+        res_list['days_diff'] = 'Unknown'
+        res_list['days_remaining'] = 'Unknown'
+    else:
+        # compute total days from start to end date
+        res_list['days_diff'] = (ending_date - starting_date).days
+        res_list['days_consumed'] = (curr_date - starting_date).days
+        res_list['days_remaining'] = (ending_date - curr_date).days
+
+    if res_list['days_remaining'] > 0:
+        percent_days = '{:.2}'.format(res_list['days_consumed'] * 100/ float(res_list['days_diff']))
+    else:
+        percent_days = '100.00'
+
+    return {'percent_days' : percent_days, 'days_consumed' : res_list['days_consumed'], 'days_remaining' : res_list['days_remaining'], 'days_diff' : res_list['days_diff']}
 
 #########################################################################################################################################
 #       models.py
@@ -326,33 +371,89 @@ def projects():
                                      company=my_company,
                                      userid=session['associate_id'])
 
+    print 'size [{} bytes]Projects json obj: {} '.format( sys.getsizeof(projects_json_obj), projects_json_obj)
     # Retrieve tasks from API
     tasks_json_obj = get_tasks(key=netsuite_key,
                                un=session['username'],
                                pw=session['password'],
                                company=my_company)
 
+    project_dates = {}
     # Prepare a project list to pass to projects page
     for project in projects_json_obj['response']['Read']['Project']:
 
         # populate the dictionary
-        pid = int(project['id'])
-        projects_dict[pid] = {'name': project['name'],
-                              'active': project['active'],
-                              'updated': reformatDate(project['updated']['Date']),
-                              'tasks': {}}
+        pid = project['id']
+        projects_dict[pid] = {'name' : project['name'],
+                              'active' : project['active'],
+                              'budget' : '{:,.2f}'.format(float(project['budget'])),
+                              'budget_time' : project['budget_time'],
+                              'customer_name' : project['customer_name'],
+                              'user_id' : project['userid'],
+                              'currency' : project['currency'],
+                              'start_date' : project['start_date'],
+                              'finish_date' : project['finish_date'],
+                              'project_stageid' : project['project_stageid'],
+                              'pm_approver_1' : project['pm_approver_1'],
+                              'pm_approver_2': project['pm_approver_2'],
+                              'pm_approver_3': project['pm_approver_3'],
+                              'updated' : reformatDate(project['updated']['Date']),
+                              'picklist_label' : project['picklist_label'],
+                              'tasks' : {}}
+        project_dates[pid] = {'start_dates' : set(), 'end_dates' : set()}
 
     # Prepare a task list to pass to projects page
     for project_tasks in tasks_json_obj['response']['Read']['Projecttask']:
 
         # Retrieve project and task ids
-        pid = int(project_tasks['projectid'])
-        tid = int(project_tasks['id'])
+        pid = project_tasks['projectid']
+        tid = project_tasks['id']
 
         # cycle through the project_tasks and populate the dictionary with active projects only
         if pid in projects_dict:
-            calc_start_date = reformatDate(project_tasks['calculated_starts']['Date']) if project_tasks['calculated_starts'] != 'None' else 'None'
-            calc_end_date = reformatDate(project_tasks['calculated_finishes']['Date']) if project_tasks['calculated_finishes'] != 'None' else 'None'
+            calc_start_date = reformatDate(project_tasks['calculated_starts']['Date']) if project_tasks['calculated_starts']['Date'] != 'None' else 'None'
+            calc_end_date = reformatDate(project_tasks['calculated_finishes']['Date']) if project_tasks['calculated_finishes']['Date'] != 'None' else 'None'
+
+            if calc_start_date != 'None':
+                my_start_date = calc_start_date
+                if len(calc_start_date) > 10:
+                    my_start_date = calc_start_date.split(' ')[0]
+                my_day, my_mnth, my_yr = my_start_date.split('/')
+                start_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+            else:
+                my_start_date = 'None'
+                start_date_str = 'None'
+
+            if calc_end_date != 'None':
+                my_end_date = calc_end_date
+                if len(calc_end_date) > 10:
+                    my_end_date = calc_end_date.split(' ')[0]
+                my_day, my_mnth, my_yr = my_end_date.split('/')
+                end_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+            else:
+                my_end_date = 'None'
+                end_date_str = 'None'
+            task_days = date_percent_difference(start_date_str, end_date_str)
+
+            #populate the project dates set
+            if calc_start_date != 'None':
+                day, mnth, yr = calc_start_date[:10].split('/')
+                start_date_num = int('{}{}{}'.format(yr, mnth, day))
+                try:
+                    project_dates[pid]['start_dates'].add(start_date_num)
+
+                except KeyError, err:
+                    project_dates[pid] = {'start_dates' : set(start_date_num)}
+
+            if calc_end_date != 'None':
+                day, mnth, yr = calc_end_date[:10].split('/')
+                end_date_num =  int('{}{}{}'.format(yr, mnth, day))
+                try:
+                    project_dates[pid]['end_dates'].add(end_date_num)
+
+                except KeyError, err:
+                    project_dates[pid] = {'end_dates' : set(end_date_num)}
+
             try:
                 projects_dict[pid]['tasks'][tid] = {'name': project_tasks['name'],
                                                     'calcstartdate': calc_start_date,
@@ -361,19 +462,27 @@ def projects():
                                                     'percent_complete': project_tasks['percent_complete'],
                                                     'estimated_hours': project_tasks['estimated_hours'],
                                                     'planned_hours': project_tasks['planned_hours'],
-                                                    'updated': projects_dict[pid]['updated']}
+                                                    'updated': projects_dict[pid]['updated'],
+                                                    'task_budget_cost' : project_tasks['task_budget_cost'],
+                                                    'customer_name' : project_tasks['customer_name'],
+                                                    'percent_days' : task_days['percent_days'],
+                                                    'days_consumed' : task_days['days_consumed'],
+                                                    'days_remaining' : task_days['days_remaining'],
+                                                    'days_diff' : task_days['days_diff']}
             except KeyError, err:
                 print 'Errors: ', err
 
-    session['projects_dict'] = str(projects_dict)
+    #session['projects_dict'] = str(projects_dict)
 
     # create an ordered dict
     ordered_project_tasks = OrderedDict()
     for key in sorted(projects_dict.keys()):
+        key = unicode(key)
 
         # create an ordered dict for the task_keys
         ordered_tasks = OrderedDict()
         for task_key in sorted({int(k): v for (k, v) in projects_dict[key]['tasks'].items()}):
+            task_key = unicode(task_key)
             ordered_tasks[task_key] = projects_dict[key]['tasks'][task_key]
 
         # populate the ordered_project_tasks with the ordered tasks list
@@ -385,13 +494,46 @@ def projects():
                 ordered_project_tasks[key] = {'tasks': ordered_tasks}
             except KeyError, err:
                 print err, ' basically a cooked goose!!'
-        
-        # print "ordered_project_tasks[key]['tasks'] = {}".format(ordered_project_tasks[key]['tasks'])
+
+        my_start_date = str(min(project_dates[key]['start_dates']))
+        start_date_str = '{}/{}/{}'.format(my_start_date[6:], my_start_date[4:6], my_start_date[:4])
+
+        my_end_date = str(max(project_dates[key]['end_dates']))
+        end_date_str =  '{}/{}/{}'.format(my_end_date[6:], my_end_date[4:6], my_end_date[:4])
         # add the other elements
         # print 'ordered_project_tasks[key] = {}'.format(ordered_project_tasks[key])
         ordered_project_tasks[key]['updated'] = projects_dict[key]['updated']
-        ordered_project_tasks[key].update({'active': projects_dict[key]['active']})
-        ordered_project_tasks[key].update({'name': projects_dict[key]['name']})
+        ordered_project_tasks[key]['active'] = projects_dict[key]['active']
+        ordered_project_tasks[key]['name'] = projects_dict[key]['name']
+        ordered_project_tasks[key]['budget'] = projects_dict[key]['budget']
+        ordered_project_tasks[key]['budget_time'] = projects_dict[key]['budget_time']
+        ordered_project_tasks[key]['test_start_date'] = start_date_str
+        ordered_project_tasks[key]['test_end_date'] = end_date_str
+        days_consumption = date_percent_difference(start_date_str, end_date_str) # returns dict
+
+        ordered_project_tasks[key]['percent_complete_days'] = days_consumption['percent_days']
+        ordered_project_tasks[key]['days_consumed'] = days_consumption['days_consumed']
+        ordered_project_tasks[key]['days_remaining'] = days_consumption['days_remaining']
+        ordered_project_tasks[key]['days_diff'] = days_consumption['days_diff']
+        ordered_project_tasks[key]['percent_complete_days'] = days_consumption['percent_days']
+
+        """
+        'name' : project['name'],
+                              'active' : project['active'],
+                              'budget' : project['budget'],
+                              'budget_time' : project['budget_time'],
+                              'customer_name' : project['customer_name'],
+                              'user_id' : project['userid'],
+                              'currency' : project['currency'],
+                              'start_date' : project['start_date'],
+                              'finish_date' : project['finish_date'],
+                              'project_stageid' : project['project_stageid'],
+                              'pm_approver_1' : project['pm_approver_1'],
+                              'pm_approver_2': project['pm_approver_2'],
+                              'pm_approver_3': project['pm_approver_3'],
+                              'updated' : reformatDate(project['updated']['Date']),
+                              'picklist_label' : project['picklist_label'],
+        """
 
     # adding the orderedprojecttasks into the global namespace, available to all templates
     app.add_template_global(ordered_project_tasks, 'projects_dict')
@@ -406,7 +548,7 @@ def projects():
 
 
 # [START project_detail]
-@app.route('/projects/<project_id>', methods=['GET'])
+@app.route('/projects/<project_id>', methods=['GET','POST'])
 @login_required
 def project_detail(project_id):
     if project_id and ("|" in project_id):
@@ -414,8 +556,8 @@ def project_detail(project_id):
         # separate the project and task id for template processing
         project_id = project_id.strip()  # remove any trailing spaces
         pid, tid = project_id.split('|')
-        pid = int(pid)
-        tid = int(tid)
+        pid = unicode(pid)
+        tid = unicode(tid)
 
         # refresh task list?
         # json_obj = get_tasks(netsuite_key,
@@ -425,14 +567,13 @@ def project_detail(project_id):
         #                     projectid=pid)
 
         return render_template('richtasks.html', project_id=pid, taskid=tid)
+    else:
+        project_id = project_id.strip()  # remove any trailing spaces
+        pid = unicode(project_id)
+        return render_template('richproject.html', project_id =project_id)
 
     return redirect(url_for('projects'))
 # [END project_detail]
-
-
-@app.context_processor
-def inject_projecttasks():
-    return projects_dict
 
 #############################################
 #

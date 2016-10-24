@@ -262,7 +262,7 @@
                 </li>
                 <li class="dropdown">
                     <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
-                        <i class="fa fa-envelope"></i>  <span class="label label-warning">16</span>
+                        <i class="fa fa-envelope"></i> {{ projects_dict[project_id]['picklist_label'] }} <span class="label label-warning">16</span>
                     </a>
                     <ul class="dropdown-menu dropdown-messages">
                         <li>
@@ -374,7 +374,7 @@
                             <a href="{{ url_for('projects') }}">Home</a>
                         </li>
                         <li class="active">
-                            <strong>{{ projects_dict[project_id]['name'] }}</strong>
+                            <strong>{{projects_dict[project_id]['name'] }}</strong>
                         </li>
                     </ol>
                 </div>
@@ -385,10 +385,10 @@
                 <div class="ibox float-e-margins">
                     <div class="ibox-content text-center p-md">
 
-                        <h2><span class="text-navy"> {{ projects_dict[project_id]['tasks'][taskid]['name'] }} </span></h2>
+                        <h2><span class="text-navy"> {{ projects_dict[project_id]['name'] }} </span></h2>
 
                         <p>
-                            Page under construction, values represented here are provisional {{ projects_dict[project_id]['tasks'][taskid]['startdate']  }}.
+                            Page under construction, values represented here are provisional.
                         </p>
 
 
@@ -419,30 +419,39 @@
                         <div class="ibox-content">
                             <div>
                                 <div>
-                                    <span>Start date</span>
-                                    <span class="text-center" style="padding: 10px 10px; margin: 10px 10px 0 0;">  {% if projects_dict[project_id]['tasks'][taskid]['percent_days'] != 'None' %}
-                                        &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;({{ '%100.2f' | format(projects_dict[project_id]['tasks'][taskid]['percent_days']|float) }}'% of time slot utilized')
+                                    <span>Start date </span>
+                                    <span class="text-center" style="padding: 10px 10px; margin: 10px 10px 0 0;">  {% if projects_dict[project_id]['percent_complete_days'] != 'None' %}
+                                        &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;({{ '%100.2f' | format(projects_dict[project_id]['percent_complete_days']|float) }}'% of time slot utilized')
                                             {% endif %}
                                     </span>
-
-                                    <small class="pull-right">End date</small>
+                                    <span class="pull-right"> End date </span>
+                                    <!-- <small class="pull-right">End date  </small> -->
                                 </div>
                                 <div class="progress progress-small">
-                                    <div style="width: {{projects_dict[project_id]['tasks'][taskid]['percent_days']}}%;" class="progress-bar"></div>
+                                    {% if projects_dict[project_id]['percent_complete_days'] != 'None' %}
+                                    <div style="width: {{ projects_dict[project_id]['percent_complete_days'] }}%;" class="progress-bar"></div>
+                                    {% endif %}
                                 </div>
 
                                 <div>
-                                    <span>{{ projects_dict[project_id]['tasks'][taskid]['calcstartdate'] }}</span>
-                                    <small class="pull-right">{{ projects_dict[project_id]['tasks'][taskid]['calcenddate'] }}</small>
+                                    <span>{% if projects_dict[project_id]['test_start_date'] %} {{ projects_dict[project_id]['test_start_date'] }} {% endif %}</span>
+                                    <small class="pull-right">{% if projects_dict[project_id]['test_end_date'] %} {{ projects_dict[project_id]['test_end_date'] }} {% endif %}</small>
                                 </div>
-                                <div class="progress progress-small">
-                                    <div style="width: {% if projects_dict[project_id]['tasks'][taskid]['percent_days'] != 'None' %}
-                                            {{projects_dict[project_id]['tasks'][taskid]['percent_days']}}
-                                        {% else %}
-                                            0.00
-                                        {% endif %}%;" class="progress-bar">
+                                <div>
+                                    <span>Days consumed: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[project_id]['days_consumed'] %} {{ projects_dict[project_id]['days_consumed'] }} {% endif %}</span>
+                                </div>
 
-                                    </div>
+                                <div>
+                                    <span>Remaining Days: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[project_id]['days_remaining'] %} {{ projects_dict[project_id]['days_remaining'] }} {% endif %}</span>
+                                </div>
+
+                                <div>
+                                    <span>Total Days: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[project_id]['days_diff'] %} {{ projects_dict[project_id]['days_diff'] }} {% endif %}</span>
+
+                                </div>
+                                <!--
+                                <div class="progress progress-small">
+                                    <div style="width: 2%;" class="progress-bar"></div>
                                 </div>
 
                                 <div>
@@ -460,6 +469,7 @@
                                 <div class="progress progress-small">
                                     <div style="width: 20%;" class="progress-bar progress-bar-danger"></div>
                                 </div>
+                                -->
                             </div>
                         </div>
                     </div>
