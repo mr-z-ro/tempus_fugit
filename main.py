@@ -23,6 +23,7 @@ from google.appengine.ext import db
 from flask_wtf import Form
 from wtforms import BooleanField, StringField, PasswordField,SubmitField, validators
 from wrapper import *
+from xmlwriter import *
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_login import LoginManager, login_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -35,6 +36,7 @@ from os import urandom
 from datetime import datetime
 
 from associates_details import getEmployeeDetails
+import sys
 
 # [END imports]
 
@@ -66,6 +68,8 @@ resp.headers.add('Cache-Control', 'no-store, no-cache, must-revalidate, post-che
 ## create a dictionary to hold projects and tasks
 projects_dict = {}
 
+users_dict = {}
+
 
 #########################################################################################################################################
 # the runtime process gave a bad HTTP response: got more than 65536 bytes when reading header line
@@ -77,28 +81,1108 @@ MAXAMOUNT = 1048576
 _MAXLINE = 65536
 
 #########################################################################################################################################
-# format date value into a sensible value
+#format date value into a sensible value
 def reformatDate(dictval):
-    # print 'dictval: {}'.format(dictval)
-    if dictval == 'None' or dictval == 'Null':
-        myDate = 'None'
+	if dictval == 'None' or dictval == 'Null':
+		myDate = 'None'
+	else:
+		simpledate = {}
+		for attr in [u'year', u'month', u'day', u'hour', u'minute', u'second']:
+			#print 'attr {}'.format(attr)
+			try:
+				simpledate[attr] = dictval[attr]
+				# sanitize the value if None
+			except KeyError,err:
+				print 'error:: ',err
+				# skip over missing values
+				simpledate[attr] = ''
+		# values that are missing time, minute and second values
+		if simpledate['hour'] == None or simpledate['minute'] == None or simpledate['second'] == None:
+			# if any elements of time is missing then exclude time from date
+			myDate = "{}/{}/{}".format(simpledate['day'], simpledate['month'], simpledate['year'])
+		else:
+			myDate = "{}/{}/{} {}:{}:{}".format(simpledate['day'], simpledate['month'], simpledate['year'], simpledate['hour'], simpledate['minute'], simpledate['second'])
+		return myDate
+
+def date_percent_difference(start_date, end_date):
+    """
+    :param start_date:
+    :param end_date:
+    :return: dictionary of the form {'percent_days' : percent_days, 'days_consumed' : res_list['days_consumed'],
+    'days_remaining' : res_list['days_remaining'], 'days_diff' : res_list['days_diff']}
+    """
+    res_list ={}
+
+    curr_date = datetime.today()
+
+    if start_date != 'None':
+        day, mnth, yr = start_date[:10].split('/')
+        starting_date = datetime(year = int(yr), month = int(mnth), day = int(day))
+
+    if end_date != 'None':
+        day, mnth, yr = end_date[:10].split('/')
+        ending_date = datetime(year = int(yr), month = int(mnth), day = int(day))
+
+    # verify that arguments passed have non-Nones
+    if start_date == 'None' and end_date == 'None':
+        res_list['days_consumed'] = 0
+        res_list['days_diff'] = 0
+        res_list['days_remaining'] = 0
+    elif start_date == 'None' and end_date != 'None':
+        res_list['days_consumed'] = 0
+        res_list['days_diff'] = 0
+        res_list['days_remaining'] = (ending_date - curr_date).days
+    elif start_date != 'None' and end_date == 'None':
+        res_list['days_consumed'] = (curr_date - starting_date).days
+        res_list['days_diff'] = 0
+        res_list['days_remaining'] = 0
     else:
-        simpledate = {}
-        # print 'dictval: {}'.format(dictval)
-        for attr in [u'year', u'month', u'day', u'hour', u'minute', u'second']:
-            # print 'attr {}'.format(attr)
+        # compute total days from start to end date
+        res_list['days_diff'] = (ending_date - starting_date).days
+        res_list['days_consumed'] = (curr_date - starting_date).days
+        res_list['days_remaining'] = (ending_date - curr_date).days
+
+    if res_list['days_remaining'] > 0:
+        percent_days = res_list['days_consumed'] * 100/ float(res_list['days_diff'])
+    else:
+        percent_days = 100.00
+
+    return {'percent_days' : percent_days, 'days_consumed' : res_list['days_consumed'], 'days_remaining' : res_list['days_remaining'], 'days_diff' : res_list['days_diff']}
+
+def prepare_dict():
+    """ module to repurpose the json objects
+    :param projects_json: projects json object
+    :param tasks_json: tasks json object
+    :param users_json: users json object
+    :param timesheets_json: timesheet json object
+    :param tickets_json: tickets json object
+    :return: dictionaries
+    """
+
+    # make an API call to projects
+    all_projects_dict = {}
+    projects_json = raw_call_wrapper(key=netsuite_key,
+                                             username=session['username'],
+                                             passwd=session['password'], xml_str='''
+                                                                                    <Read type= "Project" method = "equal to" limit = "500">
+                                                                                        <Project>
+                                                                                            <active>1</active>
+                                                                                        </Project>
+                                                                                    <_Return>
+                                                                                        <id/>
+                                                                                        <name/>
+                                                                                        <active/>
+                                                                                        <budget/>
+                                                                                        <budget_time/>
+                                                                                        <userid/>
+                                                                                        <currency/>
+                                                                                        <start_date/>
+                                                                                        <finish_date/>
+                                                                                        <project_stageid/>
+                                                                                        <updated/>
+                                                                                    </_Return>
+                                                                                    </Read>
+                                                                               ''')
+    users_dict = {}
+    users_json = raw_call_wrapper(key=netsuite_key,
+                                          username=session['username'],
+                                          passwd=session['password'], xml_str='''
+                                                                                    <Read type= "User" method = "equal to" limit = "500">
+                                                                                    <_Return>
+                                                                                        <name/>
+                                                                                        <active/>
+                                                                                        <timezone/>
+                                                                                        <currency/>
+                                                                                        <id/>
+                                                                                        <rate/>
+                                                                                        <line_managerid/>
+                                                                                        <nickname/>
+                                                                                        <departmentid/>
+                                                                                    </_Return>
+                                                                                    </Read>
+                                                                               ''')
+    ''' active user filter removed
+                                                                                        <User>
+                                                                                        <active>1</active>
+                                                                                    </User>
+    '''
+
+    # project tasks
+    """
+    all_projecttasks_json_obj = raw_call_wrapper(key=netsuite_key,
+                                           username=session['username'],
+                                           passwd=session['password'], xml_str='''
+                                                                                <Read type= "Projecttask" method = "all" limit = "500">
+                                                                                    <Projecttask>
+                                                                                        <closed>0</closed>
+                                                                                    </Projecttask>
+                                                                                <_Return>
+                                                                                    <id/>
+                                                                                    <parent_id/>
+                                                                                    <ancestry/>
+                                                                                    <cost_center_id/>
+                                                                                    <projecttask_type_id/>
+                                                                                    <name/>
+                                                                                    <projectid/>
+                                                                                    <planned_hours/>
+                                                                                    <estimated_hours/>
+                                                                                    <completed_days/>
+                                                                                    <priority/>
+                                                                                    <percent_complete/>
+                                                                                    <task_budget_cost/>
+                                                                                    <customer_name/>
+                                                                                    <calculated_finishes/>
+                                                                                    <calculated_starts/>
+                                                                                    <start_date/>
+                                                                                    <currency/>
+                                                                                    <assign_user_names/>
+                                                                                    <project_name/>
+                                                                                    <closed/>
+                                                                                </_Return>
+                                                                                </Read>
+                                                                           ''')
+    """
+
+    # tasks table contains items of timesheets
+    tasks_json = raw_call_wrapper(key=netsuite_key,
+                                          username=session['username'],
+                                          passwd=session['password'], xml_str='''
+                                                                                    <Read type= "Task" method = "all" limit = "500">
+                                                                                    <_Return>
+                                                                                        <projectid/>
+                                                                                        <projecttaskid/>
+                                                                                        <decimal_hours/>
+                                                                                        <userid/>
+                                                                                        <date/>
+                                                                                        <updated/>
+                                                                                        <hours/>
+                                                                                        <minutes/>
+                                                                                        <timesheetid/>
+                                                                                        <cost_centerid/>
+                                                                                    </_Return>
+                                                                                    </Read>
+                                                                               ''')
+
+    # pull timesheet data from Netsuite
+    """
+    all_timesheets_json_obj = raw_call_wrapper(key=netsuite_key,
+                                          username=session['username'],
+                                          passwd=session['password'], xml_str='''
+                                                                                    <Read type= "Timesheet" method = "all" limit = "500">
+                                                                                    <_Return>
+                                                                                        <id/>
+                                                                                        <updated/>
+                                                                                        <userid/>
+                                                                                        <status/>
+                                                                                        <name/>
+                                                                                        <total/>
+                                                                                        <starts/>
+                                                                                        <ends/>
+                                                                                        <approved/>
+                                                                                        <default_projectid/>
+                                                                                        <default_projecttaskid/>
+                                                                                    </_Return>
+                                                                                    </Read>
+                                                                               ''')
+    """
+
+    # pull envelope information from Netsuite
+    """
+    all_envelopes_json_obj = raw_call_wrapper(key=netsuite_key,
+                                               username=session['username'],
+                                               passwd=session['password'], xml_str='''
+                                                                                        <Read type= "Envelope" method = "all" limit = "500">
+                                                                                        <_Return>
+                                                                                            <id/>
+                                                                                            <totreimburse/>
+                                                                                            <advance/>
+                                                                                            <date/>
+                                                                                            <userid/>
+                                                                                            <status/>
+                                                                                            <currency/>
+                                                                                            <totickets/>
+                                                                                            <trip_reason/>
+                                                                                            <approver/>
+                                                                                            <date_start/>
+                                                                                            <date_end/>
+                                                                                            <name/>
+                                                                                            <updated/>
+                                                                                            <total/>
+                                                                                            <approved/>
+                                                                                            <balance/>
+                                                                                        </_Return>
+                                                                                        </Read>
+                                                                                   ''')
+    """
+    # pull tickets from Netsuite
+    tickets_json = raw_call_wrapper(key=netsuite_key,
+                                            username=session['username'],
+                                            passwd=session['password'], xml_str='''
+                                                                                                <Read type= "Ticket" method = "all" limit = "500">
+                                                                                                <_Return>
+                                                                                                    <id/>
+                                                                                                    <date/>
+                                                                                                    <updated/>
+                                                                                                    <unitm/>
+                                                                                                    <total_no_tax/>
+                                                                                                    <cost/>
+                                                                                                    <total/>
+                                                                                                    <project_taskid/>
+                                                                                                    <userid/>
+                                                                                                    <projectid/>
+                                                                                                    <currency/>
+                                                                                                    <city/>
+                                                                                                    <quantity/>
+                                                                                                    <acct_date/>
+                                                                                                    <total_tax_paid/>
+                                                                                                </_Return>
+                                                                                                </Read>
+                                                                                           ''')
+
+    # Booking information is needed, pull only approved bookings
+    bookings_json = raw_call_wrapper(key=netsuite_key,
+                                             username=session['username'],
+                                             passwd=session['password'], xml_str='''
+                                                                                        <Read type= "Booking" method = "all" limit = "500">
+                                                                                            <Booking>
+                                                                                                <approval_status>A</approval_status>
+                                                                                            </Booking>
+                                                                                            <_Return>
+                                                                                                <ownerid/>
+                                                                                                <userid/>
+                                                                                                <projectid/>
+                                                                                                <startdate/>
+                                                                                                <enddate/>
+                                                                                                <percentage/>
+                                                                                                <hours/>
+                                                                                                <project_taskid/>
+                                                                                                <as_percentage/>
+                                                                                            </_Return>
+                                                                                        </Read>
+                                                                                        ''')
+
+    succinct_projects_tasks = {} # holds summarized projects, tasks, userids, worked fees, total hrs worked
+
+    projects_dates = {}
+
+    # loop through the users_dict
+    for a_user in users_json['response']['Read']['User']:
+
+        # extract the user_id
+        user_id = a_user['id']
+
+        try:
+            # populate with a user_id
+            users_dict[user_id]['name']           = a_user['name']
+            users_dict[user_id]['nickname']       = a_user['nickname']
+            users_dict[user_id]['timezone']       = a_user['timezone']
+            users_dict[user_id]['rate']           = float(a_user['rate']) if a_user['rate'] != None else 0.00
+            users_dict[user_id]['line_managerid'] = a_user['line_managerid']
+            users_dict[user_id]['currency']       = a_user['currency']
+            users_dict[user_id]['departmentid']   = a_user['departmentid']
+            users_dict[user_id]['active']         = a_user['active']
+
+        except KeyError, err:
+            users_dict[user_id] = {
+                                        'name': a_user['name'],
+                                        'nick_name': a_user['nickname'],
+                                        'time_zone': a_user['timezone'],
+                                        'rate': float(a_user['rate']) if a_user['rate'] != None else 0.00,
+                                        'line_manager_id': a_user['line_managerid'],
+                                        'currency': a_user['currency'],
+                                        'department_id': a_user['departmentid'],
+                                        'active': a_user['active']
+                                   }
+            #flash("users_dict keyerror: %s %s" % (err, user_id))
+            # non-existent user
+        except Exception, err:
+            flash('Detected error {} with users_json_obj'.format(err))
+
+    #flash('users_dict: %s' % users_dict)
+    # loop throught the projects_dict
+    for project in projects_json['response']['Read']['Project']:
+        pid = project['id']
+        calc_start_date = reformatDate(project['start_date']['Date'])
+        calc_end_date = reformatDate(project['finish_date']['Date'])
+
+        if calc_start_date != 'None':
+            my_start_date = calc_start_date
+            if len(calc_start_date) > 10:
+                my_start_date = calc_start_date.split(' ')[0]
+            my_day, my_mnth, my_yr = my_start_date.split('/')
+            start_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+        else:
+            my_start_date = 'None'
+            start_date_str = 'None'
+
+        if calc_end_date != 'None':
+            my_end_date = calc_end_date
+            if len(calc_end_date) > 10:
+                my_end_date = calc_end_date.split(' ')[0]
+            my_day, my_mnth, my_yr = my_end_date.split('/')
+            end_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+        else:
+            my_end_date = 'None'
+            end_date_str = 'None'
+        project_days = date_percent_difference(start_date_str, end_date_str)
+
+        projects_dict[pid] = {
+                              'name' : project['name'],
+                              #'active' : project['active'],
+                              'budget': float(project['budget']),#'budget' : '{:,.2f}'.format(float(project['budget'])),
+                              'budget_time' : float(project['budget_time']) if project['budget_time']!= None else 0.00,
+                              #'customer_name' : project['customer_name'],
+                              'user_id' : project['userid'],
+                              'currency' : project['currency'],
+                              'start_date' : calc_start_date,
+                              'finish_date' : calc_end_date,
+                              'project_stageid' : project['project_stageid'],
+                              #'pm_approver_1': project['pm_approver_1'],
+                              #'pm_approver_2' : project['pm_approver_2'],
+                              #'pm_approver_3' : project['pm_approver_3'],
+                              'updated' : reformatDate(project['updated']['Date']),
+                              #'picklist_label' : project['picklist_label'],
+                              'percent_complete_days' : project_days['percent_days'],
+                              'days_consumed' : project_days['days_consumed'],
+                              'days_remaining' : project_days['days_remaining'],
+                              'days_diff' : project_days['days_diff'],
+                              'tasks' : {}
+                              }
+        succinct_projects_tasks[pid] = {
+                                            'budget' : float(project['budget']),#'budget' : '{:,.2f}'.format(float(project['budget'])),
+                                            'budget_time' : project['budget_time'],
+                                            'fees_worked': 0.0
+                                       }
+        try:
+            succinct_projects_tasks[pid]['users'][project['userid']] = {}
+        except KeyError:
             try:
-                simpledate[attr] = dictval[attr]
-            except KeyError,err:
-                # skip over missing values
-                # print 'error:: ',err
-                simpledate[attr] = ''
-            # print 'simpledate {} {} {}'.format(attr, (simpledate[attr]), (dictval[attr]))
+                succinct_projects_tasks[pid]['users'] = { project['userid'] : {}}
+            except KeyError:
+                flash("succinct_projects_tasks[pid]['users'] = { project['userid'] : {}} failed")
+        projects_dates[pid] = {'start_dates' : set(), 'end_dates' : set()}
 
-        myDate = "{}.{}.{} {}:{}:{}".format(simpledate['day'], simpledate['month'], simpledate['year'], simpledate['hour'], simpledate['minute'], simpledate['second'])
-        return myDate
+        # Prepare a task list to pass to projects page
+        '''
+        for project_tasks in projecttasks_json['response']['Read']['Projecttask']:
+
+            # Retrieve project and task ids
+            pid = project_tasks['projectid']
+            tid = project_tasks['id']
+
+            # cycle through the project_tasks and populate the dictionary with active projects only
+            if pid in projects_dict:
+                calc_start_date = reformatDate(project_tasks['calculated_starts']['Date']) if \
+                project_tasks['calculated_starts']['Date'] != 'None' else 'None'
+                calc_end_date = reformatDate(project_tasks['calculated_finishes']['Date']) if \
+                project_tasks['calculated_finishes']['Date'] != 'None' else 'None'
+
+                if calc_start_date != 'None':
+                    my_start_date = calc_start_date
+                    if len(calc_start_date) > 10:
+                        my_start_date = calc_start_date.split(' ')[0]
+                    my_day, my_mnth, my_yr = my_start_date.split('/')
+                    start_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+                else:
+                    my_start_date = 'None'
+                    start_date_str = 'None'
+
+                if calc_end_date != 'None':
+                    my_end_date = calc_end_date
+                    if len(calc_end_date) > 10:
+                        my_end_date = calc_end_date.split(' ')[0]
+                    my_day, my_mnth, my_yr = my_end_date.split('/')
+                    end_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+                else:
+                    my_end_date = 'None'
+                    end_date_str = 'None'
+                task_days = date_percent_difference(start_date_str, end_date_str)
+
+                # populate the project dates set
+                if calc_start_date != 'None':
+                    day, mnth, yr = calc_start_date[:10].split('/')
+                    start_date_num = int('{}{}{}'.format(yr, mnth, day))
+                    try:
+                        projects_dates[pid]['start_dates'].add(start_date_num)
+
+                    except KeyError, err:
+                        projects_dates[pid] = {'start_dates': set([start_date_num,])}
+
+                if calc_end_date != 'None':
+                    day, mnth, yr = calc_end_date[:10].split('/')
+                    end_date_num = int('{}{}{}'.format(yr, mnth, day))
+                    try:
+                        projects_dates[pid]['end_dates'].add(end_date_num)
+
+                    except KeyError, err:
+                        projects_dates[pid] = {'end_dates': set([end_date_num,])}
+
+                try:
+                    projects_dict[pid]['tasks'][tid] = {'name': project_tasks['name'],
+                                                        'calcstartdate': calc_start_date,
+                                                        'calcenddate': calc_end_date,
+                                                        'priority': project_tasks['priority'],
+                                                        'percent_complete': project_tasks['percent_complete'],
+                                                        'estimated_hours': project_tasks['estimated_hours'],
+                                                        'planned_hours': project_tasks['planned_hours'],
+                                                        'updated': projects_dict[pid]['updated'],
+                                                        'task_budget_cost': project_tasks['task_budget_cost'],
+                                                        'customer_name': project_tasks['customer_name'],
+                                                        'percent_days': task_days['percent_days'],
+                                                        'days_consumed': task_days['days_consumed'],
+                                                        'days_remaining': task_days['days_remaining'],
+                                                        'days_diff': task_days['days_diff']}
+                except KeyError, err:
+                    print 'Errors: ', err
+        '''
+    for tasks in tasks_json['response']['Read']['Task']:
+        project_id  = tasks['projectid']
+        task_id     = tasks['projecttaskid']
+        user_id     = tasks['userid']
+        task_hours  = float(tasks['hours']) if tasks['hours'] !=None else 0.00
+
+        # extract the rate for the user
+        try:
+            user_rate = users_dict[user_id]['rate'] if users_dict[user_id]['rate'] != None else 0.00
+        except KeyError:
+            user_rate = 0.00
+            #flash('Error reading userid:{} rate, non-existent'.format(user_id))
+        # add to succinct_projects_tasks[pid], first the associate fees worked per project then per task
+        # compute total hours worked per project
+        try:
+            succinct_projects_tasks[project_id]['fees_worked'] += task_hours * user_rate
+            succinct_projects_tasks[project_id]['hours_worked'] += task_hours
+        except:
+            succinct_projects_tasks[project_id]['fees_worked'] = task_hours * user_rate
+            succinct_projects_tasks[project_id]['hours_worked'] = task_hours
+
+        try:
+            succinct_projects_tasks[project_id]['users'][user_id][task_id]['total_hours'] += task_hours
+            succinct_projects_tasks[project_id]['users'][user_id][task_id]['total_fees'] += task_hours * user_rate
+        except KeyError:
+            try:
+                succinct_projects_tasks[project_id]['users'][user_id][task_id]['total_hours'] = task_hours
+                succinct_projects_tasks[project_id]['users'][user_id][task_id]['total_fees']  = task_hours * user_rate
+            except KeyError:
+                try:
+                    succinct_projects_tasks[project_id]['users'][user_id][task_id] = {'total_hours' : task_hours,
+                                                                                   'total_fees' :  task_hours * user_rate}
+                except KeyError:
+                    try:
+                        succinct_projects_tasks[project_id]['users'][user_id] = {task_id :{'total_hours' : task_hours,
+                                                                                   'total_fees' :  task_hours * user_rate}}
+                    except KeyError:
+                        try:
+                            succinct_projects_tasks[project_id]['users'] = {user_id: {task_id: {'total_hours': task_hours,
+                                                                                                'total_fees': task_hours * user_rate}}}
+                        except KeyError:
+                            flash("Strange error for succinct_projects_tasks[project_id]['users'] = {user_id: {task_id: "
+                                  "{'total_hours': task_hours, 'total_fees': task_hours * user_rate}}}")
+        except Exception, err:
+            flash("succinct_projects_tasks[pid] errors: {}".format(err))
+
+        # compute total hours used per project by each user and save in succinct_projects_tasks[project_id]['users'][user_id]['total_hrs_used']
+        try:
+            succinct_projects_tasks[project_id]['users'][user_id]['total_hrs_used'] += task_hours
+            #flash("succinct_projects_tasks[project_id]['users'][user_id]['total_hrs_used']+ ok ")
+        except KeyError:
+            try:
+                succinct_projects_tasks[project_id]['users'][user_id]['total_hrs_used'] = task_hours
+                #flash("succinct_projects_tasks[project_id]['users'][user_id]['total_hrs_used']= ok ")
+            except KeyError:
+                try:
+                    succinct_projects_tasks[project_id]['users'][user_id] = {'total_hrs_used' : task_hours }
+                    #flash("succinct_projects_tasks[project_id]['users'][user_id] = {'total_hrs_used' : task_hours } ok ")
+                except:
+                    flash("Strange error with succinct_projects_tasks")
+
+        try:
+            # evaluate need for computation of tasks in projects_dict if succinct_projects_task already has this info
+            projects_dict[project_id]['tasks'][task_id]['total_hours'] += task_hours
+        except KeyError, err:
+            projects_dict[project_id]['tasks'][task_id] = {'total_hours' : task_hours}
+
+        # track total hours worked per user per project
+        try:
+            projects_dict[project_id]['users'][user_id]['total_hours'] += task_hours
+        except KeyError:
+            try:
+                projects_dict[project_id]['users'][user_id]['total_hours'] = task_hours
+            except KeyError:
+                try:
+                    projects_dict[project_id]['users'][user_id] = {'total_hours' : task_hours}
+                except KeyError, err:
+                    try:
+                        projects_dict[project_id]['users']= {user_id : {'total_hours': task_hours}}
+                    except KeyError:
+                        flash("projects_dict[project_id]['users']= {user_id : {'total_hours': task_hours}} failed")
+
+    # loop through the tickets and compute the additional expense
+    for ticket in tickets_json['response']['Read']['Ticket']:
+        total = float(ticket['total']) if ticket['total'] != None else 0.00
+        project_id = ticket['projectid']
+        user_id = ticket['userid']
+
+        # track expenses per project/ per user
+        try:
+            succinct_projects_tasks[project_id]['users'][user_id]['expenses'] += total
+        except KeyError:
+            try:
+                succinct_projects_tasks[project_id]['users'][user_id]['expenses'] = total
+            except KeyError:
+                try:
+                    succinct_projects_tasks[project_id]['users'][user_id] = {'expenses' : total}
+                except KeyError:
+                    flash("Unexpected succinct_projects_tasks[project_id]['users'][user_id] = {'expenses' : total} fail")
+
+        # track the expenses per project
+        try:
+            succinct_projects_tasks[project_id]['fees_worked'] += total
+        except KeyError:
+            succinct_projects_tasks[project_id]['fees_worked'] = total
+
+    # create an ordered dict
+    """
+    ordered_project_tasks = OrderedDict()
+    for key in sorted(projects_dict.keys()):
+        key = unicode(key)
+
+        # create an ordered dict for the task_keys
+        ordered_tasks = OrderedDict()
+        for task_key in sorted({int(k): v for (k, v) in projects_dict[key]['tasks'].items()}):
+            task_key = unicode(task_key)
+            ordered_tasks[task_key] = projects_dict[key]['tasks'][task_key]
+
+        # populate the ordered_project_tasks with the ordered tasks list
+        try:
+            # if there are existing tasks, then update
+            ordered_project_tasks[key]['tasks'].update(ordered_tasks)
+        except KeyError, err:
+            try:
+                ordered_project_tasks[key] = {'tasks': ordered_tasks}
+            except KeyError, err:
+                print err, ' basically a cooked goose!!'
+
+        my_start_date = str(min(projects_dates[key]['start_dates']))
+        start_date_str = '{}/{}/{}'.format(my_start_date[6:], my_start_date[4:6], my_start_date[:4])
+
+        my_end_date = str(max(projects_dates[key]['end_dates']))
+        end_date_str = '{}/{}/{}'.format(my_end_date[6:], my_end_date[4:6], my_end_date[:4])
+        # add the other elements
+        # print 'ordered_project_tasks[key] = {}'.format(ordered_project_tasks[key])
+        ordered_project_tasks[key]['updated'] = projects_dict[key]['updated']
+        ordered_project_tasks[key]['active'] = projects_dict[key]['active']
+        ordered_project_tasks[key]['name'] = projects_dict[key]['name']
+        ordered_project_tasks[key]['budget'] = projects_dict[key]['budget']
+        ordered_project_tasks[key]['budget_time'] = projects_dict[key]['budget_time']
+        ordered_project_tasks[key]['test_start_date'] = start_date_str
+        ordered_project_tasks[key]['test_end_date'] = end_date_str
+        days_consumption = date_percent_difference(start_date_str, end_date_str)  # returns dict
+
+        ordered_project_tasks[key]['percent_complete_days'] = days_consumption['percent_days']
+        ordered_project_tasks[key]['days_consumed'] = days_consumption['days_consumed']
+        ordered_project_tasks[key]['days_remaining'] = days_consumption['days_remaining']
+        ordered_project_tasks[key]['days_diff'] = days_consumption['days_diff']
+        ordered_project_tasks[key]['percent_complete_days'] = days_consumption['percent_days']
+    """
+    bookings_dict = {}
+    for booking in bookings_json['response']['Read']['Booking']:
+        """ restructure bookings into
+            {project_id:{'tot_booked_hrs' : XY + 'hours',
+                    task_id : {
+                        user_id1 : {
+                            'hours' : 40,
+                            'percentage' : 45%,
+                            'start_date' : date1,
+                            'end_date'   : date2
+                        },
+                        user_id2 : {
+                            'hours' : 30,
+                            'percentage' : 35%,
+                            'start_date' : date1,
+                            'end_date'   : date2
+                        }
+                    },
+                    'users_proj_hours' : {
+                                19: XY# total_hours_booked,
+                                23: YZ
+                              }
+                }
+            }
+        """
+        project_id = booking['projectid']
+        task_id = booking['project_taskid']
+        user_id = booking['userid']
+        hours_booked = float(booking['hours']) if booking['hours'] != None else 0.0
+
+        try:
+            bookings_dict[project_id]['tot_booked_hrs'] += hours_booked
+        except KeyError:
+            try:
+                bookings_dict[project_id]['tot_booked_hrs'] = hours_booked
+            except KeyError:
+                bookings_dict[project_id] = {'tot_booked_hrs' : hours_booked}
+        # compute total project hours for a user (from all tasks booked)
+        try:
+            bookings_dict[project_id]['users_proj_hours'][user_id] += hours_booked
+        except KeyError:
+            try:
+                bookings_dict[project_id]['users_proj_hours'][user_id] = hours_booked
+            except KeyError:
+                try:
+                    bookings_dict[project_id]['users_proj_hours']= {user_id : hours_booked}
+                except Exception, err:
+                    flash("Error :{} from bookings_dict".format(err))
 
 
+        try:
+            bookings_dict[project_id][task_id]['total_task_hrs'] += hours_booked
+        except KeyError:
+            try:
+                bookings_dict[project_id][task_id]['total_task_hrs'] = hours_booked
+            except KeyError:
+                bookings_dict[project_id][task_id] = {'total_task_hrs': hours_booked}
+
+
+        try:
+            bookings_dict[project_id][task_id][user_id] = {
+                                                            'hours' : hours_booked,
+                                                            'percentage' : booking['percentage']
+                                                          }
+        except KeyError:
+            try:
+                bookings_dict[project_id][task_id] = {user_id : {
+                                                        'hours': hours_booked,
+                                                        'percentage': booking['percentage']
+                                                       }
+                                                    }
+            except KeyError, err:
+                flash("Issues with bookings dict: {}".format(err))
+
+    # flash("bookings_dict: {}".format(bookings_dict))
+    # create an ordered project_dict to help sort projects and tasks
+    # create global dictionaries for projects, users
+    app.add_template_global(users_dict, 'users_dict')
+    app.add_template_global(projects_dict, 'projects_dict')
+    app.add_template_global(succinct_projects_tasks, 'succinct_projects_tasks_dict')
+    app.add_template_global(bookings_dict, 'bookings_dict')
+    return None
+def prepare_dict_old(projects_json, tasks_json, users_json, tickets_json, bookings_json):
+    """ module to repurpose the json objects
+    :param projects_json: projects json object
+    :param tasks_json: tasks json object
+    :param users_json: users json object
+    :param timesheets_json: timesheet json object
+    :param tickets_json: tickets json object
+    :return: dictionaries
+    """
+
+    succinct_projects_tasks = {} # holds summarized projects, tasks, userids, worked fees, total hrs worked
+
+    projects_dates = {}
+
+    # loop through the users_dict
+    for a_user in users_json['response']['Read']['User']:
+
+        # extract the user_id
+        user_id = a_user['id']
+
+        try:
+            # populate with a user_id
+            users_dict[user_id]['name']           = a_user['name']
+            users_dict[user_id]['nickname']       = a_user['nickname']
+            users_dict[user_id]['timezone']       = a_user['timezone']
+            users_dict[user_id]['rate']           = float(a_user['rate']) if a_user['rate'] != None else 0.00
+            users_dict[user_id]['line_managerid'] = a_user['line_managerid']
+            users_dict[user_id]['currency']       = a_user['currency']
+            users_dict[user_id]['departmentid']   = a_user['departmentid']
+            users_dict[user_id]['active']         = a_user['active']
+
+        except KeyError, err:
+            users_dict[user_id] = {
+                                        'name': a_user['name'],
+                                        'nick_name': a_user['nickname'],
+                                        'time_zone': a_user['timezone'],
+                                        'rate': float(a_user['rate']) if a_user['rate'] != None else 0.00,
+                                        'line_manager_id': a_user['line_managerid'],
+                                        'currency': a_user['currency'],
+                                        'department_id': a_user['departmentid'],
+                                        'active': a_user['active']
+                                   }
+            #flash("users_dict keyerror: %s %s" % (err, user_id))
+            # non-existent user
+        except Exception, err:
+            flash('Detected error {} with users_json_obj'.format(err))
+
+    #flash('users_dict: %s' % users_dict)
+    # loop throught the projects_dict
+    for project in projects_json['response']['Read']['Project']:
+        pid = project['id']
+        calc_start_date = reformatDate(project['start_date']['Date'])
+        calc_end_date = reformatDate(project['finish_date']['Date'])
+
+        if calc_start_date != 'None':
+            my_start_date = calc_start_date
+            if len(calc_start_date) > 10:
+                my_start_date = calc_start_date.split(' ')[0]
+            my_day, my_mnth, my_yr = my_start_date.split('/')
+            start_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+        else:
+            my_start_date = 'None'
+            start_date_str = 'None'
+
+        if calc_end_date != 'None':
+            my_end_date = calc_end_date
+            if len(calc_end_date) > 10:
+                my_end_date = calc_end_date.split(' ')[0]
+            my_day, my_mnth, my_yr = my_end_date.split('/')
+            end_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+        else:
+            my_end_date = 'None'
+            end_date_str = 'None'
+        project_days = date_percent_difference(start_date_str, end_date_str)
+
+        projects_dict[pid] = {
+                              'name' : project['name'],
+                              #'active' : project['active'],
+                              'budget': float(project['budget']),#'budget' : '{:,.2f}'.format(float(project['budget'])),
+                              'budget_time' : float(project['budget_time']) if project['budget_time']!= None else 0.00,
+                              #'customer_name' : project['customer_name'],
+                              'user_id' : project['userid'],
+                              'currency' : project['currency'],
+                              'start_date' : calc_start_date,
+                              'finish_date' : calc_end_date,
+                              'project_stageid' : project['project_stageid'],
+                              #'pm_approver_1': project['pm_approver_1'],
+                              #'pm_approver_2' : project['pm_approver_2'],
+                              #'pm_approver_3' : project['pm_approver_3'],
+                              'updated' : reformatDate(project['updated']['Date']),
+                              #'picklist_label' : project['picklist_label'],
+                              'percent_complete_days' : project_days['percent_days'],
+                              'days_consumed' : project_days['days_consumed'],
+                              'days_remaining' : project_days['days_remaining'],
+                              'days_diff' : project_days['days_diff'],
+                              'tasks' : {}
+                              }
+        succinct_projects_tasks[pid] = {
+                                            'budget' : float(project['budget']),#'budget' : '{:,.2f}'.format(float(project['budget'])),
+                                            'budget_time' : project['budget_time'],
+                                            'fees_worked': 0.0
+                                       }
+        try:
+            succinct_projects_tasks[pid]['users'][project['userid']] = {}
+        except KeyError:
+            try:
+                succinct_projects_tasks[pid]['users'] = { project['userid'] : {}}
+            except KeyError:
+                flash("succinct_projects_tasks[pid]['users'] = { project['userid'] : {}} failed")
+        projects_dates[pid] = {'start_dates' : set(), 'end_dates' : set()}
+
+        # Prepare a task list to pass to projects page
+        '''
+        for project_tasks in projecttasks_json['response']['Read']['Projecttask']:
+
+            # Retrieve project and task ids
+            pid = project_tasks['projectid']
+            tid = project_tasks['id']
+
+            # cycle through the project_tasks and populate the dictionary with active projects only
+            if pid in projects_dict:
+                calc_start_date = reformatDate(project_tasks['calculated_starts']['Date']) if \
+                project_tasks['calculated_starts']['Date'] != 'None' else 'None'
+                calc_end_date = reformatDate(project_tasks['calculated_finishes']['Date']) if \
+                project_tasks['calculated_finishes']['Date'] != 'None' else 'None'
+
+                if calc_start_date != 'None':
+                    my_start_date = calc_start_date
+                    if len(calc_start_date) > 10:
+                        my_start_date = calc_start_date.split(' ')[0]
+                    my_day, my_mnth, my_yr = my_start_date.split('/')
+                    start_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+                else:
+                    my_start_date = 'None'
+                    start_date_str = 'None'
+
+                if calc_end_date != 'None':
+                    my_end_date = calc_end_date
+                    if len(calc_end_date) > 10:
+                        my_end_date = calc_end_date.split(' ')[0]
+                    my_day, my_mnth, my_yr = my_end_date.split('/')
+                    end_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+                else:
+                    my_end_date = 'None'
+                    end_date_str = 'None'
+                task_days = date_percent_difference(start_date_str, end_date_str)
+
+                # populate the project dates set
+                if calc_start_date != 'None':
+                    day, mnth, yr = calc_start_date[:10].split('/')
+                    start_date_num = int('{}{}{}'.format(yr, mnth, day))
+                    try:
+                        projects_dates[pid]['start_dates'].add(start_date_num)
+
+                    except KeyError, err:
+                        projects_dates[pid] = {'start_dates': set([start_date_num,])}
+
+                if calc_end_date != 'None':
+                    day, mnth, yr = calc_end_date[:10].split('/')
+                    end_date_num = int('{}{}{}'.format(yr, mnth, day))
+                    try:
+                        projects_dates[pid]['end_dates'].add(end_date_num)
+
+                    except KeyError, err:
+                        projects_dates[pid] = {'end_dates': set([end_date_num,])}
+
+                try:
+                    projects_dict[pid]['tasks'][tid] = {'name': project_tasks['name'],
+                                                        'calcstartdate': calc_start_date,
+                                                        'calcenddate': calc_end_date,
+                                                        'priority': project_tasks['priority'],
+                                                        'percent_complete': project_tasks['percent_complete'],
+                                                        'estimated_hours': project_tasks['estimated_hours'],
+                                                        'planned_hours': project_tasks['planned_hours'],
+                                                        'updated': projects_dict[pid]['updated'],
+                                                        'task_budget_cost': project_tasks['task_budget_cost'],
+                                                        'customer_name': project_tasks['customer_name'],
+                                                        'percent_days': task_days['percent_days'],
+                                                        'days_consumed': task_days['days_consumed'],
+                                                        'days_remaining': task_days['days_remaining'],
+                                                        'days_diff': task_days['days_diff']}
+                except KeyError, err:
+                    print 'Errors: ', err
+        '''
+    for tasks in tasks_json['response']['Read']['Task']:
+        project_id  = tasks['projectid']
+        task_id     = tasks['projecttaskid']
+        user_id     = tasks['userid']
+        task_hours  = float(tasks['hours']) if tasks['hours'] !=None else 0.00
+
+        # extract the rate for the user
+        try:
+            user_rate = users_dict[user_id]['rate'] if users_dict[user_id]['rate'] != None else 0.00
+        except KeyError:
+            user_rate = 0.00
+            #flash('Error reading userid:{} rate, non-existent'.format(user_id))
+        # add to succinct_projects_tasks[pid], first the associate fees worked per project then per task
+        # compute total hours worked per project
+        try:
+            succinct_projects_tasks[project_id]['fees_worked'] += task_hours * user_rate
+            succinct_projects_tasks[project_id]['hours_worked'] += task_hours
+        except:
+            succinct_projects_tasks[project_id]['fees_worked'] = task_hours * user_rate
+            succinct_projects_tasks[project_id]['hours_worked'] = task_hours
+
+        try:
+            succinct_projects_tasks[project_id]['users'][user_id][task_id]['total_hours'] += task_hours
+            succinct_projects_tasks[project_id]['users'][user_id][task_id]['total_fees'] += task_hours * user_rate
+        except KeyError:
+            try:
+                succinct_projects_tasks[project_id]['users'][user_id][task_id]['total_hours'] = task_hours
+                succinct_projects_tasks[project_id]['users'][user_id][task_id]['total_fees']  = task_hours * user_rate
+            except KeyError:
+                try:
+                    succinct_projects_tasks[project_id]['users'][user_id][task_id] = {'total_hours' : task_hours,
+                                                                                   'total_fees' :  task_hours * user_rate}
+                except KeyError:
+                    try:
+                        succinct_projects_tasks[project_id]['users'][user_id] = {task_id :{'total_hours' : task_hours,
+                                                                                   'total_fees' :  task_hours * user_rate}}
+                    except KeyError:
+                        try:
+                            succinct_projects_tasks[project_id]['users'] = {user_id: {task_id: {'total_hours': task_hours,
+                                                                                                'total_fees': task_hours * user_rate}}}
+                        except KeyError:
+                            flash("Strange error for succinct_projects_tasks[project_id]['users'] = {user_id: {task_id: "
+                                  "{'total_hours': task_hours, 'total_fees': task_hours * user_rate}}}")
+        except Exception, err:
+            flash("succinct_projects_tasks[pid] errors: {}".format(err))
+
+        # compute total hours used per project by each user and save in succinct_projects_tasks[project_id]['users'][user_id]['total_hrs_used']
+        try:
+            succinct_projects_tasks[project_id]['users'][user_id]['total_hrs_used'] += task_hours
+            #flash("succinct_projects_tasks[project_id]['users'][user_id]['total_hrs_used']+ ok ")
+        except KeyError:
+            try:
+                succinct_projects_tasks[project_id]['users'][user_id]['total_hrs_used'] = task_hours
+                #flash("succinct_projects_tasks[project_id]['users'][user_id]['total_hrs_used']= ok ")
+            except KeyError:
+                try:
+                    succinct_projects_tasks[project_id]['users'][user_id] = {'total_hrs_used' : task_hours }
+                    #flash("succinct_projects_tasks[project_id]['users'][user_id] = {'total_hrs_used' : task_hours } ok ")
+                except:
+                    flash("Strange error with succinct_projects_tasks")
+
+        try:
+            # evaluate need for computation of tasks in projects_dict if succinct_projects_task already has this info
+            projects_dict[project_id]['tasks'][task_id]['total_hours'] += task_hours
+        except KeyError, err:
+            projects_dict[project_id]['tasks'][task_id] = {'total_hours' : task_hours}
+
+        # track total hours worked per user per project
+        try:
+            projects_dict[project_id]['users'][user_id]['total_hours'] += task_hours
+        except KeyError:
+            try:
+                projects_dict[project_id]['users'][user_id]['total_hours'] = task_hours
+            except KeyError:
+                try:
+                    projects_dict[project_id]['users'][user_id] = {'total_hours' : task_hours}
+                except KeyError, err:
+                    try:
+                        projects_dict[project_id]['users']= {user_id : {'total_hours': task_hours}}
+                    except KeyError:
+                        flash("projects_dict[project_id]['users']= {user_id : {'total_hours': task_hours}} failed")
+
+    # loop through the tickets and compute the additional expense
+    for ticket in tickets_json['response']['Read']['Ticket']:
+        total = float(ticket['total']) if ticket['total'] != None else 0.00
+        project_id = ticket['projectid']
+        user_id = ticket['userid']
+
+        # track expenses per project/ per user
+        try:
+            succinct_projects_tasks[project_id]['users'][user_id]['expenses'] += total
+        except KeyError:
+            try:
+                succinct_projects_tasks[project_id]['users'][user_id]['expenses'] = total
+            except KeyError:
+                try:
+                    succinct_projects_tasks[project_id]['users'][user_id] = {'expenses' : total}
+                except KeyError:
+                    flash("Unexpected succinct_projects_tasks[project_id]['users'][user_id] = {'expenses' : total} fail")
+
+        # track the expenses per project
+        try:
+            succinct_projects_tasks[project_id]['fees_worked'] += total
+        except KeyError:
+            succinct_projects_tasks[project_id]['fees_worked'] = total
+
+    # create an ordered dict
+    """
+    ordered_project_tasks = OrderedDict()
+    for key in sorted(projects_dict.keys()):
+        key = unicode(key)
+
+        # create an ordered dict for the task_keys
+        ordered_tasks = OrderedDict()
+        for task_key in sorted({int(k): v for (k, v) in projects_dict[key]['tasks'].items()}):
+            task_key = unicode(task_key)
+            ordered_tasks[task_key] = projects_dict[key]['tasks'][task_key]
+
+        # populate the ordered_project_tasks with the ordered tasks list
+        try:
+            # if there are existing tasks, then update
+            ordered_project_tasks[key]['tasks'].update(ordered_tasks)
+        except KeyError, err:
+            try:
+                ordered_project_tasks[key] = {'tasks': ordered_tasks}
+            except KeyError, err:
+                print err, ' basically a cooked goose!!'
+
+        my_start_date = str(min(projects_dates[key]['start_dates']))
+        start_date_str = '{}/{}/{}'.format(my_start_date[6:], my_start_date[4:6], my_start_date[:4])
+
+        my_end_date = str(max(projects_dates[key]['end_dates']))
+        end_date_str = '{}/{}/{}'.format(my_end_date[6:], my_end_date[4:6], my_end_date[:4])
+        # add the other elements
+        # print 'ordered_project_tasks[key] = {}'.format(ordered_project_tasks[key])
+        ordered_project_tasks[key]['updated'] = projects_dict[key]['updated']
+        ordered_project_tasks[key]['active'] = projects_dict[key]['active']
+        ordered_project_tasks[key]['name'] = projects_dict[key]['name']
+        ordered_project_tasks[key]['budget'] = projects_dict[key]['budget']
+        ordered_project_tasks[key]['budget_time'] = projects_dict[key]['budget_time']
+        ordered_project_tasks[key]['test_start_date'] = start_date_str
+        ordered_project_tasks[key]['test_end_date'] = end_date_str
+        days_consumption = date_percent_difference(start_date_str, end_date_str)  # returns dict
+
+        ordered_project_tasks[key]['percent_complete_days'] = days_consumption['percent_days']
+        ordered_project_tasks[key]['days_consumed'] = days_consumption['days_consumed']
+        ordered_project_tasks[key]['days_remaining'] = days_consumption['days_remaining']
+        ordered_project_tasks[key]['days_diff'] = days_consumption['days_diff']
+        ordered_project_tasks[key]['percent_complete_days'] = days_consumption['percent_days']
+    """
+    bookings_dict = {}
+    for booking in bookings_json['response']['Read']['Booking']:
+        """ restructure bookings into
+            {project_id:{'tot_booked_hrs' : XY + 'hours',
+                    task_id : {
+                        user_id1 : {
+                            'hours' : 40,
+                            'percentage' : 45%,
+                            'start_date' : date1,
+                            'end_date'   : date2
+                        },
+                        user_id2 : {
+                            'hours' : 30,
+                            'percentage' : 35%,
+                            'start_date' : date1,
+                            'end_date'   : date2
+                        }
+                    },
+                    'users_proj_hours' : {
+                                19: XY# total_hours_booked,
+                                23: YZ
+                              }
+                }
+            }
+        """
+        project_id = booking['projectid']
+        task_id = booking['project_taskid']
+        user_id = booking['userid']
+        hours_booked = float(booking['hours']) if booking['hours'] != None else 0.0
+
+        try:
+            bookings_dict[project_id]['tot_booked_hrs'] += hours_booked
+        except KeyError:
+            try:
+                bookings_dict[project_id]['tot_booked_hrs'] = hours_booked
+            except KeyError:
+                bookings_dict[project_id] = {'tot_booked_hrs' : hours_booked}
+        # compute total project hours for a user (from all tasks booked)
+        try:
+            bookings_dict[project_id]['users_proj_hours'][user_id] += hours_booked
+        except KeyError:
+            try:
+                bookings_dict[project_id]['users_proj_hours'][user_id] = hours_booked
+            except KeyError:
+                try:
+                    bookings_dict[project_id]['users_proj_hours']= {user_id : hours_booked}
+                except Exception, err:
+                    flash("Error :{} from bookings_dict".format(err))
+
+
+        try:
+            bookings_dict[project_id][task_id]['total_task_hrs'] += hours_booked
+        except KeyError:
+            try:
+                bookings_dict[project_id][task_id]['total_task_hrs'] = hours_booked
+            except KeyError:
+                bookings_dict[project_id][task_id] = {'total_task_hrs': hours_booked}
+
+
+        try:
+            bookings_dict[project_id][task_id][user_id] = {
+                                                            'hours' : hours_booked,
+                                                            'percentage' : booking['percentage']
+                                                          }
+        except KeyError:
+            try:
+                bookings_dict[project_id][task_id] = {user_id : {
+                                                        'hours': hours_booked,
+                                                        'percentage': booking['percentage']
+                                                       }
+                                                    }
+            except KeyError, err:
+                flash("Issues with bookings dict: {}".format(err))
+
+    # flash("bookings_dict: {}".format(bookings_dict))
+    # create an ordered project_dict to help sort projects and tasks
+    # create global dictionaries for projects, users
+    app.add_template_global(users_dict, 'users_dict')
+    app.add_template_global(projects_dict, 'projects_dict')
+    app.add_template_global(succinct_projects_tasks, 'succinct_projects_tasks_dict')
+    app.add_template_global(bookings_dict, 'bookings_dict')
+    return None
 #########################################################################################################################################
 #       models.py
 #########################################################################################################################################
@@ -205,7 +1289,7 @@ def login_required(func):
         session.modified = True
         try:
             # to catch keyerrors
-            
+
             if ('logged_in' not in session) and ('username' not in session) and (session['username']=='' or session['username']== None) and (not user.is_authenticated()) and (request.endpoint !=url_for('login')):
                 # session is non-existent but we still do the same
                 return redirect(url_for('login',next=request.url))
@@ -268,7 +1352,7 @@ def login():
 
         if 'remember_me' in request.form:
             remember_me = True
-        
+
         # make a call to the wrapper
         json_obj = get_whoami(key=netsuite_key, un=username, pw=password, company=my_company)
         # flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
@@ -304,53 +1388,162 @@ def login():
                 session['currentpage'] = str(str(next).split('//')[-1:]).split('.')[:1]
             else:
                 session['currentpage'] = 'projects'
-            return redirect(next or url_for('projects'))
+            return redirect(next or url_for('index'))
         flash('Sorry! Your password or username is invalid. Kindly try again..')
     return render_template('login.html', form=form)
 
 # [END login submitted]
 
+# create a route to be called by jQuery to process data
+# [START prepare_data]
+@app.route('/prepare_data')
+@login_required
+def prepare_data():
+    dummy = prepare_dict()
+    return render_template(url_for('index'))
 
 # [START projects]
-@app.route('/', methods=['GET'])
 @app.route('/projects')
 @login_required
 def projects():
-
-    # Retrieve projects from API
+    """ # Retrieve projects from API
     projects_json_obj = get_projects(key=netsuite_key,
                                      un=session['username'],
                                      pw=session['password'],
                                      company=my_company,
                                      userid=session['associate_id'])
 
+    #print 'size [{} bytes]Projects json obj: {} '.format( sys.getsizeof(projects_json_obj), projects_json_obj)
     # Retrieve tasks from API
     tasks_json_obj = get_tasks(key=netsuite_key,
                                un=session['username'],
                                pw=session['password'],
                                company=my_company)
 
+    project_dates = {}
+
+    #users_dict = {}
+    all_users_json_obj = raw_call_wrapper(key=netsuite_key,
+                                           username=session['username'],
+                                           passwd=session['password'], xml_str='''
+                                                                                <Read type= "User" method = "all" limit = "500">
+                                                                                <_Return>
+                                                                                    <name/>
+                                                                                    <picklist_label/>
+                                                                                    <cost_centerid/>
+                                                                                    <active/>
+                                                                                    <timezone/>
+                                                                                    <addr/>
+                                                                                    <currency/>
+                                                                                    <id/>
+                                                                                    <rate/>
+                                                                                    <line_managerid/>
+                                                                                    <nickname/>
+                                                                                    <departmentid/>
+                                                                                </_Return>
+                                                                                </Read>
+                                                                           ''')
+
+    #flash('Hey yah! mock users: {}'.format( all_users_json_obj))  # user_info))
+    for a_user in all_users_json_obj['response']['Read']['User']:
+
+        try:
+            # populate with a user_id
+            users_dict[a_user['id']] = {'name' : a_user['name'],
+                                        'nick_name' : a_user['nickname'],
+                                        'time_zone' : a_user['timezone'],
+                                        'rate' : a_user['rate'],
+                                        'cost_centerid' : a_user['cost_centerid'],
+                                        'line_manager_id' : a_user['line_managerid'],
+                                        'picklist_label' : a_user['picklist_label'],
+                                        'department_id' : a_user['departmentid']}
+        except KeyError:
+            flash ('check the users_json_obj')
+        except Exception, err:
+            flash('Detected error {} with users_json_obj'.format(err))
+    # adding the users_dict into the global namespace, available to all templates
+    app.add_template_global(users_dict, 'users_dict')
+
     # Prepare a project list to pass to projects page
     for project in projects_json_obj['response']['Read']['Project']:
 
         # populate the dictionary
-        pid = int(project['id'])
-        projects_dict[pid] = {'name': project['name'],
-                              'active': project['active'],
-                              'updated': reformatDate(project['updated']['Date']),
-                              'tasks': {}}
+        pid = project['id']
+
+
+
+
+
+        projects_dict[pid] = {'name' : project['name'],
+                              'active' : project['active'],
+                              'budget' : '{:,.2f}'.format(float(project['budget'])),
+                              'budget_time' : project['budget_time'],
+                              'customer_name' : project['customer_name'],
+                              'user_id' : project['userid'],
+                              'currency' : project['currency'],
+                              'start_date' : project['start_date'],
+                              'finish_date' : project['finish_date'],
+                              'project_stageid' : project['project_stageid'],
+                              'pm_approver_1' : project['pm_approver_1'],
+                              'pm_approver_2': project['pm_approver_2'],
+                              'pm_approver_3': project['pm_approver_3'],
+                              'updated' : reformatDate(project['updated']['Date']),
+                              'picklist_label' : project['picklist_label'],
+                              'tasks' : {}}
+        project_dates[pid] = {'start_dates' : set(), 'end_dates' : set()}
 
     # Prepare a task list to pass to projects page
     for project_tasks in tasks_json_obj['response']['Read']['Projecttask']:
 
         # Retrieve project and task ids
-        pid = int(project_tasks['projectid'])
-        tid = int(project_tasks['id'])
+        pid = project_tasks['projectid']
+        tid = project_tasks['id']
 
         # cycle through the project_tasks and populate the dictionary with active projects only
         if pid in projects_dict:
-            calc_start_date = reformatDate(project_tasks['calculated_starts']) if project_tasks['calculated_starts'] != 'None' else 'None'
-            calc_end_date = reformatDate(project_tasks['calculated_finishes']) if project_tasks['calculated_finishes'] != 'None' else 'None'
+            calc_start_date = reformatDate(project_tasks['calculated_starts']['Date']) if project_tasks['calculated_starts']['Date'] != 'None' else 'None'
+            calc_end_date = reformatDate(project_tasks['calculated_finishes']['Date']) if project_tasks['calculated_finishes']['Date'] != 'None' else 'None'
+
+            if calc_start_date != 'None':
+                my_start_date = calc_start_date
+                if len(calc_start_date) > 10:
+                    my_start_date = calc_start_date.split(' ')[0]
+                my_day, my_mnth, my_yr = my_start_date.split('/')
+                start_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+            else:
+                my_start_date = 'None'
+                start_date_str = 'None'
+
+            if calc_end_date != 'None':
+                my_end_date = calc_end_date
+                if len(calc_end_date) > 10:
+                    my_end_date = calc_end_date.split(' ')[0]
+                my_day, my_mnth, my_yr = my_end_date.split('/')
+                end_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
+            else:
+                my_end_date = 'None'
+                end_date_str = 'None'
+            task_days = date_percent_difference(start_date_str, end_date_str)
+
+            #populate the project dates set
+            if calc_start_date != 'None':
+                day, mnth, yr = calc_start_date[:10].split('/')
+                start_date_num = int('{}{}{}'.format(yr, mnth, day))
+                try:
+                    project_dates[pid]['start_dates'].add(start_date_num)
+
+                except KeyError, err:
+                    project_dates[pid] = {'start_dates' : set(start_date_num)}
+
+            if calc_end_date != 'None':
+                day, mnth, yr = calc_end_date[:10].split('/')
+                end_date_num =  int('{}{}{}'.format(yr, mnth, day))
+                try:
+                    project_dates[pid]['end_dates'].add(end_date_num)
+
+                except KeyError, err:
+                    project_dates[pid] = {'end_dates' : set(end_date_num)}
+
             try:
                 projects_dict[pid]['tasks'][tid] = {'name': project_tasks['name'],
                                                     'calcstartdate': calc_start_date,
@@ -359,19 +1552,27 @@ def projects():
                                                     'percent_complete': project_tasks['percent_complete'],
                                                     'estimated_hours': project_tasks['estimated_hours'],
                                                     'planned_hours': project_tasks['planned_hours'],
-                                                    'updated': projects_dict[pid]['updated']}
+                                                    'updated': projects_dict[pid]['updated'],
+                                                    'task_budget_cost' : project_tasks['task_budget_cost'],
+                                                    'customer_name' : project_tasks['customer_name'],
+                                                    'percent_days' : task_days['percent_days'],
+                                                    'days_consumed' : task_days['days_consumed'],
+                                                    'days_remaining' : task_days['days_remaining'],
+                                                    'days_diff' : task_days['days_diff']}
             except KeyError, err:
                 print 'Errors: ', err
 
-    session['projects_dict'] = str(projects_dict)
+    #session['projects_dict'] = str(projects_dict)
 
     # create an ordered dict
     ordered_project_tasks = OrderedDict()
     for key in sorted(projects_dict.keys()):
+        key = unicode(key)
 
         # create an ordered dict for the task_keys
         ordered_tasks = OrderedDict()
         for task_key in sorted({int(k): v for (k, v) in projects_dict[key]['tasks'].items()}):
+            task_key = unicode(task_key)
             ordered_tasks[task_key] = projects_dict[key]['tasks'][task_key]
 
         # populate the ordered_project_tasks with the ordered tasks list
@@ -383,28 +1584,46 @@ def projects():
                 ordered_project_tasks[key] = {'tasks': ordered_tasks}
             except KeyError, err:
                 print err, ' basically a cooked goose!!'
-        
-        # print "ordered_project_tasks[key]['tasks'] = {}".format(ordered_project_tasks[key]['tasks'])
+
+        my_start_date = str(min(project_dates[key]['start_dates']))
+        start_date_str = '{}/{}/{}'.format(my_start_date[6:], my_start_date[4:6], my_start_date[:4])
+
+        my_end_date = str(max(project_dates[key]['end_dates']))
+        end_date_str =  '{}/{}/{}'.format(my_end_date[6:], my_end_date[4:6], my_end_date[:4])
         # add the other elements
         # print 'ordered_project_tasks[key] = {}'.format(ordered_project_tasks[key])
         ordered_project_tasks[key]['updated'] = projects_dict[key]['updated']
-        ordered_project_tasks[key].update({'active': projects_dict[key]['active']})
-        ordered_project_tasks[key].update({'name': projects_dict[key]['name']})
+        ordered_project_tasks[key]['active'] = projects_dict[key]['active']
+        ordered_project_tasks[key]['name'] = projects_dict[key]['name']
+        ordered_project_tasks[key]['budget'] = projects_dict[key]['budget']
+        ordered_project_tasks[key]['budget_time'] = projects_dict[key]['budget_time']
+        ordered_project_tasks[key]['test_start_date'] = start_date_str
+        ordered_project_tasks[key]['test_end_date'] = end_date_str
+        days_consumption = date_percent_difference(start_date_str, end_date_str) # returns dict
+
+        ordered_project_tasks[key]['percent_complete_days'] = days_consumption['percent_days']
+        ordered_project_tasks[key]['days_consumed'] = days_consumption['days_consumed']
+        ordered_project_tasks[key]['days_remaining'] = days_consumption['days_remaining']
+        ordered_project_tasks[key]['days_diff'] = days_consumption['days_diff']
+        ordered_project_tasks[key]['percent_complete_days'] = days_consumption['percent_days']
 
     # adding the orderedprojecttasks into the global namespace, available to all templates
     app.add_template_global(ordered_project_tasks, 'projects_dict')
+
+    #flash('pword: {}'.format(session['password']))
 
     # clear some memory by clearing list and dict, the page never loads due to memory limitation
     # projects_dict.clear()
     projectslist = None
     # print 'Eventual projects dict: ', projects_dict
+    """
 
     return render_template('projects.html')
 # [END projects]
 
 
 # [START project_detail]
-@app.route('/projects/<project_id>', methods=['GET'])
+@app.route('/projects/<project_id>', methods=['GET','POST'])
 @login_required
 def project_detail(project_id):
     if project_id and ("|" in project_id):
@@ -412,8 +1631,8 @@ def project_detail(project_id):
         # separate the project and task id for template processing
         project_id = project_id.strip()  # remove any trailing spaces
         pid, tid = project_id.split('|')
-        pid = int(pid)
-        tid = int(tid)
+        pid = unicode(pid)
+        tid = unicode(tid)
 
         # refresh task list?
         # json_obj = get_tasks(netsuite_key,
@@ -423,14 +1642,14 @@ def project_detail(project_id):
         #                     projectid=pid)
 
         return render_template('richtasks.html', project_id=pid, taskid=tid)
+    else:
+        project_id = project_id.strip()  # remove any trailing spaces
+        pid = unicode(project_id)
+
+        return render_template('richproject.html', project_id =project_id)
 
     return redirect(url_for('projects'))
 # [END project_detail]
-
-
-@app.context_processor
-def inject_projecttasks():
-    return projects_dict
 
 #############################################
 #
@@ -894,11 +2113,25 @@ def idle_timer():
 
 
 # [START index]
-
+@app.route('/', methods=['GET'])
 @app.route('/index',methods=['GET','POST'])
 @app.route('/index.html',methods=['GET','POST'])
 @login_required
 def index():
+
+    #flash("all_bookings_json_obj: ***{}***".format(all_bookings_json_obj['response']['Read']['Booking']))
+    #flash("all_users_json_obj:{} ".format(all_users_json_obj))
+    # prepare projects dictionary
+    '''dummy = prepare_dict(projects_json= all_projects_json_obj, users_json= all_users_json_obj, tasks_json= all_tasks_json_obj,
+                 tickets_json= all_tickets_json_obj, bookings_json = all_bookings_json_obj)'''
+
+    # create global variables
+
+
+    '''flash("all_projects_json_obj: {}, all_users_json_obj: {}, all_tasks_info_obj: {}, all_timesheets_info_obj: {}, all_envelopes_info_obj: {}".format(all_projects_json_obj, all_users_json_obj, all_tasks_info_obj,
+                                                                     all_timesheets_info_obj, all_envelopes_info_obj))
+                                                                     '''
+
     return render_template(url_for('index'))
 # [END index]
 
