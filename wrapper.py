@@ -33,7 +33,7 @@ def _call_wrapper(key, un, pw, company, xml_data):
     return json_obj
 
 
-# Get auth info from server
+# Get auth info from server, of currently authorized user
 def get_whoami(key, un, pw, company):
 
     auth = connections.Auth(company, un, pw)
@@ -44,6 +44,17 @@ def get_whoami(key, un, pw, company):
 
     return _call_wrapper(key, un, pw, company, xml_data)
 
+# get user information based on user id only
+def get_user_info(key, un, pw, company, userid):
+
+        auth = connections.Auth(company, un, pw)
+        user = datatypes.Datatype('User', {'id': userid})
+
+        # Prepare the request
+        whoami_req = connections.Whoami(user).whoami()
+        xml_data = [whoami_req]
+
+        return _call_wrapper(key, un, pw, company, xml_data)
 
 # Get the time from the server
 def get_time(key, un, pw, company):
@@ -62,8 +73,12 @@ def get_projects(key, un, pw, company='', userid = ''):
     project = datatypes.Datatype('Project', {'active': '1'})
     filter1 = commands.Read.Filter(None, None, project).getFilter()
 
+    # limit the field names returned to absolute necessary fields to prevent long waits after login
+    field_names = ['id', 'name', 'active', 'budget', 'budget_time', 'customer_name', 'userid', 'currency', 'start_date',
+                   'finish_date', 'project_stageid','pm_approver_1', 'pm_approver_2', 'pm_approver_3', 'updated', 'picklist_label']  # to limit
+
     # Prepare the request
-    xml_data = [commands.Read('Project', 'equal to', {'limit': '1000'}, [filter1], None).read()]
+    xml_data = [commands.Read('Project', 'equal to', {'limit': '1000'}, [filter1], field_names).read()]
 
     return _call_wrapper(key, un, pw, company, xml_data)
 
@@ -87,7 +102,66 @@ def get_tasks(key, un, pw, company='', projectid = ''):
                               ['id', 'parent_id', 'ancestry', 'cost_center_id', 'projecttask_type_id', 'name',
                                'projectid', 'planned_hours', 'estimated_hours', 'completed_days', 'priority',
                                'percent_complete', 'task_budget_cost', 'customer_name', 'calculated_finishes',
-                               'calculated_starts', 'start_date', 'currency']
+                               'calculated_starts', 'start_date', 'currency', 'assign_user_names', 'project_name']
                               ).read()]
 
     return _call_wrapper(key, un, pw, company, xml_data)
+
+# Get user Ids of users assigned to a project
+def get_userids(key, un, pw, company, projectid =''):
+    # filter by projectid
+    print 'projectid = {}'.format(projectid)
+    project = datatypes.Datatype('Task', {'project_id' : projectid})
+    filter1 = commands.Read.Filter(None, None, project).getFilter()
+
+    # prepare the request
+    xml_data = [commands.Read('Task', 'equal to', {'limit' : '500'}, [filter1], None ).read()]
+
+    # call wrapper
+    return _call_wrapper(key, un, pw, company, xml_data)
+
+# Get user Ids of users assigned to a project
+def get_task_info(key, un, pw, company, projectid =''):
+    # filter by projectid
+    #print 'projectid = {}'.format(projectid)
+    project = datatypes.Datatype('Task', {'projectid' : projectid})
+    filter1 = commands.Read.Filter(None, None, project).getFilter()
+
+    # prepare the request
+    xml_data = [commands.Read('Task', 'equal to', {'limit' : '500'}, [filter1], ['projectid', 'projecttaskid',
+                'decimal_hours', 'userid', 'loaded_cost', 'date', 'updated', 'timetypeid', 'projecttask_typeid',
+                'project_loaded_cost', 'hours', 'timesheetid', 'cost_centerid'] ).read()]
+
+    # call wrapper
+    return _call_wrapper(key, un, pw, company, xml_data)
+
+# get the user's rate
+def get_user_rate(key, un, pw, company, projectid =''):
+    print "project_id: {}".format(projectid)
+    # filter by projectid
+    #print 'projectid = {}'.format(projectid)
+    uprate = datatypes.Datatype('Uprate', {'projectid' : '{}'.format(projectid)})
+    #user = datatypes.Datatype('Uprate', {'userid': userid})
+
+    filter1 = commands.Read.Filter(None, None, uprate).getFilter()
+    #filter2 = commands.Read.Filter(None, None, user).getFilter()
+
+    # prepare the request
+    xml_data = [commands.Read('Uprate', 'equal to', {'limit' : '500'}, [filter1], ['projectid', 'id', 'userid', 'rate'] ).read()]
+
+    # call wrapper
+    return _call_wrapper(key, un, pw, company, xml_data)
+
+def get_user_details(key, un, pw, company, projectid = ''):
+    # filter by userida
+    user = datatypes.Datatype('User', {'active': '1'})
+    #nickname = datatypes.Datatype('User', {'nickname': 'bgathecha@bankablefrontier.com'})
+    filter1 = commands.Read.Filter(None, None, user).getFilter()
+    #filter2 = commands.Read.Filter(None, None, nickname).getFilter()
+
+    # prepare the request
+    xml_data = [commands.Read('User', 'equal to', {'limit': 1000}, [filter1], None).read()]
+
+    # call the wrapper
+    return _call_wrapper(key, un, pw, company, xml_data)
+
