@@ -1,0 +1,17 @@
+oaxmlapi/__init__.py,sha256=brFHqAtML1nEhjfNIh749uVFXanlicP-7pCnwQMzhjo,123
+oaxmlapi/commands.py,sha256=DZHaqD0UR6oK18Jqm-BYvHNMUR26cucBPIV2Jyk2DrU,18386
+oaxmlapi/connections.py,sha256=YQaS21NsqELkucaPv9znmr4Wd1DKEWQHhHhI6BZnUnM,6501
+oaxmlapi/datatypes.py,sha256=RRRn14TuMqP4VadZCOJ1TDOqePOSTe8MXO4F-V0yN5Q,2249
+oaxmlapi/utilities.py,sha256=50ntmGpGhkX_wuJ1AdJKFbkcSnYb-PkNH3kQ7WQZTxw,4494
+oaxmlapi-1.2.dist-info/DESCRIPTION.rst,sha256=OCTuuN6LcWulhHS3d5rfjdsQtW22n7HENFRh6jC6ego,10
+oaxmlapi-1.2.dist-info/METADATA,sha256=grqIT6mUWUwPBGHDPAm7mLQhas6N3O7ajdDr3tyEYyM,349
+oaxmlapi-1.2.dist-info/RECORD,,
+oaxmlapi-1.2.dist-info/WHEEL,sha256=ZjEnM9ajJj3CC6PFLEd3wiDD9cvgsTK9wvIqII7XxRs,98
+oaxmlapi-1.2.dist-info/metadata.json,sha256=YkD8lO1PZaPCJZEkEa_gVudoELfnYddFgAVRMcoDsy4,547
+oaxmlapi-1.2.dist-info/top_level.txt,sha256=g5Mp_zhCO6gN4a7kay0jL0LJFEIpVbUQQGcYwpcvtEE,9
+oaxmlapi-1.2.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+oaxmlapi/__init__.pyc,,
+oaxmlapi/connections.pyc,,
+oaxmlapi/datatypes.pyc,,
+oaxmlapi/utilities.pyc,,
+oaxmlapi/commands.pyc,,
