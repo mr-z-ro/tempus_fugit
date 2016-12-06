@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Tempus Fugit | Rich tasks page</title>
+
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/font-awesome/css/font-awesome.css" rel="stylesheet">
+
+    <link href="/css/animate.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+
+    <!-- c3 Charts -->
+    <link href="{{ url_for('static', filename='/css/plugins/c3/c3.min.css') }}" rel="stylesheet">
+
+    <link href="/css/animate.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+
+    <style type="text/css">
+        #fees_per_associate, #time_per_associate {
+
+                                                    width : 50%;
+                                                     margin-right: 10px;
+                                                    float: left;
+                                                   }
+        #gauge {
+            height : 100px;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <div id="wrapper">
+        {% include 'navbar.html' ignore missing %}
+
+        <div id="page-wrapper" class="gray-bg">
+        <div class="row border-bottom">
+        <nav class="navbar navbar-static-top white-bg" role="navigation" style="margin-bottom: 0">
+        <div class="navbar-header">
+            <a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i class="fa fa-bars"></i> </a>
+            <form role="search" class="navbar-form-custom" action="search_results.html">
+                <div class="form-group">
+                    <input type="text" placeholder="Search for something..." class="form-control" name="top-search" id="top-search">
+                </div>
+            </form>
+        </div>
+            <ul class="nav navbar-top-links navbar-right">
+                <li>
+                    <span class="m-r-sm text-muted welcome-message">{% for messages in get_flashed_messages()%} {{messages}} {% endfor %}Welcome to Tempus Fugit+ {% if session['currentpage'] %} {{ session['currentpage'] }} {% endif %}.</span>
+                </li>
+                <li class="dropdown">
+                    <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
+                        <i class="fa fa-envelope"></i> {{ projects_dict[session['username']][project_id]['picklist_label'] }} <span class="label label-warning">16</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-messages">
+                        <li>
+                            <div class="dropdown-messages-box">
+                                <a href="profile.html" class="pull-left">
+                                    <img alt="image" class="img-circle" src="/img/a7.jpg">
+                                </a>
+                                <div>
+                                    <small class="pull-right">46h ago</small>
+                                    <strong>Mike Loreipsum</strong> started following <strong>Monica Smith</strong>. <br>
+                                    <small class="text-muted">3 days ago at 7:58 pm - 10.06.2014</small>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <div class="dropdown-messages-box">
+                                <a href="profile.html" class="pull-left">
+                                    <img alt="image" class="img-circle" src="/img/a4.jpg">
+                                </a>
+                                <div>
+                                    <small class="pull-right text-navy">5h ago</small>
+                                    <strong>Chris Johnatan Overtunk</strong> started following <strong>Monica Smith</strong>. <br>
+                                    <small class="text-muted">Yesterday 1:21 pm - 11.06.2014</small>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <div class="dropdown-messages-box">
+                                <a href="profile.html" class="pull-left">
+                                    <img alt="image" class="img-circle" src="/img/profile.jpg">
+                                </a>
+                                <div>
+                                    <small class="pull-right">23h ago</small>
+                                    <strong>Monica Smith</strong> love <strong>Kim Smith</strong>. <br>
+                                    <small class="text-muted">2 days ago at 2:30 am - 11.06.2014</small>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <div class="text-center link-block">
+                                <a href="mailbox.html">
+                                    <i class="fa fa-envelope"></i> <strong>Read All Messages</strong>
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
+                        <i class="fa fa-bell"></i>  <span class="label label-primary">8</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-alerts">
+                        <li>
+                            <a href="mailbox.html">
+                                <div>
+                                    <i class="fa fa-envelope fa-fw"></i> You have 16 messages
+                                    <span class="pull-right text-muted small">4 minutes ago</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <a href="profile.html">
+                                <div>
+                                    <i class="fa fa-twitter fa-fw"></i> 3 New Followers
+                                    <span class="pull-right text-muted small">12 minutes ago</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <a href="grid_options.html">
+                                <div>
+                                    <i class="fa fa-upload fa-fw"></i> Server Rebooted
+                                    <span class="pull-right text-muted small">4 minutes ago</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <div class="text-center link-block">
+                                <a href="notifications.html">
+                                    <strong>See All Alerts</strong>
+                                    <i class="fa fa-angle-right"></i>
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+
+
+                <li>
+                    <a href="{{ url_for('logout') }}">
+                        <i class="fa fa-sign-out"></i> Log out
+                    </a>
+                </li>
+            </ul>
+
+        </nav>
+        </div>
+            <div class="row wrapper border-bottom white-bg page-heading">
+                <div class="col-sm-4">
+                    <h2>Project detail </h2>
+                    <ol class="breadcrumb">
+                        <li>
+                            <a href="{{ url_for('index') }}">Home</a>
+                        </li>
+                        <li class="active">
+                            <strong>{{projects_dict[session['username']][project_id]['name'] }}</strong>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-content text-center p-md">
+
+                        <h2><span class="text-navy"> {{ projects_dict[session['username']][project_id]['name'] }} </span></h2>
+
+                        <p>
+                            Page under construction, values represented here are provisional.
+                        </p>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <div class="wrapper wrapper-content animated fadeInRight">
+                {% set exists = [] %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="ibox-content text-left">
+
+                            <div class="ibox-content">
+                                <h5>Total project cost</h5>
+                                <h1 class="no-margins">{% if projects_dict[session['username']][project_id]['currency'] !='Undefined' %} {{ projects_dict[session['username']][project_id]['currency'] }} {% else %} $ {% endif %} {{'{0:,.2f}'.format(projects_dict[session['username']][project_id]['budget']|float) }}</h1>
+                                <!-- <div class="stat-percent font-bold text-navy">98% <i class="fa fa-bolt"></i></div> -->
+                                <small>Total project budget</small>
+                            </div>
+                            <div class="ibox-content">
+                                <h5>Budget burning chart</h5>
+                                <h1 class="no-margins">{{ projects_dict[session['username']][project_id]['currency'] }} {{'{0:,.2f}'.format(projects_dict[session['username']][project_id]['fees_worked']|float) }}</h1>
+                                <div class="stat-percent font-bold text-navy">
+                                    {% if projects_dict[session['username']][project_id]['fees_worked'] != 0 and projects_dict[session['username']][project_id]['budget'] != 0 %}
+                                    {{'%100.2f'|format(projects_dict[session['username']][project_id]['fees_worked'] /projects_dict[session['username']][project_id]['budget']) }}%
+                                    {% else%}
+                                    0.00%
+                                    {% endif %}
+                                    <i class="fa fa-bolt"></i></div>
+                                <small>Total budget burnt</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="ibox-content">
+                            <div>
+                                <div>
+                                    <span>Start date </span>
+                                    <span class="text-center" style="padding: 10px 10px; margin: 10px 10px 0 0;">  {% if projects_dict[session['username']][project_id]['percent_complete_days'] != 'None' %}
+                                        &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;({{ '%100.2f' | format(projects_dict[session['username']][project_id]['percent_complete_days']|float) }}'% of time slot utilized')
+                                            {% endif %}
+                                    </span>
+                                    <span class="pull-right"> End date </span>
+                                    <!-- <small class="pull-right">End date  </small> -->
+                                </div>
+                                <div class="progress progress-small">
+                                    {% if projects_dict[session['username']][project_id]['percent_complete_days'] != 'None' %}
+                                    <div style="width: {{ projects_dict[session['username']][project_id]['percent_complete_days'] }}%;" class="progress-bar"></div>
+                                    {% endif %}
+                                </div>
+
+                                <div>
+                                    <span>{% if projects_dict[session['username']][project_id]['test_start_date'] %} {{ projects_dict[session['username']][project_id]['test_start_date'] }} {% else %} No start date{% endif %}</span>
+                                    <small class="pull-right">{% if projects_dict[session['username']][project_id]['test_end_date'] %} {{ projects_dict[session['username']][project_id]['test_end_date'] }} {% else %} No end date {% endif %}</small>
+                                </div>
+                                <!--
+                                <div>
+                                    <span>Days consumed: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[session['username']][project_id]['days_consumed'] %} {{ projects_dict[session['username']][project_id]['days_consumed'] }} {% endif %}</span>
+                                </div>
+                                <div>
+                                    <span>Remaining Days: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[session['username']][project_id]['days_remaining'] %} {{ projects_dict[session['username']][project_id]['days_remaining'] }} {% endif %}</span>
+                                </div>
+                                <div>
+                                    <span>Total Days: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[session['username']][project_id]['days_diff'] %} {{ projects_dict[session['username']][project_id]['days_diff'] }} {% endif %}</span>
+                                </div>
+                                -->
+                                <div>
+                                    <span>Budget Hours: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[session['username']][project_id]['budget_time'] %} {{ '{0:,.2f}'.format(projects_dict[session['username']][project_id]['budget_time']|float) }} {% endif %}</span>
+                                </div>
+                                <!--
+                                <div class="progress progress-small">
+                                    <div style="width: 2%;" class="progress-bar"></div>
+                                </div>
+
+                                <div>
+                                    <span>Activity</span>
+                                    <small class="pull-right">73%</small>
+                                </div>
+                                <div class="progress progress-small">
+                                    <div style="width: 40%;" class="progress-bar"></div>
+                                </div>
+
+                                <div>
+                                    <span>FTP</span>
+                                    <small class="pull-right">400 GB</small>
+                                </div>
+                                <div class="progress progress-small">
+                                    <div style="width: 20%;" class="progress-bar progress-bar-danger"></div>
+                                </div>
+                                -->
+                            </div>
+                        </div>
+                    </div>
+
+                <div class="col-lg-6">
+                    <div class="ibox float-e-margins">
+                        <div class="ibox-title">
+                            <h5>Overall Pace</h5>
+                        </div>
+                        <div class="ibox-content">
+                            <div>
+                                <div id="gauge"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="ibox-content text-left">
+
+                            <table class="table">
+                                <h5>Time per consultant</h5>
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Associate</th>
+                                    <th>Used</th>
+                                    <th>Left</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if project_id in bookings_dict[session['username']].iterkeys() %}
+                                {% for user_id in bookings_dict[session['username']][project_id]['users_proj_hours']%}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        <!-- remember the user_rate-->
+                                        {% set user_rate = 0 %}
+                                        {%if user_id in users_dict[session['username']].iterkeys()%}
+                                            {{users_dict[session['username']][user_id]['name']}}
+                                            {% set user_rate = users_dict[session['username']][user_id]['rate'] %}
+                                        {% else %}
+                                            Unknown user
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <!-- remember the total_hrs_used -->
+                                        {% set total_hrs_used = 0%}
+                                        {% if project_id in projects_dict[session['username']].iterkeys() %}
+                                            <!-- project id exists  -->
+                                            {% if  user_id in projects_dict[session['username']][project_id]['users'].iterkeys() %}
+                                                <!-- user id exists, next check if it has total_hrs_used  -->
+                                                {% if 'total_hrs_used' in projects_dict[session['username']][project_id]['users'][user_id].iterkeys() %}
+                                                    {{ projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] }}
+                                                    <!-- -->
+                                                    {% set total_hrs_used = projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] %}
+                                                {% else %}
+                                                    0.00
+                                                {% endif %}
+                                            {% else %}
+                                                consultant hasn't worked
+                                            {% endif %}
+                                        {% else %}
+                                            None
+                                        {% endif %}
+
+                                    </td>
+                                    <td>
+
+                                        {% set user_hours_booked = 0.0 %}<!-- remember the hours booked per user-->
+                                        {% if project_id in bookings_dict[session['username']] %}
+                                        <!-- project_id exists, then check if  --->
+                                            {% if 'users_proj_hours' in bookings_dict[session['username']][project_id].iterkeys() %}
+                                                <!-- check if the user id is booked for this project id-->
+                                                {% if user_id in bookings_dict[session['username']][project_id]['users_proj_hours'].iterkeys() %}
+                                                    {% set user_hours_booked = bookings_dict[session['username']][project_id]['users_proj_hours'][user_id] %}
+                                                    {{ user_hours_booked - total_hrs_used }}
+                                                    {% if exists.append(user_hours_booked) %} {% endif %}
+                                                {% else %}
+                                                    user not booked
+                                                {% endif %}
+                                            {% else %}
+                                                No users proj hours
+                                            {% endif %}
+                                        {% endif %}
+
+                                        <!--
+                                        {% if projects_dict[session['username']][project_id]['users'][user_id] and bookings_dict[session['username']][project_id]['users_proj_hours'][user_id] %}
+                                            {% if projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used']!= 'Undefined' %}
+                                                {{ bookings_dict[session['username']][project_id]['users_proj_hours'][user_id]|default(0.00) - projects_dict[session['username']][project_id]['users'][user_id]['total_hours']|default(0.00)}}
+                                            {% else %}
+                                                No work
+                                            {% endif %}
+                                        {% else %}
+                                            {% if projects_dict[session['username']][project_id]['users'][user_id] and projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] %}
+                                                {{ bookings_dict[session['username']][project_id]['users_proj_hours'][user_id] - projects_dict[session['username']][project_id]['users'][user_id]['total_hours']}}
+                                            {% else %}
+                                                No work
+                                            {% endif %}
+                                        {% endif %}
+
+                                        -->
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td>No time assigned per consultant</td>
+                                </tr>
+                                {% endif %}
+
+
+                                </tbody>
+                            </table>
+
+                    </div>
+                </div>
+            <div class="col-md-6">
+                    <div class="ibox-content text-left">
+
+                        <table class="table">
+                            <h5>Fees per consultant</h5>
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Associate</th>
+                                <th>Used</th>
+                                <th>Left</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% if project_id in bookings_dict[session['username']].iterkeys()%}
+                            {% for user_id in bookings_dict[session['username']][project_id]['users_proj_hours']%}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <!-- remember the user_rate-->
+                                    {% set user_rate = 0 %}
+                                    {%if users_dict[session['username']][user_id]%}
+                                        {{users_dict[session['username']][user_id]['name']}}
+                                        {% set user_rate = users_dict[session['username']][user_id]['rate'] %}
+                                    {% else %}
+                                        Unknown user
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set user_expenses = 0 %}
+                                    {% set user_spent_hours = 0 %}
+                                    {% set total_fees_spent = 0%}
+                                    {% if project_id in projects_dict[session['username']].iterkeys() %}
+                                        <!-- project_id exists, then check if 'users' and user_id exist -->
+                                        {% if 'users' in projects_dict[session['username']][project_id].iterkeys() %}
+                                            <!-- check if the user_id exists -->
+                                            {% if user_id in projects_dict[session['username']][project_id]['users'].iterkeys() %}
+                                                <!-- user_id exists, check if expenses and total_hours_used exist -->
+                                                {% if 'expenses' in projects_dict[session['username']][project_id]['users'][user_id].iterkeys() %}
+                                                    {% set user_expenses = projects_dict[session['username']][project_id]['users'][user_id]['expenses']%}
+                                                {% endif %}
+
+                                                {% if 'total_hrs_used' in projects_dict[session['username']][project_id]['users'][user_id].iterkeys()%}
+                                                    {% set user_spent_hours = projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] %}
+                                                {% endif %}
+
+                                                <!-- compute total_fees_spent -->
+                                                {% set total_fees_spent = user_expenses + (user_spent_hours * user_rate) %}
+
+                                                <!-- display the fees spent -->
+                                                {{ total_fees_spent }}
+
+                                            {% else %}
+                                                Consultant hasn't worked
+                                            {% endif %}
+                                        {% else %}
+                                            <!-- users not assigned to this project -->
+                                            No consultant has worked
+                                        {% endif %}
+                                    {% else %}
+                                        None
+                                    {% endif %}
+
+                                </td>
+                                <td>
+                                    {% if exists %}
+                                        {% set user_hours_booked = exists[0] %}
+                                        <!-- calculate the fees left -->
+                                        {% set user_total_fees =0 %} <!-- need to compute the user_total_fees for this project -->
+                                        {% if user_rate != 0  and user_hours_booked != 0%}
+                                            {% set user_total_fees = user_rate * user_hours_booked %}
+                                        {% elif user_rate ==0 %}
+                                            <!-- <small>user rate = 0</small> -->
+                                        {% elif user_hours_booked ==0 %}
+                                            <small>booked hours = 0</small>
+                                        {% endif %}
+
+                                    {% endif %} <!-- end if exists loop-->
+                                    {{user_total_fees - total_fees_spent -user_expenses }}
+
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td>No fees per consultant</td>
+                            </tr>
+                            {% endif %}
+
+
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+            </div>
+
+        <div class="footer">
+            <div class="pull-right">
+                10GB of <strong>250GB</strong> Free.
+            </div>
+            <div>
+                <strong>Copyright</strong> <a href="http://www.bankablefrontier.com" target="_blank">BFA</a> &copy; 2016
+            </div>
+        </div>
+        </div>
+
+    </div>
+
+    <!-- Mainly scripts -->
+    <script src="{{ url_for('static', filename='js/jquery-2.1.1.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/metisMenu/jquery.metisMenu.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/slimscroll/jquery.slimscroll.min.js') }}"></script>
+
+    <!-- Custom and plugin javascript -->
+    <script src="{{ url_for('static', filename='js/inspinia.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/pace/pace.min.js') }}"></script>
+
+    <!-- d3 and c3 charts -->
+    <script src="{{ url_for('static', filename='js/plugins/d3/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/c3/c3.min.js') }}"></script>
+
+    <script>
+
+        $(document).ready(function () {
+
+            c3.generate({
+                bindto: '#gauge',
+                data:{
+                    columns: [
+                        ['Pace ', {{80.4 + 2}}]
+                    ],
+
+                    type: 'gauge'
+                },
+                color:{
+                    pattern: ['#1ab394', '#e6e6e6']
+
+                }
+            });
+
+            c3.generate({
+                bindto: '#pie',
+                data:{
+                    columns: [
+                        ['data1', 30],
+                        ['data2', 120]
+                    ],
+                    colors:{
+                        data1: '#1ab394',
+                        data2: '#BABABA'
+                    },
+                    type : 'pie'
+                }
+            });
+
+        });
+
+    </script>
+</body>
+</html>
