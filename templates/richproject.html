@@ -37,7 +37,7 @@
 
 <body>
     <div id="wrapper">
-        {% include "navbar.html" ignore missing %}
+        {% include 'navbar.html' ignore missing %}
 
         <div id="page-wrapper" class="gray-bg">
         <div class="row border-bottom">
@@ -56,7 +56,7 @@
                 </li>
                 <li class="dropdown">
                     <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
-                        <i class="fa fa-envelope"></i> {{ projects_dict[project_id]['picklist_label'] }} <span class="label label-warning">16</span>
+                        <i class="fa fa-envelope"></i> {{ projects_dict[session['username']][project_id]['picklist_label'] }} <span class="label label-warning">16</span>
                     </a>
                     <ul class="dropdown-menu dropdown-messages">
                         <li>
@@ -152,7 +152,7 @@
 
 
                 <li>
-                    <a href="login.html">
+                    <a href="{{ url_for('logout') }}">
                         <i class="fa fa-sign-out"></i> Log out
                     </a>
                 </li>
@@ -165,10 +165,10 @@
                     <h2>Project detail </h2>
                     <ol class="breadcrumb">
                         <li>
-                            <a href="{{ url_for('projects') }}">Home</a>
+                            <a href="{{ url_for('index') }}">Home</a>
                         </li>
                         <li class="active">
-                            <strong>{{projects_dict[project_id]['name'] }}</strong>
+                            <strong>{{projects_dict[session['username']][project_id]['name'] }}</strong>
                         </li>
                     </ol>
                 </div>
@@ -179,7 +179,7 @@
                 <div class="ibox float-e-margins">
                     <div class="ibox-content text-center p-md">
 
-                        <h2><span class="text-navy"> {{ projects_dict[project_id]['name'] }} </span></h2>
+                        <h2><span class="text-navy"> {{ projects_dict[session['username']][project_id]['name'] }} </span></h2>
 
                         <p>
                             Page under construction, values represented here are provisional.
@@ -200,16 +200,16 @@
 
                             <div class="ibox-content">
                                 <h5>Total project cost</h5>
-                                <h1 class="no-margins">{% if projects_dict[project_id]['currency'] !='Undefined' %} {{ projects_dict[project_id]['currency'] }} {% else %} $ {% endif %} {{'{0:,.2f}'.format(projects_dict[project_id]['budget']|float) }}</h1>
+                                <h1 class="no-margins">{% if projects_dict[session['username']][project_id]['currency'] !='Undefined' %} {{ projects_dict[session['username']][project_id]['currency'] }} {% else %} $ {% endif %} {{'{0:,.2f}'.format(projects_dict[session['username']][project_id]['budget']|float) }}</h1>
                                 <!-- <div class="stat-percent font-bold text-navy">98% <i class="fa fa-bolt"></i></div> -->
                                 <small>Total project budget</small>
                             </div>
                             <div class="ibox-content">
                                 <h5>Budget burning chart</h5>
-                                <h1 class="no-margins">{{ projects_dict[project_id]['currency'] }} {{'{0:,.2f}'.format(succinct_projects_tasks_dict[project_id]['fees_worked']|float) }}</h1>
+                                <h1 class="no-margins">{{ projects_dict[session['username']][project_id]['currency'] }} {{'{0:,.2f}'.format(projects_dict[session['username']][project_id]['fees_worked']|float) }}</h1>
                                 <div class="stat-percent font-bold text-navy">
-                                    {% if succinct_projects_tasks_dict[project_id]['fees_worked'] != 0 and projects_dict[project_id]['budget'] != 0 %}
-                                    {{'%100.2f'|format(succinct_projects_tasks_dict[project_id]['fees_worked'] /projects_dict[project_id]['budget']) }}%
+                                    {% if projects_dict[session['username']][project_id]['fees_worked'] != 0 and projects_dict[session['username']][project_id]['budget'] != 0 %}
+                                    {{'%100.2f'|format(projects_dict[session['username']][project_id]['fees_worked'] /projects_dict[session['username']][project_id]['budget']) }}%
                                     {% else%}
                                     0.00%
                                     {% endif %}
@@ -223,36 +223,36 @@
                             <div>
                                 <div>
                                     <span>Start date </span>
-                                    <span class="text-center" style="padding: 10px 10px; margin: 10px 10px 0 0;">  {% if projects_dict[project_id]['percent_complete_days'] != 'None' %}
-                                        &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;({{ '%100.2f' | format(projects_dict[project_id]['percent_complete_days']|float) }}'% of time slot utilized')
+                                    <span class="text-center" style="padding: 10px 10px; margin: 10px 10px 0 0;">  {% if projects_dict[session['username']][project_id]['percent_complete_days'] != 'None' %}
+                                        &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;({{ '%100.2f' | format(projects_dict[session['username']][project_id]['percent_complete_days']|float) }}'% of time slot utilized')
                                             {% endif %}
                                     </span>
                                     <span class="pull-right"> End date </span>
                                     <!-- <small class="pull-right">End date  </small> -->
                                 </div>
                                 <div class="progress progress-small">
-                                    {% if projects_dict[project_id]['percent_complete_days'] != 'None' %}
-                                    <div style="width: {{ projects_dict[project_id]['percent_complete_days'] }}%;" class="progress-bar"></div>
+                                    {% if projects_dict[session['username']][project_id]['percent_complete_days'] != 'None' %}
+                                    <div style="width: {{ projects_dict[session['username']][project_id]['percent_complete_days'] }}%;" class="progress-bar"></div>
                                     {% endif %}
                                 </div>
 
                                 <div>
-                                    <span>{% if projects_dict[project_id]['test_start_date'] %} {{ projects_dict[project_id]['test_start_date'] }} {% else %} No start date{% endif %}</span>
-                                    <small class="pull-right">{% if projects_dict[project_id]['test_end_date'] %} {{ projects_dict[project_id]['test_end_date'] }} {% else %} No end date {% endif %}</small>
+                                    <span>{% if projects_dict[session['username']][project_id]['test_start_date'] %} {{ projects_dict[session['username']][project_id]['test_start_date'] }} {% else %} No start date{% endif %}</span>
+                                    <small class="pull-right">{% if projects_dict[session['username']][project_id]['test_end_date'] %} {{ projects_dict[session['username']][project_id]['test_end_date'] }} {% else %} No end date {% endif %}</small>
                                 </div>
                                 <!--
                                 <div>
-                                    <span>Days consumed: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[project_id]['days_consumed'] %} {{ projects_dict[project_id]['days_consumed'] }} {% endif %}</span>
+                                    <span>Days consumed: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[session['username']][project_id]['days_consumed'] %} {{ projects_dict[session['username']][project_id]['days_consumed'] }} {% endif %}</span>
                                 </div>
                                 <div>
-                                    <span>Remaining Days: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[project_id]['days_remaining'] %} {{ projects_dict[project_id]['days_remaining'] }} {% endif %}</span>
+                                    <span>Remaining Days: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[session['username']][project_id]['days_remaining'] %} {{ projects_dict[session['username']][project_id]['days_remaining'] }} {% endif %}</span>
                                 </div>
                                 <div>
-                                    <span>Total Days: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[project_id]['days_diff'] %} {{ projects_dict[project_id]['days_diff'] }} {% endif %}</span>
+                                    <span>Total Days: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[session['username']][project_id]['days_diff'] %} {{ projects_dict[session['username']][project_id]['days_diff'] }} {% endif %}</span>
                                 </div>
                                 -->
                                 <div>
-                                    <span>Budget Hours: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[project_id]['budget_time'] %} {{ '{0:,.2f}'.format(projects_dict[project_id]['budget_time']|float) }} {% endif %}</span>
+                                    <span>Budget Hours: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[session['username']][project_id]['budget_time'] %} {{ '{0:,.2f}'.format(projects_dict[session['username']][project_id]['budget_time']|float) }} {% endif %}</span>
                                 </div>
                                 <!--
                                 <div class="progress progress-small">
@@ -309,16 +309,16 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {% if project_id in bookings_dict.keys() %}
-                                {% for user_id in bookings_dict[project_id]['users_proj_hours']%}
+                                {% if project_id in bookings_dict[session['username']].iterkeys() %}
+                                {% for user_id in bookings_dict[session['username']][project_id]['users_proj_hours']%}
                                 <tr>
                                     <td>{{ loop.index }}</td>
                                     <td>
                                         <!-- remember the user_rate-->
                                         {% set user_rate = 0 %}
-                                        {%if user_id in users_dict.keys()%}
-                                            {{users_dict[user_id]['name']}}
-                                            {% set user_rate = users_dict[user_id]['rate'] %}
+                                        {%if user_id in users_dict[session['username']].iterkeys()%}
+                                            {{users_dict[session['username']][user_id]['name']}}
+                                            {% set user_rate = users_dict[session['username']][user_id]['rate'] %}
                                         {% else %}
                                             Unknown user
                                         {% endif %}
@@ -326,14 +326,14 @@
                                     <td>
                                         <!-- remember the total_hrs_used -->
                                         {% set total_hrs_used = 0%}
-                                        {% if project_id in succinct_projects_tasks_dict.keys() %}
+                                        {% if project_id in projects_dict[session['username']].iterkeys() %}
                                             <!-- project id exists  -->
-                                            {% if  user_id in succinct_projects_tasks_dict[project_id]['users'].keys() %}
+                                            {% if  user_id in projects_dict[session['username']][project_id]['users'].iterkeys() %}
                                                 <!-- user id exists, next check if it has total_hrs_used  -->
-                                                {% if 'total_hrs_used' in succinct_projects_tasks_dict[project_id]['users'][user_id].keys() %}
-                                                    {{ succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hrs_used'] }}
+                                                {% if 'total_hrs_used' in projects_dict[session['username']][project_id]['users'][user_id].iterkeys() %}
+                                                    {{ projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] }}
                                                     <!-- -->
-                                                    {% set total_hrs_used = succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hrs_used'] %}
+                                                    {% set total_hrs_used = projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] %}
                                                 {% else %}
                                                     0.00
                                                 {% endif %}
@@ -348,12 +348,12 @@
                                     <td>
 
                                         {% set user_hours_booked = 0.0 %}<!-- remember the hours booked per user-->
-                                        {% if project_id in bookings_dict %}
+                                        {% if project_id in bookings_dict[session['username']] %}
                                         <!-- project_id exists, then check if  --->
-                                            {% if 'users_proj_hours' in bookings_dict[project_id].keys() %}
+                                            {% if 'users_proj_hours' in bookings_dict[session['username']][project_id].iterkeys() %}
                                                 <!-- check if the user id is booked for this project id-->
-                                                {% if user_id in bookings_dict[project_id]['users_proj_hours'].keys() %}
-                                                    {% set user_hours_booked = bookings_dict[project_id]['users_proj_hours'][user_id] %}
+                                                {% if user_id in bookings_dict[session['username']][project_id]['users_proj_hours'].iterkeys() %}
+                                                    {% set user_hours_booked = bookings_dict[session['username']][project_id]['users_proj_hours'][user_id] %}
                                                     {{ user_hours_booked - total_hrs_used }}
                                                     {% if exists.append(user_hours_booked) %} {% endif %}
                                                 {% else %}
@@ -365,15 +365,15 @@
                                         {% endif %}
 
                                         <!--
-                                        {% if succinct_projects_tasks_dict[project_id]['users'][user_id] and bookings_dict[project_id]['users_proj_hours'][user_id] %}
-                                            {% if succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hrs_used']!= 'Undefined' %}
-                                                {{ bookings_dict[project_id]['users_proj_hours'][user_id]|default(0.00) - succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hours']|default(0.00)}}
+                                        {% if projects_dict[session['username']][project_id]['users'][user_id] and bookings_dict[session['username']][project_id]['users_proj_hours'][user_id] %}
+                                            {% if projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used']!= 'Undefined' %}
+                                                {{ bookings_dict[session['username']][project_id]['users_proj_hours'][user_id]|default(0.00) - projects_dict[session['username']][project_id]['users'][user_id]['total_hours']|default(0.00)}}
                                             {% else %}
                                                 No work
                                             {% endif %}
                                         {% else %}
-                                            {% if succinct_projects_tasks_dict[project_id]['users'][user_id] and succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hrs_used'] %}
-                                                {{ bookings_dict[project_id]['users_proj_hours'][user_id] - succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hours']}}
+                                            {% if projects_dict[session['username']][project_id]['users'][user_id] and projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] %}
+                                                {{ bookings_dict[session['username']][project_id]['users_proj_hours'][user_id] - projects_dict[session['username']][project_id]['users'][user_id]['total_hours']}}
                                             {% else %}
                                                 No work
                                             {% endif %}
@@ -409,16 +409,16 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {% if project_id in bookings_dict.keys()%}
-                            {% for user_id in bookings_dict[project_id]['users_proj_hours']%}
+                            {% if project_id in bookings_dict[session['username']].iterkeys()%}
+                            {% for user_id in bookings_dict[session['username']][project_id]['users_proj_hours']%}
                             <tr>
                                 <td>{{ loop.index }}</td>
                                 <td>
                                     <!-- remember the user_rate-->
                                     {% set user_rate = 0 %}
-                                    {%if users_dict[user_id]%}
-                                        {{users_dict[user_id]['name']}}
-                                        {% set user_rate = users_dict[user_id]['rate'] %}
+                                    {%if users_dict[session['username']][user_id]%}
+                                        {{users_dict[session['username']][user_id]['name']}}
+                                        {% set user_rate = users_dict[session['username']][user_id]['rate'] %}
                                     {% else %}
                                         Unknown user
                                     {% endif %}
@@ -427,18 +427,18 @@
                                     {% set user_expenses = 0 %}
                                     {% set user_spent_hours = 0 %}
                                     {% set total_fees_spent = 0%}
-                                    {% if project_id in succinct_projects_tasks_dict.keys() %}
+                                    {% if project_id in projects_dict[session['username']].iterkeys() %}
                                         <!-- project_id exists, then check if 'users' and user_id exist -->
-                                        {% if 'users' in succinct_projects_tasks_dict[project_id].keys() %}
+                                        {% if 'users' in projects_dict[session['username']][project_id].iterkeys() %}
                                             <!-- check if the user_id exists -->
-                                            {% if user_id in succinct_projects_tasks_dict[project_id]['users'].keys() %}
+                                            {% if user_id in projects_dict[session['username']][project_id]['users'].iterkeys() %}
                                                 <!-- user_id exists, check if expenses and total_hours_used exist -->
-                                                {% if 'expenses' in succinct_projects_tasks_dict[project_id]['users'][user_id].keys() %}
-                                                    {% set user_expenses = succinct_projects_tasks_dict[project_id]['users'][user_id]['expenses']%}
+                                                {% if 'expenses' in projects_dict[session['username']][project_id]['users'][user_id].iterkeys() %}
+                                                    {% set user_expenses = projects_dict[session['username']][project_id]['users'][user_id]['expenses']%}
                                                 {% endif %}
 
-                                                {% if 'total_hrs_used' in succinct_projects_tasks_dict[project_id]['users'][user_id].keys()%}
-                                                    {% set user_spent_hours = succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hrs_used'] %}
+                                                {% if 'total_hrs_used' in projects_dict[session['username']][project_id]['users'][user_id].iterkeys()%}
+                                                    {% set user_spent_hours = projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] %}
                                                 {% endif %}
 
                                                 <!-- compute total_fees_spent -->
@@ -458,17 +458,6 @@
                                         None
                                     {% endif %}
 
-                                    <!--
-                                    {% set total_proj_fees = 0.0 %}
-                                    {% for task_id in succinct_projects_tasks_dict[project_id]['users'][user_id] %}
-                                        {% if succinct_projects_tasks_dict[project_id]['users'][user_id][task_id]['total_fees'] %}
-                                            {% set total_proj_fees = total_proj_fees + succinct_projects_tasks_dict[project_id]['users'][user_id][task_id]['total_fees']|float(default = 0.0) %}
-                                        {% else %}
-                                            No fees
-                                        {% endif %}
-                                    {% endfor %}
-                                    {{ total_proj_fees }}
-                                    -->
                                 </td>
                                 <td>
                                     {% if exists %}
@@ -485,23 +474,7 @@
 
                                     {% endif %} <!-- end if exists loop-->
                                     {{user_total_fees - total_fees_spent -user_expenses }}
-                                     <!--({{user_total_fees}} - {{total_fees_spent}} -{{user_expenses }}) -->
 
-                                    <!--
-                                    {% if succinct_projects_tasks_dict[project_id]['users'][user_id] and bookings_dict[project_id]['users_proj_hours'][user_id] %}
-                                        {% if succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hrs_used'] %}
-                                            {{ bookings_dict[project_id]['users_proj_hours'][user_id] - succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hrs_used']}}
-                                        {% else %}
-                                            No work
-                                        {% endif %}
-                                    {% else %}
-                                        {% if succinct_projects_tasks_dict[project_id]['users'][user_id] and succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hrs_used'] %}
-                                            {{ bookings_dict[project_id]['users_proj_hours'][user_id] - succinct_projects_tasks_dict[project_id]['users'][user_id]['total_hrs_used']}}
-                                        {% else %}
-                                            No work
-                                        {% endif %}
-                                    {% endif %}
-                                    -->
                                 </td>
                             </tr>
                             {% endfor %}
