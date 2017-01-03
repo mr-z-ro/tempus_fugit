@@ -1,12 +1,12 @@
 # utilities to interface with the OAXMLAPI Netsuite API wrapper
 # import modules from Python wrapper around the NetSuite OpenAir XML API
 from __future__ import absolute_import
+
 import urllib2
+
 import simplejson as json
 
-
-from xml.dom import minidom
-from oaxmlapi import utilities
+from app.oaxmlapi import utilities
 
 try:
     import xml.etree.cElementTree as ET

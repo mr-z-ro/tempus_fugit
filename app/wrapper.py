@@ -1,9 +1,10 @@
 # utilities to interface with the OAXMLAPI Netsuite API wrapper
 # import modules from Python wrapper around the NetSuite OpenAir XML API
 import urllib2
-from oaxmlapi import connections, datatypes, commands
+
 import simplejson as json
-from oaxmlapi import *
+
+from oaxmlapi import connections, datatypes, commands, utilities
 
 
 # Private method to make the final call including all the general parameters

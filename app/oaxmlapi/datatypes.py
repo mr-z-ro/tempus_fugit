@@ -1,8 +1,10 @@
 # -*- coding: utf-8
 
 from __future__ import absolute_import
+
 from xml.dom import minidom
-from oaxmlapi.utilities import ADDRESS_FIELDS
+
+from app.oaxmlapi.utilities import ADDRESS_FIELDS
 
 try:
     import xml.etree.cElementTree as ET

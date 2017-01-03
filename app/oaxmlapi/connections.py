@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 
 from __future__ import absolute_import
+
 from xml.dom import minidom
 
 try:
@@ -161,7 +162,7 @@ class Whoami(object):
         Returns an ElementTree object containing an XML Whoami tag.
 
         """
-        from oaxmlapi.datatypes import Datatype
+        from app.oaxmlapi.datatypes import Datatype
 
         whoami = ET.Element('Whoami')
         if isinstance(self.datatype, Datatype) and self.datatype.type == 'User':
