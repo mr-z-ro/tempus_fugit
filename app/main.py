@@ -45,7 +45,7 @@ app = Flask(__name__)
 
 ##########################################################################################################################################
 # global variables from config.py and instance/config.py
-app.config.from_object('config') # normal config.py
+app.config.from_object('app.config') # normal config.py
 
 app.config.from_pyfile('config.py') # instance/config.py access to secret keys
 # Now we can access the configuration variables via app.config["VAR_NAME"].
