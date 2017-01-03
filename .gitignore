@@ -132,7 +132,7 @@ Thumbs.db
 
 #	Secret Files 	  #
 #######################
-app/instance/
+instance/
 
 #	PyCharm config	  #
 #######################
@@ -144,3 +144,10 @@ app/instance/
 #     test files       #
 ########################
 Api_Tester.py
+
+# old & orig .html,.py #
+########################
+*_old.html
+*_orig.html
+*_old.py
+*_orig.py

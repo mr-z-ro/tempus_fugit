@@ -17,7 +17,7 @@ import pytest
 
 @pytest.fixture
 def app():
-    from app import main
+    import main
     main.app.testing = True
     return main.app.test_client()
 
