@@ -152,7 +152,7 @@
 
 
                 <li>
-                    <a href="{{ url_for('logout') }}">
+                    <a href="{{ url_for('mod_tempus_fugit.logout') }}">
                         <i class="fa fa-sign-out"></i> Log out
                     </a>
                 </li>
@@ -165,7 +165,7 @@
                     <h2>Project detail </h2>
                     <ol class="breadcrumb">
                         <li>
-                            <a href="{{ url_for('index') }}">Home</a>
+                            <a href="{{ url_for('mod_tempus_fugit.index') }}">Home</a>
                         </li>
                         <li class="active">
                             <strong>{{projects_dict[session['username']][project_id]['name'] }}</strong>
