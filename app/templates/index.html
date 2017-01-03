@@ -216,7 +216,7 @@
                                                 {% for key in projects_dict[session['username']] if not projects_dict[session['username']][key].name in ('UnAllocated Time', 'PTO', 'Internal', 'Meetings - Internal')%}
                                                 <tr>
                                                     <td> {{ loop.index }} </td>
-                                                    <td><a href="{{ url_for('mod_tempus_fugit.project_detail', project_id = key) }}"><strong> {{ projects_dict[session['username']][key]['name'] }} </strong></a></td> <!-- link to associates list-->
+                                                    <td><a href="{{ url_for('mod_tempus_fugit.project_detail', project_id = key|string) }}"><strong> {{ projects_dict[session['username']][key]['name'] }} </strong></a></td> <!-- link to associates list-->
                                                     <td>
                                                         {%if 'budget' in projects_dict[session['username']][key].keys() %}
                                                             {% if projects_dict[session['username']][key]['budget'] <= 0.00 %}
@@ -241,7 +241,6 @@
                                                         {% else %}
                                                             <span id="sparkline7" class="pie">{{projects_dict[session['username']][key]['days_consumed']}}/{{projects_dict[session['username']][key]['days_diff']}}</span>
                                                         {% endif %}
-                                                        <!-- <small>{{ '{0:0.2f}%'.format(projects_dict[session['username']][key]['percent_complete_days'])}}</small> -->
                                                         <small>{{ projects_dict[session['username']][key]['percent_complete_days'] }}</small>
                                                     </td> <!-- show small blue piechart displaying calendar time elapsed Start Date -Today/ End date -->
                                                     <td>
@@ -266,7 +265,6 @@
                                                     <td>Budget not available.</td>
                                                     {% endif %}
                                                     <td>{{ projects_dict[session['username']][key]['updated'] }}</td>
-                                                    <!--<td><a href="{{ url_for('mod_tempus_fugit.project_detail', project_id = key) }}"><i class="fa fa-check text-navy"></i></a></td> -->
                                                 </tr>
                                                 {% else %}
                                                     {# this should be an exception, an associate should not have an empty projects list#}

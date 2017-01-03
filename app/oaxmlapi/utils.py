@@ -1,30 +1,6 @@
 #########################################################################################################################################
 # format date value into a sensible value
-import datetime
-
-
-def reformatDate(dictval):
-    if dictval == 'None' or dictval == 'Null':
-        myDate = 'None'
-    else:
-        simpledate = {}
-        for attr in [u'year', u'month', u'day', u'hour', u'minute', u'second']:
-            # print 'attr {}'.format(attr)
-            try:
-                simpledate[attr] = dictval[attr]
-            # sanitize the value if None
-            except KeyError, err:
-                print 'error:: ', err
-                # skip over missing values
-                simpledate[attr] = ''
-        # values that are missing time, minute and second values
-        if simpledate['hour'] == None or simpledate['minute'] == None or simpledate['second'] == None:
-            # if any elements of time is missing then exclude time from date
-            myDate = "{}/{}/{}".format(simpledate['day'], simpledate['month'], simpledate['year'])
-        else:
-            myDate = "{}/{}/{} {}:{}:{}".format(simpledate['day'], simpledate['month'], simpledate['year'],
-                                                simpledate['hour'], simpledate['minute'], simpledate['second'])
-        return myDate
+from datetime import datetime
 
 
 def date_percent_difference(start_date, end_date):
