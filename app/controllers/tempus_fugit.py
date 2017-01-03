@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 from os import urandom
 
@@ -5,17 +6,19 @@ from flask import Blueprint
 from flask import current_app
 from flask import flash
 from flask import render_template
-from flask_login import LoginManager
 
+from app.models.Booking import Booking
+from app.models.Project import Project
+from app.models.Task import Task
+from app.models.TempusFugitUser import TempusFugitUser
+from app.models.Ticket import Ticket
 from app.models.User import User
 from login_form import LoginForm
 
 from functools import wraps
 from flask import request, session, redirect, url_for
-from app.oaxmlapi.utils import reformatDate
 from app.oaxmlapi.utils import date_percent_difference
 from app.oaxmlapi.wrapper import get_whoami
-from app.oaxmlapi.xmlwriter import raw_call_wrapper
 
 mod_tempus_fugit = Blueprint('mod_tempus_fugit', __name__)
 
@@ -23,7 +26,7 @@ mod_tempus_fugit = Blueprint('mod_tempus_fugit', __name__)
 projects_dict = {}
 users_dict = {}
 bookings_dict = {}
-user = User(
+tempus_fugit_user = TempusFugitUser(
             username=None,
             password=None,
             company=None
@@ -62,7 +65,7 @@ def login_required(func):
         try:
             # to catch keyerrors
 
-            if ('logged_in' not in session) and ('username' not in session) and (session['username']=='' or session['username']== None) and (not user.is_authenticated()) and (request.endpoint !=url_for('mod_tempus_fugit.login')):
+            if ('logged_in' not in session) and ('username' not in session) and (session['username']=='' or session['username']== None) and (not tempus_fugit_user.is_authenticated()) and (request.endpoint !=url_for('mod_tempus_fugit.login')):
                 # session is non-existent but we still do the same
                 return redirect(url_for('mod_tempus_fugit.login',next=request.url))
         except Exception, err:
@@ -77,20 +80,6 @@ def login_required(func):
 @mod_tempus_fugit.route('/index.html',methods=['GET','POST'])
 @login_required
 def index():
-
-    #flash("all_bookings_json_obj: ***{}***".format(all_bookings_json_obj['response']['Read']['Booking']))
-    #flash("all_users_json_obj:{} ".format(all_users_json_obj))
-    # prepare projects dictionary
-    '''dummy = prepare_dict(projects_json= all_projects_json_obj, users_json= all_users_json_obj, tasks_json= all_tasks_json_obj,
-                 tickets_json= all_tickets_json_obj, bookings_json = all_bookings_json_obj)'''
-
-    # create global variables
-
-
-    '''flash("all_projects_json_obj: {}, all_users_json_obj: {}, all_tasks_info_obj: {}, all_timesheets_info_obj: {}, all_envelopes_info_obj: {}".format(all_projects_json_obj, all_users_json_obj, all_tasks_info_obj,
-                                                                     all_timesheets_info_obj, all_envelopes_info_obj))
-                                                                     '''
-
     return render_template(url_for('mod_tempus_fugit.index'))
 # [END index]
 
@@ -99,7 +88,7 @@ def index():
 def logout():
     """Logout the current user"""
     #user = current_user;
-    user.authenticated = False
+    tempus_fugit_user.authenticated = False
     session['logged_in'] = False
 
     session['username']=''
@@ -116,7 +105,7 @@ def logout():
     # set a timeout for the session  to 1 seconds of inactivity /this  can change
     current_app.permanent_session_lifetime = timedelta(seconds=1)
 
-    if 'username' not in session  or 'logged_in' not in session or session['username']=='' or session['logged_in']=='' and not user.is_authenticated():
+    if 'username' not in session  or 'logged_in' not in session or session['username']=='' or session['logged_in']=='' and not tempus_fugit_user.is_authenticated():
         return redirect(url_for('mod_tempus_fugit.login'))
 
     return render_template(url_for('mod_tempus_fugit.login'))
@@ -156,37 +145,26 @@ def login():
         # flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
         auth = True if (json_obj['response']['Auth']['@status'])=='0' else False
         # set authentication on the user instance
-        user.set_authentication(auth)
-        if user.is_authenticated():
-            # print "is_authenticated *********************************************************************************"
-            # save the username to a session
-            # session['username'] = form.username.data.split('@')[0] # Generate ID from email address
+        tempus_fugit_user.set_authentication(auth)
+        if tempus_fugit_user.is_authenticated():
+
             session['associate'] = '%s, %s' % (json_obj['response']['Whoami']['User']['addr']['Address']['last'], json_obj['response']['Whoami']['User']['addr']['Address']['first'])
             session['associate_title'] = '%s' % (json_obj['response']['Whoami']['User']['type'])
             session['associate_email'] = '%s' % (json_obj['response']['Whoami']['User']['addr']['Address']['email'])
             session['associate_id'] = '%s' % (json_obj['response']['Whoami']['User']['id'])
-            # login_user(user)
             session['logged_in'] = True
+
             # for session timeout to work we must set session permanent to True
             # session.permanent = True
             flash('Logged in successfully.')
+
             next = request.args.get('next')
-            # next_is_valid should check if the user has validate
-            # permission to access the 'next' url
-            # if not next_is_valid(next):
-            #    return abort(400)
-
-            # user should be an instance of your 'User' class
-            # login_user(user,remember=True)
-            # redirect to projects page
-            # return redirect(next or (url_for('mod_tempus_fugit.index')))
-
-            # flash("session Projects : {}".format(session['projects']))
             if next:
                 session['currentpage'] = str(str(next).split('//')[-1:]).split('.')[:1]
             else:
                 session['currentpage'] = 'projects'
             return redirect(next or url_for('mod_tempus_fugit.index'))
+
         flash('Sorry! Your password or username is invalid. Kindly try again..')
     return render_template('login.html', form=form)
 
@@ -200,116 +178,26 @@ def prepare_data():
     # project_dates will store dates related to projects, earliest used to estimate start date for projects with Null start date
     all_projects_dict = {}
     projects_dates = {}
-    netsuite_key = current_app.config['NETSUITE_API_KEY']  # Retrieve key from instance/config file
 
-    # make an API call to projects
-    projects_json = raw_call_wrapper(key=netsuite_key,
-                                     username=session['username'],
-                                     passwd=session['password'], xml_str='''
-                                                                                        <Read type= "Project" method = "equal to" limit = "500">
-                                                                                            <Project>
-                                                                                                <active>1</active>
-                                                                                            </Project>
-                                                                                        <_Return>
-                                                                                            <id/>
-                                                                                            <name/>
-                                                                                            <active/>
-                                                                                            <budget/>
-                                                                                            <budget_time/>
-                                                                                            <userid/>
-                                                                                            <currency/>
-                                                                                            <start_date/>
-                                                                                            <finish_date/>
-                                                                                            <project_stageid/>
-                                                                                            <updated/>
-                                                                                        </_Return>
-                                                                                        </Read>
-                                                                                   ''')
+    # get active projects
+    projects_list = Project.query.filter_by(active=1).all()
+    projects_list = [project.to_dict() for project in projects_list]
+
     # make API call to retrieve users name and rate
-    users_json = raw_call_wrapper(key=netsuite_key,
-                                  username=session['username'],
-                                  passwd=session['password'], xml_str='''
-                                                                                        <Read type= "User" method = "equal to" limit = "500">
-                                                                                        <_Return>
-                                                                                            <name/>
-                                                                                            <active/>
-                                                                                            <timezone/>
-                                                                                            <currency/>
-                                                                                            <id/>
-                                                                                            <rate/>
-                                                                                            <line_managerid/>
-                                                                                            <nickname/>
-                                                                                            <departmentid/>
-                                                                                        </_Return>
-                                                                                        </Read>
-                                                                                   ''')
+    users_list = User.query.all()
+    users_list = [user.to_dict() for user in users_list]
 
     # make API call to retrieve timesheet entries
-    tasks_json = raw_call_wrapper(key=netsuite_key,
-                                  username=session['username'],
-                                  passwd=session['password'], xml_str='''
-                                                                                        <Read type= "Task" method = "all" limit = "500">
-                                                                                        <_Return>
-                                                                                            <projectid/>
-                                                                                            <projecttaskid/>
-                                                                                            <decimal_hours/>
-                                                                                            <userid/>
-                                                                                            <date/>
-                                                                                            <updated/>
-                                                                                            <hours/>
-                                                                                            <minutes/>
-                                                                                            <timesheetid/>
-                                                                                            <cost_centerid/>
-                                                                                        </_Return>
-                                                                                        </Read>
-                                                                                   ''')
+    tasks_list = Task.query.all()
+    tasks_list = [task.to_dict() for task in tasks_list]
 
     # API call to retrieve Tickets info form Netsuite Openair
-    tickets_json = raw_call_wrapper(key=netsuite_key,
-                                    username=session['username'],
-                                    passwd=session['password'], xml_str='''
-                                                                                                    <Read type= "Ticket" method = "all" limit = "500">
-                                                                                                    <_Return>
-                                                                                                        <id/>
-                                                                                                        <date/>
-                                                                                                        <updated/>
-                                                                                                        <unitm/>
-                                                                                                        <total_no_tax/>
-                                                                                                        <cost/>
-                                                                                                        <total/>
-                                                                                                        <project_taskid/>
-                                                                                                        <userid/>
-                                                                                                        <projectid/>
-                                                                                                        <currency/>
-                                                                                                        <city/>
-                                                                                                        <quantity/>
-                                                                                                        <acct_date/>
-                                                                                                        <total_tax_paid/>
-                                                                                                    </_Return>
-                                                                                                    </Read>
-                                                                                               ''')
+    tickets_list = Ticket.query.all()
+    tickets_list = [ticket.to_dict() for ticket in tickets_list]
 
     # Booking information is needed, pull only approved bookings
-    bookings_json = raw_call_wrapper(key=netsuite_key,
-                                     username=session['username'],
-                                     passwd=session['password'], xml_str='''
-                                                                                            <Read type= "Booking" method = "all" limit = "500">
-                                                                                                <Booking>
-                                                                                                    <approval_status>A</approval_status>
-                                                                                                </Booking>
-                                                                                                <_Return>
-                                                                                                    <ownerid/>
-                                                                                                    <userid/>
-                                                                                                    <projectid/>
-                                                                                                    <startdate/>
-                                                                                                    <enddate/>
-                                                                                                    <percentage/>
-                                                                                                    <hours/>
-                                                                                                    <project_taskid/>
-                                                                                                    <as_percentage/>
-                                                                                                </_Return>
-                                                                                            </Read>
-                                                                                            ''')
+    bookings_list = Booking.query.filter_by(approval_status='A').all()
+    bookings_list = [booking.to_dict() for booking in bookings_list]
 
     users_name = session['username'].strip()
     # ensure that the user_dict is tagged with this user's name
@@ -326,7 +214,7 @@ def prepare_data():
         bookings_dict[users_name] = {}
 
     # loop through the users_json
-    for a_user in users_json['response']['Read']['User']:
+    for a_user in users_list:
 
         # extract the user_id
         user_id = a_user['id']
@@ -337,9 +225,9 @@ def prepare_data():
             users_dict[users_name][user_id]['nickname'] = a_user['nickname']
             users_dict[users_name][user_id]['timezone'] = a_user['timezone']
             users_dict[users_name][user_id]['rate'] = float(a_user['rate']) if a_user['rate'] != None else 0.00
-            users_dict[users_name][user_id]['line_managerid'] = a_user['line_managerid']
+            users_dict[users_name][user_id]['line_manager_id'] = a_user['line_manager_id']
             users_dict[users_name][user_id]['currency'] = a_user['currency']
-            users_dict[users_name][user_id]['departmentid'] = a_user['departmentid']
+            users_dict[users_name][user_id]['department_id'] = a_user['department_id']
             users_dict[users_name][user_id]['active'] = a_user['active']
             # print 'user_dict try'
 
@@ -349,9 +237,9 @@ def prepare_data():
                 'nick_name': a_user['nickname'],
                 'time_zone': a_user['timezone'],
                 'rate': float(a_user['rate']) if a_user['rate'] != None else 0.00,
-                'line_manager_id': a_user['line_managerid'],
+                'line_manager_id': a_user['line_manager_id'],
                 'currency': a_user['currency'],
-                'department_id': a_user['departmentid'],
+                'department_id': a_user['department_id'],
                 'active': a_user['active']
             }
             # flash("users_dict[users_name] keyerror: %s %s" % (err, user_id))
@@ -362,10 +250,10 @@ def prepare_data():
 
     # flash('users_dict[users_name]: %s' % users_dict[users_name])
     # loop through the projects_json
-    for project in projects_json['response']['Read']['Project']:
+    for project in projects_list:
         pid = project['id']
-        calc_start_date = reformatDate(project['start_date']['Date'])
-        calc_end_date = reformatDate(project['finish_date']['Date'])
+        calc_start_date = project['start_date']
+        calc_end_date = project['finish_date']
 
         if calc_start_date != 'None':
             my_start_date = calc_start_date
@@ -394,12 +282,12 @@ def prepare_data():
                 project['budget'])  # 'budget' : '{:,.2f}'.format(float(project['budget']))
             projects_dict[users_name][pid]['budget_time'] = float(project['budget_time']) if project[
                                                                                                  'budget_time'] != None else 0.00
-            projects_dict[users_name][pid]['owner_id'] = project['userid']
+            projects_dict[users_name][pid]['owner_id'] = project['owner_id']
             projects_dict[users_name][pid]['currency'] = project['currency']
             projects_dict[users_name][pid]['start_date'] = calc_start_date
             projects_dict[users_name][pid]['finish_date'] = calc_end_date
-            projects_dict[users_name][pid]['project_stageid'] = project['project_stageid']
-            projects_dict[users_name][pid]['updated'] = reformatDate(project['updated']['Date'])
+            projects_dict[users_name][pid]['project_stage_id'] = project['project_stage_id']
+            projects_dict[users_name][pid]['updated'] = project['updated']
             projects_dict[users_name][pid]['percent_complete_days'] = project_days['percent_days']
             projects_dict[users_name][pid]['days_consumed'] = project_days['days_consumed']
             projects_dict[users_name][pid]['days_remaining'] = project_days['days_remaining']
@@ -413,12 +301,12 @@ def prepare_data():
                 'name': project['name'],
                 'budget': float(project['budget']),
                 'budget_time': float(project['budget_time']) if project['budget_time'] != None else 0.00,
-                'owner_id': project['userid'],
+                'owner_id': project['user_id'],
                 'currency': project['currency'],
                 'start_date': calc_start_date,
                 'finish_date': calc_end_date,
-                'project_stageid': project['project_stageid'],
-                'updated': reformatDate(project['updated']['Date']),
+                'project_stage_id': project['project_stage_id'],
+                'updated': project['updated'],
                 'percent_complete_days': project_days['percent_days'],
                 'days_consumed': project_days['days_consumed'],
                 'days_remaining': project_days['days_remaining'],
@@ -436,11 +324,11 @@ def prepare_data():
         except KeyError:
             projects_dates[pid] = {'start_dates': set([calc_start_date, ]), 'end_dates': set([calc_end_date, ])}
 
-    for tasks in tasks_json['response']['Read']['Task']:
-        project_id = tasks['projectid']
-        task_id = tasks['projecttaskid']
-        user_id = tasks['userid']
-        task_hours = float(tasks['hours']) if tasks['hours'] != None else 0.00
+    for tasks in tasks_list:
+        project_id = tasks['project_id']
+        task_id = tasks['project_task_id']
+        user_id = tasks['user_id']
+        task_hours = float(tasks['hour']) if tasks['hour'] != None else 0.00
 
         # extract the rate for the user
         try:
@@ -452,7 +340,6 @@ def prepare_data():
 
         # compute total hours worked per project
         fees_worked = task_hours * user_rate
-
         if project_id not in projects_dict[users_name].keys():
             # track fees_worked, users and hours_worked in projects_dict
             projects_dict[users_name][project_id] = {
@@ -562,30 +449,48 @@ def prepare_data():
                             "projects_dict[users_name][project_id]['users']= {user_id : {'total_hours': task_hours}} failed")
 
     # loop through the tickets and compute the additional expense
-    for ticket in tickets_json['response']['Read']['Ticket']:
-        total = float(ticket['total']) if ticket['total'] != None else 0.00
-        project_id = ticket['projectid']
-        user_id = ticket['userid']
+    for ticket in tickets_list:
+        total = float(ticket['total']) if ticket['total'] is not None else 0.00
+        project_id = ticket['project_id']
+        user_id = ticket['user_id']
 
-        # track expenses per project/ per user
-        try:
-            projects_dict[users_name][project_id]['users'][user_id]['expenses'] += total
-        except KeyError:
+        if project_id not in projects_dict[users_name].keys():
+            # track fees_worked, users and hours_worked in projects_dict
+            projects_dict[users_name][project_id] = {
+                'fees_worked': 0.00,
+                'hours_worked': 0.00,
+                'users': {
+                    user_id: {
+                        'expenses': total
+                    }
+                }
+            }
+        else:
+            # track expenses per project/ per user
             try:
-                projects_dict[users_name][project_id]['users'][user_id]['expenses'] = total
+                projects_dict[users_name][project_id]['users'][user_id]['expenses'] += total
             except KeyError:
                 try:
-                    projects_dict[users_name][project_id]['users'][user_id] = {'expenses': total}
+                    projects_dict[users_name][project_id]['users'][user_id]['expenses'] = total
                 except KeyError:
-                    flash(
-                        "Unexpected projects_dict[users_name][project_id]['users'][user_id] = {'expenses' : total} fail")
+                    try:
+                        projects_dict[users_name][project_id]['users'][user_id] = {'expenses': total}
+                    except KeyError:
+                        try:
+                            projects_dict[users_name][project_id]['users'].append({user_id:{'expenses': total}})
+                        except KeyError:
+                            try:
+                                projects_dict[users_name][project_id] = {'users':[{user_id: {'expenses': total}}]}
+                            except KeyError:
+                                flash(
+                                    "Unexpected projects_dict[users_name][project_id]['users'][user_id] = {'expenses' : total} fail")
 
-        try:
-            projects_dict[users_name][project_id]['fees_worked'] += total
-        except KeyError:
-            projects_dict[users_name][project_id]['fees_worked'] = total
+            try:
+                projects_dict[users_name][project_id]['fees_worked'] += total
+            except KeyError:
+                projects_dict[users_name][project_id]['fees_worked'] = total
 
-    for booking in bookings_json['response']['Read']['Booking']:
+    for booking in bookings_list:
         """ restructure bookings into
             {project_id:{'tot_booked_hrs' : XY + 'hours',
                     task_id : {
@@ -609,9 +514,9 @@ def prepare_data():
                 }
             }
         """
-        project_id = booking['projectid']
-        task_id = booking['project_taskid']
-        user_id = booking['userid']
+        project_id = booking['project_id']
+        task_id = booking['project_task_id']
+        user_id = booking['user_id']
         hours_booked = float(booking['hours']) if booking['hours'] != None else 0.0
         hours_percent = float(booking['percentage']) if booking['percentage'] != None else 0.0
 
@@ -695,7 +600,7 @@ def prepare_data():
     current_app.add_template_global(users_dict, 'users_dict')
     current_app.add_template_global(projects_dict, 'projects_dict')
     current_app.add_template_global(bookings_dict, 'bookings_dict')
-    return render_template(url_for('mod_tempus_fugit.index'), users_dict = users_dict)
+    return render_template(url_for('mod_tempus_fugit.index'), users_dict=users_dict)
 
 # [START projects]
 @mod_tempus_fugit.route('/projects')

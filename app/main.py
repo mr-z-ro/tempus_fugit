@@ -24,6 +24,7 @@ from app.controllers.tempus_fugit import mod_tempus_fugit
 from app.controllers.wrap_bootstrap_templates import mod_wrap_bootstrap_templates
 from datetime import timedelta
 # [END imports]
+from app.models import db
 
 app = Flask(__name__)
 
@@ -54,6 +55,10 @@ login_manager.login_view = 'mod_tempus_fugit.login'
 secret_key = app.config['SECRET_KEY']
 if not secret_key:
     secret_key = urandom(24)
+
+# Define the database object which is imported by modules and controllers
+# (See http://stackoverflow.com/a/9695045/604003 for explanation)
+db.init_app(app)
 
 # Register Blueprints
 app.register_blueprint(mod_tempus_fugit)
