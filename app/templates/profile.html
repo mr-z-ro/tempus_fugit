@@ -18,7 +18,7 @@
 <body>
 
     <div id="wrapper">
-        {% include ["{{url_for('navbar')}}", "navbar.html"] ignore missing %}
+        {% include ["{{url_for('mod_wrap_bootstrap_templates.navbar')}}", "navbar.html"] ignore missing %}
 
         <div id="page-wrapper" class="gray-bg">
         <div class="row border-bottom">
@@ -146,7 +146,7 @@
                     <h2>Profile</h2>
                     <ol class="breadcrumb">
                         <li>
-                            <a href="{{ url_for('index') }}">Home</a>
+                            <a href="{{ url_for('mod_tempus_fugit.index') }}">Home</a>
                         </li>
                         <li>
                             <a>Extra Pages</a>

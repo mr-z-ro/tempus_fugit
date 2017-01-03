@@ -4,7 +4,7 @@ import urllib2
 
 import simplejson as json
 
-from oaxmlapi import connections, datatypes, commands, utilities
+from app.oaxmlapi import connections, datatypes, commands, utilities
 
 
 # Private method to make the final call including all the general parameters

@@ -417,7 +417,7 @@
 
 
                                         <td class="project-title">
-                                            <a href="{{ url_for('project_detail', project_id = key) }}">{{ projects_dict[key]['name'] }}</a>
+                                            <a href="{{ url_for('mod_tempus_fugit.project_detail', project_id = key) }}">{{ projects_dict[key]['name'] }}</a>
                                             <br/>
 
                                             <small>Project last updated on {{  projects_dict[key]['updated'] }}</small>
@@ -436,7 +436,7 @@
 
                                         <td>
                                             <div>
-                                                <a href="{{ url_for('project_detail', project_id = key ~ '|' ~ taskkey ) }}"> {{ projects_dict[key]['tasks'][taskkey]['name'] }} </a>
+                                                <a href="{{ url_for('mod_tempus_fugit.project_detail', project_id = key ~ '|' ~ taskkey ) }}"> {{ projects_dict[key]['tasks'][taskkey]['name'] }} </a>
                                             </div>
                                             <small>Task last updated on {{  projects_dict[key]['tasks'][taskkey]['updated'] }}</small>
 
