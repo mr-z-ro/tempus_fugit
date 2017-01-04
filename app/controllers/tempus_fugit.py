@@ -180,7 +180,7 @@ def prepare_data():
     projects_dates = {}
 
     # get active projects
-    projects_list = Project.query.filter_by(active=1).all()
+    projects_list = Project.get_my_projects(session['username']) # TODO: evaluate for sql injection via session
     projects_list = [project.to_dict() for project in projects_list]
 
     # make API call to retrieve users name and rate
@@ -188,15 +188,15 @@ def prepare_data():
     users_list = [user.to_dict() for user in users_list]
 
     # make API call to retrieve timesheet entries
-    tasks_list = Task.query.all()
+    tasks_list = Task.get_my_tasks(session['username'])
     tasks_list = [task.to_dict() for task in tasks_list]
 
     # API call to retrieve Tickets info form Netsuite Openair
-    tickets_list = Ticket.query.all()
+    tickets_list = Ticket.get_my_tickets(session['username'])
     tickets_list = [ticket.to_dict() for ticket in tickets_list]
 
     # Booking information is needed, pull only approved bookings
-    bookings_list = Booking.query.filter_by(approval_status='A').all()
+    bookings_list = Booking.get_my_bookings(session['username'])
     bookings_list = [booking.to_dict() for booking in bookings_list]
 
     users_name = session['username'].strip()
@@ -326,7 +326,9 @@ def prepare_data():
 
     for tasks in tasks_list:
         project_id = tasks['project_id']
+        project_name = tasks['project_name']
         task_id = tasks['project_task_id']
+        task_name = tasks['project_task_name']
         user_id = tasks['user_id']
         task_hours = float(tasks['hour']) if tasks['hour'] != None else 0.00
 
@@ -343,11 +345,13 @@ def prepare_data():
         if project_id not in projects_dict[users_name].keys():
             # track fees_worked, users and hours_worked in projects_dict
             projects_dict[users_name][project_id] = {
+                'name': project_name,
                 'fees_worked': fees_worked,
                 'hours_worked': task_hours,
                 'users': {
                     user_id: {
                         task_id: {
+                            'name': task_name,
                             'total_hours': task_hours,
                             'total_fees': fees_worked
                         }
@@ -424,7 +428,7 @@ def prepare_data():
             projects_dict[users_name][project_id]['tasks'] = {}
 
         if task_id not in projects_dict[users_name][project_id]['tasks'].keys():
-            projects_dict[users_name][project_id]['tasks'][task_id] = {}
+            projects_dict[users_name][project_id]['tasks'][task_id] = {'name': task_name}
 
         try:
             # evaluate need for computation of tasks in projects_dict if succinct_projects_task already has this info
@@ -452,11 +456,13 @@ def prepare_data():
     for ticket in tickets_list:
         total = float(ticket['total']) if ticket['total'] is not None else 0.00
         project_id = ticket['project_id']
+        project_name = ticket['project_name']
         user_id = ticket['user_id']
 
         if project_id not in projects_dict[users_name].keys():
             # track fees_worked, users and hours_worked in projects_dict
             projects_dict[users_name][project_id] = {
+                'name': project_name,
                 'fees_worked': 0.00,
                 'hours_worked': 0.00,
                 'users': {
@@ -480,7 +486,7 @@ def prepare_data():
                             projects_dict[users_name][project_id]['users'].append({user_id:{'expenses': total}})
                         except KeyError:
                             try:
-                                projects_dict[users_name][project_id] = {'users':[{user_id: {'expenses': total}}]}
+                                projects_dict[users_name][project_id] = {'name': project_name, 'users': [{user_id: {'expenses' : total}}]}
                             except KeyError:
                                 flash(
                                     "Unexpected projects_dict[users_name][project_id]['users'][user_id] = {'expenses' : total} fail")
@@ -831,8 +837,8 @@ def project_detail(project_id):
         # separate the project and task id for template processing
         project_id = project_id.strip()  # remove any trailing spaces
         pid, tid = project_id.split('|')
-        pid = unicode(pid)
-        tid = unicode(tid)
+        pid = long(pid)
+        tid = long(tid)
 
         # refresh task list?
         # json_obj = get_tasks(netsuite_key,
@@ -844,9 +850,9 @@ def project_detail(project_id):
         return render_template('richtasks.html', project_id=pid, taskid=tid)
     else:
         project_id = project_id.strip()  # remove any trailing spaces
-        pid = unicode(project_id)
+        pid = long(project_id)
 
-        return render_template('richproject.html', project_id =project_id)
+        return render_template('richproject.html', project_id=pid)
 
     return redirect(url_for('mod_tempus_fugit.projects'))
 # [END project_detail]
