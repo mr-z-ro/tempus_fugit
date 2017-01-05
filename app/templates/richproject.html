@@ -224,7 +224,7 @@
                                 <div>
                                     <span>Start date </span>
                                     <span class="text-center" style="padding: 10px 10px; margin: 10px 10px 0 0;">  {% if projects_dict[session['username']][project_id]['percent_complete_days'] != 'None' %}
-                                        &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;({{ '%100.2f' | format(projects_dict[session['username']][project_id]['percent_complete_days']|float) }}'% of time slot utilized')
+                                        &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;({{ '%100.2f' | format(projects_dict[session['username']][project_id]['percent_complete_days']|float) }}% of time slot utilized)
                                             {% endif %}
                                     </span>
                                     <span class="pull-right"> End date </span>
@@ -237,8 +237,8 @@
                                 </div>
 
                                 <div>
-                                    <span>{% if projects_dict[session['username']][project_id]['test_start_date'] %} {{ projects_dict[session['username']][project_id]['test_start_date'] }} {% else %} No start date{% endif %}</span>
-                                    <small class="pull-right">{% if projects_dict[session['username']][project_id]['test_end_date'] %} {{ projects_dict[session['username']][project_id]['test_end_date'] }} {% else %} No end date {% endif %}</small>
+                                    <span>{% if projects_dict[session['username']][project_id]['start_date'] %} {{ projects_dict[session['username']][project_id]['start_date'] }} {% else %} No start date{% endif %}</span>
+                                    <small class="pull-right">{% if projects_dict[session['username']][project_id]['finish_date'] %} {{ projects_dict[session['username']][project_id]['finish_date'] }} {% else %} No end date {% endif %}</small>
                                 </div>
                                 <!--
                                 <div>
@@ -252,7 +252,7 @@
                                 </div>
                                 -->
                                 <div>
-                                    <span>Budget Hours: &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{% if projects_dict[session['username']][project_id]['budget_time'] %} {{ '{0:,.2f}'.format(projects_dict[session['username']][project_id]['budget_time']|float) }} {% endif %}</span>
+                                    <span>Budget Days: {% if projects_dict[session['username']][project_id]['budget_time'] %} {{ '{0:,.2f}'.format(projects_dict[session['username']][project_id]['budget_time']|float / 8.00) }} {% endif %}</span>
                                 </div>
                                 <!--
                                 <div class="progress progress-small">
@@ -299,7 +299,7 @@
                     <div class="ibox-content text-left">
 
                             <table class="table">
-                                <h5>Time per consultant</h5>
+                                <h5>Days per consultant</h5>
                                 <thead>
                                 <tr>
                                     <th>#</th>
@@ -318,7 +318,8 @@
                                         {% set user_rate = 0 %}
                                         {%if user_id in users_dict[session['username']].iterkeys()%}
                                             {{users_dict[session['username']][user_id]['name']}}
-                                            {% set user_rate = users_dict[session['username']][user_id]['rate'] %}
+                                            {% set user_rate = rates_dict[session['username']][user_id, project_id]['rate'] if (rates_dict[session['username']] and rates_dict[session['username']][user_id, project_id]) else 0.00 %}
+                                            {% set user_currency = rates_dict[session['username']][user_id, project_id]['currency'] if (rates_dict[session['username']] and rates_dict[session['username']][user_id, project_id]) else "" %}
                                         {% else %}
                                             Unknown user
                                         {% endif %}
@@ -331,14 +332,14 @@
                                             {% if  user_id in projects_dict[session['username']][project_id]['users'].iterkeys() %}
                                                 <!-- user id exists, next check if it has total_hrs_used  -->
                                                 {% if 'total_hrs_used' in projects_dict[session['username']][project_id]['users'][user_id].iterkeys() %}
-                                                    {{ projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] }}
+                                                    {{ projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] / 8.00 }}
                                                     <!-- -->
                                                     {% set total_hrs_used = projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] %}
                                                 {% else %}
                                                     0.00
                                                 {% endif %}
                                             {% else %}
-                                                consultant hasn't worked
+                                                <small>[Consultant hasn't worked]</small>
                                             {% endif %}
                                         {% else %}
                                             None
@@ -354,32 +355,15 @@
                                                 <!-- check if the user id is booked for this project id-->
                                                 {% if user_id in bookings_dict[session['username']][project_id]['users_proj_hours'].iterkeys() %}
                                                     {% set user_hours_booked = bookings_dict[session['username']][project_id]['users_proj_hours'][user_id] %}
-                                                    {{ user_hours_booked - total_hrs_used }}
+                                                    {{ (user_hours_booked - total_hrs_used) / 8.00 }}
                                                     {% if exists.append(user_hours_booked) %} {% endif %}
                                                 {% else %}
-                                                    user not booked
+                                                    <small>[User not booked]</small>
                                                 {% endif %}
                                             {% else %}
-                                                No users proj hours
+                                                <small>[No User Project Hours]</small>
                                             {% endif %}
                                         {% endif %}
-
-                                        <!--
-                                        {% if projects_dict[session['username']][project_id]['users'][user_id] and bookings_dict[session['username']][project_id]['users_proj_hours'][user_id] %}
-                                            {% if projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used']!= 'Undefined' %}
-                                                {{ bookings_dict[session['username']][project_id]['users_proj_hours'][user_id]|default(0.00) - projects_dict[session['username']][project_id]['users'][user_id]['total_hours']|default(0.00)}}
-                                            {% else %}
-                                                No work
-                                            {% endif %}
-                                        {% else %}
-                                            {% if projects_dict[session['username']][project_id]['users'][user_id] and projects_dict[session['username']][project_id]['users'][user_id]['total_hrs_used'] %}
-                                                {{ bookings_dict[session['username']][project_id]['users_proj_hours'][user_id] - projects_dict[session['username']][project_id]['users'][user_id]['total_hours']}}
-                                            {% else %}
-                                                No work
-                                            {% endif %}
-                                        {% endif %}
-
-                                        -->
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -418,9 +402,10 @@
                                     {% set user_rate = 0 %}
                                     {%if users_dict[session['username']][user_id]%}
                                         {{users_dict[session['username']][user_id]['name']}}
-                                        {% set user_rate = users_dict[session['username']][user_id]['rate'] %}
+                                        {% set user_rate = rates_dict[session['username']][user_id, project_id]['rate'] if (rates_dict[session['username']] and rates_dict[session['username']][user_id, project_id]) else 0.00 %}
+                                        {% set user_currency = rates_dict[session['username']][user_id, project_id]['currency'] if (rates_dict[session['username']] and rates_dict[session['username']][user_id, project_id]) else "" %}
                                     {% else %}
-                                        Unknown user
+                                        <small>[Unknown user]</small>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -442,13 +427,19 @@
                                                 {% endif %}
 
                                                 <!-- compute total_fees_spent -->
-                                                {% set total_fees_spent = user_expenses + (user_spent_hours * user_rate) %}
+                                                {% set total_fees_spent = user_expenses + (user_spent_hours / 8.00 * user_rate) %}
 
                                                 <!-- display the fees spent -->
-                                                {{ total_fees_spent }}
+                                                {% if user_expenses == 0 and user_rate == 0 %}
+                                                    <small>[expenses=0 and user rate=0]</small>
+                                                {% elif user_rate == 0 %}
+                                                    {{ user_currency }} {{ '{0:,.2f}'.format(total_fees_spent) }}<br /><small>[expenses only, since user rate=0]</small>
+                                                {% else %}
+                                                    {{ user_currency }} {{ '{0:,.2f}'.format(total_fees_spent) }}
+                                                {% endif %}
 
                                             {% else %}
-                                                Consultant hasn't worked
+                                                <small>[Consultant hasn't worked]</small>
                                             {% endif %}
                                         {% else %}
                                             <!-- users not assigned to this project -->
@@ -465,15 +456,15 @@
                                         <!-- calculate the fees left -->
                                         {% set user_total_fees =0 %} <!-- need to compute the user_total_fees for this project -->
                                         {% if user_rate != 0  and user_hours_booked != 0%}
-                                            {% set user_total_fees = user_rate * user_hours_booked %}
+                                            {% set user_total_fees = user_rate * user_hours_booked / 8.00 %}
+                                            {{ user_currency }} {{'{0:,.2f}'.format(user_total_fees - total_fees_spent - user_expenses) }}
                                         {% elif user_rate ==0 %}
-                                            <!-- <small>user rate = 0</small> -->
-                                        {% elif user_hours_booked ==0 %}
-                                            <small>booked hours = 0</small>
+                                            <small>[user rate = 0]</small>
+                                        {% elif user_hours_booked == 0 %}
+                                            <small>[booked hours = 0]</small>
                                         {% endif %}
 
                                     {% endif %} <!-- end if exists loop-->
-                                    {{user_total_fees - total_fees_spent -user_expenses }}
 
                                 </td>
                             </tr>

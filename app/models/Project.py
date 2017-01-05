@@ -20,24 +20,31 @@ class Project(Base):
 
     @staticmethod
     def get_my_projects(user_email):
-        query = '''SELECT DISTINCT
-                          p.id,
-                          p.name,
-                          p.active,
-                          p.budget,
-                          p.budget_time,
-                          p.user_id,
-                          p.currency,
-                          p.start_date,
-                          p.finish_date,
-                          p.project_stage_id,
-                          p.updated
-                        FROM project p
-                        LEFT JOIN project_task pt ON pt.project_id = p.id
-                        LEFT JOIN project_task_assign pta ON pta.project_task_id = pt.id
-                        LEFT JOIN booking b ON b.project_id = p.id
-                        LEFT JOIN user u ON (p.user_id = u.id OR pta.user_id = u.id OR b.user_id = u.id)
-                        WHERE u.email = :email AND p.active="1";'''
+        query = '''SELECT t1.id, name, active, budget, budget_time, user_id, currency, start_date, finish_date, project_stage_id, updated FROM
+                    (SELECT
+                        p.id,
+                        MIN(b.startdate) AS start_date,
+                        MAX(b.enddate) AS finish_date
+                    FROM project p LEFT JOIN booking b ON p.id=b.project_id
+                    GROUP BY p.id) t1
+                    INNER JOIN
+                    (SELECT DISTINCT
+                                              p.id,
+                                              p.name,
+                                              p.active,
+                                              p.budget,
+                                              p.budget_time,
+                                              p.user_id,
+                                              p.currency,
+                                              p.project_stage_id,
+                                              p.updated
+                                            FROM project p
+                                            LEFT JOIN project_task pt ON pt.project_id = p.id
+                                            LEFT JOIN project_task_assign pta ON pta.project_task_id = pt.id
+                                            LEFT JOIN booking b ON b.project_id = p.id
+                                            LEFT JOIN user u ON (p.user_id = u.id OR pta.user_id = u.id OR b.user_id = u.id)
+                                            WHERE u.email = "mgrasser@bankablefrontier.com" AND p.active="1") t2
+                    ON t1.id = t2.id;'''
         return Project.query.from_statement(text(query)).params(email=user_email).all()
 
     def __repr__(self):

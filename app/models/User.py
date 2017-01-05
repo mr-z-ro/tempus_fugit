@@ -9,8 +9,6 @@ class User(Base):
     name = db.Column(db.String(200))
     nickname = db.Column(db.String(50))
     active = db.Column(db.String(1))
-    rate = db.Column(db.Float(scale=16, precision=2))
-    currency = db.Column(db.String(3))
     timezone = db.Column(db.String(6))
     line_manager_id = db.Column(db.Integer())
     department_id = db.Column(db.Integer())

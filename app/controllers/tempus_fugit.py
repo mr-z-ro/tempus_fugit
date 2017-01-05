@@ -7,6 +7,7 @@ from flask import current_app
 from flask import flash
 from flask import render_template
 
+from app.models.Rate import Rate
 from app.models.Booking import Booking
 from app.models.Project import Project
 from app.models.Task import Task
@@ -199,6 +200,10 @@ def prepare_data():
     bookings_list = Booking.get_my_bookings(session['username'])
     bookings_list = [booking.to_dict() for booking in bookings_list]
 
+    # Rates list is needed
+    rates_list = Rate.get_all_rates()
+    rates_list = [rate.to_dict() for rate in rates_list]
+
     users_name = session['username'].strip()
     # ensure that the user_dict is tagged with this user's name
 
@@ -213,6 +218,17 @@ def prepare_data():
     if users_name not in bookings_dict.iterkeys():
         bookings_dict[users_name] = {}
 
+    # loop through the rates json
+    rates_dict = {}
+    for rate in rates_list:
+        if session['username'] not in rates_dict.keys():
+            rates_dict[session['username']] = {}
+
+        rates_dict[session['username']][rate['user_id'], rate['project_id']] = {
+            'rate': rate['rate'],
+            'currency': rate['currency']
+        }
+
     # loop through the users_json
     for a_user in users_list:
 
@@ -224,9 +240,7 @@ def prepare_data():
             users_dict[users_name][user_id]['name'] = a_user['name']
             users_dict[users_name][user_id]['nickname'] = a_user['nickname']
             users_dict[users_name][user_id]['timezone'] = a_user['timezone']
-            users_dict[users_name][user_id]['rate'] = float(a_user['rate']) if a_user['rate'] != None else 0.00
             users_dict[users_name][user_id]['line_manager_id'] = a_user['line_manager_id']
-            users_dict[users_name][user_id]['currency'] = a_user['currency']
             users_dict[users_name][user_id]['department_id'] = a_user['department_id']
             users_dict[users_name][user_id]['active'] = a_user['active']
             # print 'user_dict try'
@@ -236,9 +250,7 @@ def prepare_data():
                 'name': a_user['name'],
                 'nick_name': a_user['nickname'],
                 'time_zone': a_user['timezone'],
-                'rate': float(a_user['rate']) if a_user['rate'] != None else 0.00,
                 'line_manager_id': a_user['line_manager_id'],
-                'currency': a_user['currency'],
                 'department_id': a_user['department_id'],
                 'active': a_user['active']
             }
@@ -252,10 +264,12 @@ def prepare_data():
     # loop through the projects_json
     for project in projects_list:
         pid = project['id']
+        if (pid==425L):
+            pass
         calc_start_date = project['start_date']
         calc_end_date = project['finish_date']
 
-        if calc_start_date != 'None':
+        if calc_start_date is not None:
             my_start_date = calc_start_date
             if len(calc_start_date) > 10:
                 my_start_date = calc_start_date.split(' ')[0]
@@ -265,7 +279,7 @@ def prepare_data():
             my_start_date = 'None'
             start_date_str = 'None'
 
-        if calc_end_date != 'None':
+        if calc_end_date is not None:
             my_end_date = calc_end_date
             if len(calc_end_date) > 10:
                 my_end_date = calc_end_date.split(' ')[0]
@@ -281,7 +295,7 @@ def prepare_data():
             projects_dict[users_name][pid]['budget'] = float(
                 project['budget'])  # 'budget' : '{:,.2f}'.format(float(project['budget']))
             projects_dict[users_name][pid]['budget_time'] = float(project['budget_time']) if project[
-                                                                                                 'budget_time'] != None else 0.00
+                                                                                                 'budget_time'] is not None else 0.00
             projects_dict[users_name][pid]['owner_id'] = project['owner_id']
             projects_dict[users_name][pid]['currency'] = project['currency']
             projects_dict[users_name][pid]['start_date'] = calc_start_date
@@ -300,7 +314,7 @@ def prepare_data():
             projects_dict[users_name][pid] = {
                 'name': project['name'],
                 'budget': float(project['budget']),
-                'budget_time': float(project['budget_time']) if project['budget_time'] != None else 0.00,
+                'budget_time': float(project['budget_time']) if project['budget_time'] is not None else 0.00,
                 'owner_id': project['user_id'],
                 'currency': project['currency'],
                 'start_date': calc_start_date,
@@ -330,18 +344,16 @@ def prepare_data():
         task_id = tasks['project_task_id']
         task_name = tasks['project_task_name']
         user_id = tasks['user_id']
-        task_hours = float(tasks['hour']) if tasks['hour'] != None else 0.00
+        task_hours = float(tasks['hour']) if tasks['hour'] is not None else 0.00
 
         # extract the rate for the user
         try:
-            user_rate = float(users_dict[users_name][user_id]['rate']) if users_dict[users_name][user_id][
-                                                                              'rate'] != None else 0.00
+            user_rate = float(rates_dict[session['username']][user_id, project_id]['rate']) if rates_dict[session['username']][user_id, project_id]['rate'] else 0.00
         except KeyError:
             user_rate = 0.00
-            # flash('Error reading userid:{} rate, non-existent'.format(user_id))
 
         # compute total hours worked per project
-        fees_worked = task_hours * user_rate
+        fees_worked = task_hours / 8.00 * user_rate
         if project_id not in projects_dict[users_name].keys():
             # track fees_worked, users and hours_worked in projects_dict
             projects_dict[users_name][project_id] = {
@@ -523,8 +535,8 @@ def prepare_data():
         project_id = booking['project_id']
         task_id = booking['project_task_id']
         user_id = booking['user_id']
-        hours_booked = float(booking['hours']) if booking['hours'] != None else 0.0
-        hours_percent = float(booking['percentage']) if booking['percentage'] != None else 0.0
+        hours_booked = float(booking['hours']) if booking['hours'] is not None else 0.0
+        hours_percent = float(booking['percentage']) if booking['percentage'] is not None else 0.0
 
         # try the bookings_dict
         # try the bookings_dict
@@ -606,224 +618,13 @@ def prepare_data():
     current_app.add_template_global(users_dict, 'users_dict')
     current_app.add_template_global(projects_dict, 'projects_dict')
     current_app.add_template_global(bookings_dict, 'bookings_dict')
+    current_app.add_template_global(rates_dict, 'rates_dict')
     return render_template(url_for('mod_tempus_fugit.index'), users_dict=users_dict)
 
 # [START projects]
 @mod_tempus_fugit.route('/projects')
 @login_required
 def projects():
-    """ # Retrieve projects from API
-    projects_json_obj = get_projects(key=netsuite_key,
-                                     un=session['username'],
-                                     pw=session['password'],
-                                     company=my_company,
-                                     userid=session['associate_id'])
-
-    #print 'size [{} bytes]Projects json obj: {} '.format( sys.getsizeof(projects_json_obj), projects_json_obj)
-    # Retrieve tasks from API
-    tasks_json_obj = get_tasks(key=netsuite_key,
-                               un=session['username'],
-                               pw=session['password'],
-                               company=my_company)
-
-    project_dates = {}
-
-    #users_dict = {}
-    all_users_json_obj = raw_call_wrapper(key=netsuite_key,
-                                           username=session['username'],
-                                           passwd=session['password'], xml_str='''
-                                                                                <Read type= "User" method = "all" limit = "500">
-                                                                                <_Return>
-                                                                                    <name/>
-                                                                                    <picklist_label/>
-                                                                                    <cost_centerid/>
-                                                                                    <active/>
-                                                                                    <timezone/>
-                                                                                    <addr/>
-                                                                                    <currency/>
-                                                                                    <id/>
-                                                                                    <rate/>
-                                                                                    <line_managerid/>
-                                                                                    <nickname/>
-                                                                                    <departmentid/>
-                                                                                </_Return>
-                                                                                </Read>
-                                                                           ''')
-
-    #flash('Hey yah! mock users: {}'.format( all_users_json_obj))  # user_info))
-    for a_user in all_users_json_obj['response']['Read']['User']:
-
-        try:
-            # populate with a user_id
-            users_dict[a_user['id']] = {'name' : a_user['name'],
-                                        'nick_name' : a_user['nickname'],
-                                        'time_zone' : a_user['timezone'],
-                                        'rate' : a_user['rate'],
-                                        'cost_centerid' : a_user['cost_centerid'],
-                                        'line_manager_id' : a_user['line_managerid'],
-                                        'picklist_label' : a_user['picklist_label'],
-                                        'department_id' : a_user['departmentid']}
-        except KeyError:
-            flash ('check the users_json_obj')
-        except Exception, err:
-            flash('Detected error {} with users_json_obj'.format(err))
-    # adding the users_dict into the global namespace, available to all templates
-    app.add_template_global(users_dict, 'users_dict')
-
-    # Prepare a project list to pass to projects page
-    for project in projects_json_obj['response']['Read']['Project']:
-
-        # populate the dictionary
-        pid = project['id']
-
-
-
-
-
-        projects_dict[pid] = {'name' : project['name'],
-                              'active' : project['active'],
-                              'budget' : '{:,.2f}'.format(float(project['budget'])),
-                              'budget_time' : project['budget_time'],
-                              'customer_name' : project['customer_name'],
-                              'user_id' : project['userid'],
-                              'currency' : project['currency'],
-                              'start_date' : project['start_date'],
-                              'finish_date' : project['finish_date'],
-                              'project_stageid' : project['project_stageid'],
-                              'pm_approver_1' : project['pm_approver_1'],
-                              'pm_approver_2': project['pm_approver_2'],
-                              'pm_approver_3': project['pm_approver_3'],
-                              'updated' : reformatDate(project['updated']['Date']),
-                              'picklist_label' : project['picklist_label'],
-                              'tasks' : {}}
-        project_dates[pid] = {'start_dates' : set(), 'end_dates' : set()}
-
-    # Prepare a task list to pass to projects page
-    for project_tasks in tasks_json_obj['response']['Read']['Projecttask']:
-
-        # Retrieve project and task ids
-        pid = project_tasks['projectid']
-        tid = project_tasks['id']
-
-        # cycle through the project_tasks and populate the dictionary with active projects only
-        if pid in projects_dict:
-            calc_start_date = reformatDate(project_tasks['calculated_starts']['Date']) if project_tasks['calculated_starts']['Date'] != 'None' else 'None'
-            calc_end_date = reformatDate(project_tasks['calculated_finishes']['Date']) if project_tasks['calculated_finishes']['Date'] != 'None' else 'None'
-
-            if calc_start_date != 'None':
-                my_start_date = calc_start_date
-                if len(calc_start_date) > 10:
-                    my_start_date = calc_start_date.split(' ')[0]
-                my_day, my_mnth, my_yr = my_start_date.split('/')
-                start_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
-            else:
-                my_start_date = 'None'
-                start_date_str = 'None'
-
-            if calc_end_date != 'None':
-                my_end_date = calc_end_date
-                if len(calc_end_date) > 10:
-                    my_end_date = calc_end_date.split(' ')[0]
-                my_day, my_mnth, my_yr = my_end_date.split('/')
-                end_date_str = '{2}/{1}/{0}'.format(my_yr, my_mnth, my_day)
-            else:
-                my_end_date = 'None'
-                end_date_str = 'None'
-            task_days = date_percent_difference(start_date_str, end_date_str)
-
-            #populate the project dates set
-            if calc_start_date != 'None':
-                day, mnth, yr = calc_start_date[:10].split('/')
-                start_date_num = int('{}{}{}'.format(yr, mnth, day))
-                try:
-                    project_dates[pid]['start_dates'].add(start_date_num)
-
-                except KeyError, err:
-                    project_dates[pid] = {'start_dates' : set(start_date_num)}
-
-            if calc_end_date != 'None':
-                day, mnth, yr = calc_end_date[:10].split('/')
-                end_date_num =  int('{}{}{}'.format(yr, mnth, day))
-                try:
-                    project_dates[pid]['end_dates'].add(end_date_num)
-
-                except KeyError, err:
-                    project_dates[pid] = {'end_dates' : set(end_date_num)}
-
-            try:
-                projects_dict[pid]['tasks'][tid] = {'name': project_tasks['name'],
-                                                    'calcstartdate': calc_start_date,
-                                                    'calcenddate': calc_end_date,
-                                                    'priority': project_tasks['priority'],
-                                                    'percent_complete': project_tasks['percent_complete'],
-                                                    'estimated_hours': project_tasks['estimated_hours'],
-                                                    'planned_hours': project_tasks['planned_hours'],
-                                                    'updated': projects_dict[pid]['updated'],
-                                                    'task_budget_cost' : project_tasks['task_budget_cost'],
-                                                    'customer_name' : project_tasks['customer_name'],
-                                                    'percent_days' : task_days['percent_days'],
-                                                    'days_consumed' : task_days['days_consumed'],
-                                                    'days_remaining' : task_days['days_remaining'],
-                                                    'days_diff' : task_days['days_diff']}
-            except KeyError, err:
-                print 'Errors: ', err
-
-    #session['projects_dict'] = str(projects_dict)
-
-    # create an ordered dict
-    ordered_project_tasks = OrderedDict()
-    for key in sorted(projects_dict.keys()):
-        key = unicode(key)
-
-        # create an ordered dict for the task_keys
-        ordered_tasks = OrderedDict()
-        for task_key in sorted({int(k): v for (k, v) in projects_dict[key]['tasks'].items()}):
-            task_key = unicode(task_key)
-            ordered_tasks[task_key] = projects_dict[key]['tasks'][task_key]
-
-        # populate the ordered_project_tasks with the ordered tasks list
-        try:
-            # if there are existing tasks, then update
-            ordered_project_tasks[key]['tasks'].update(ordered_tasks)
-        except KeyError, err:
-            try:
-                ordered_project_tasks[key] = {'tasks': ordered_tasks}
-            except KeyError, err:
-                print err, ' basically a cooked goose!!'
-
-        my_start_date = str(min(project_dates[key]['start_dates']))
-        start_date_str = '{}/{}/{}'.format(my_start_date[6:], my_start_date[4:6], my_start_date[:4])
-
-        my_end_date = str(max(project_dates[key]['end_dates']))
-        end_date_str =  '{}/{}/{}'.format(my_end_date[6:], my_end_date[4:6], my_end_date[:4])
-        # add the other elements
-        # print 'ordered_project_tasks[key] = {}'.format(ordered_project_tasks[key])
-        ordered_project_tasks[key]['updated'] = projects_dict[key]['updated']
-        ordered_project_tasks[key]['active'] = projects_dict[key]['active']
-        ordered_project_tasks[key]['name'] = projects_dict[key]['name']
-        ordered_project_tasks[key]['budget'] = projects_dict[key]['budget']
-        ordered_project_tasks[key]['budget_time'] = projects_dict[key]['budget_time']
-        ordered_project_tasks[key]['test_start_date'] = start_date_str
-        ordered_project_tasks[key]['test_end_date'] = end_date_str
-        days_consumption = date_percent_difference(start_date_str, end_date_str) # returns dict
-
-        ordered_project_tasks[key]['percent_complete_days'] = days_consumption['percent_days']
-        ordered_project_tasks[key]['days_consumed'] = days_consumption['days_consumed']
-        ordered_project_tasks[key]['days_remaining'] = days_consumption['days_remaining']
-        ordered_project_tasks[key]['days_diff'] = days_consumption['days_diff']
-        ordered_project_tasks[key]['percent_complete_days'] = days_consumption['percent_days']
-
-    # adding the orderedprojecttasks into the global namespace, available to all templates
-    app.add_template_global(ordered_project_tasks, 'projects_dict')
-
-    #flash('pword: {}'.format(session['password']))
-
-    # clear some memory by clearing list and dict, the page never loads due to memory limitation
-    # projects_dict.clear()
-    projectslist = None
-    # print 'Eventual projects dict: ', projects_dict
-    """
-
     return render_template('projects.html')
 # [END projects]
 
@@ -840,13 +641,6 @@ def project_detail(project_id):
         pid = long(pid)
         tid = long(tid)
 
-        # refresh task list?
-        # json_obj = get_tasks(netsuite_key,
-        #                     session['username'],
-        #                     session['password'],
-        #                     company=my_company,
-        #                     projectid=pid)
-
         return render_template('richtasks.html', project_id=pid, taskid=tid)
     else:
         project_id = project_id.strip()  # remove any trailing spaces
@@ -857,6 +651,7 @@ def project_detail(project_id):
     return redirect(url_for('mod_tempus_fugit.projects'))
 # [END project_detail]
 
+
 # [START navbar]
 @mod_tempus_fugit.route('/navbar', methods=['GET','POST'])
 @mod_tempus_fugit.route('/navbar.html')
@@ -864,6 +659,7 @@ def project_detail(project_id):
 def navbar():
     return render_template('navbar.html')
 # [END navbar]
+
 
 # [START resources]
 @mod_tempus_fugit.route('/resources/<user_id>', methods= ['GET', 'POST'])
