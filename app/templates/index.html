@@ -232,7 +232,7 @@
                                                                 {{ '{0:0.2f}%'.format(projects_dict[session['username']][key]['fees_worked'] / projects_dict[session['username']][key]['budget']) }}
                                                             {% endif %}
                                                         {% else %}
-                                                            Budget not available
+                                                            <small>Budget not available</small>
                                                         {% endif %}
                                                     </td><!--small green pie chart displaying worked fees/total fees--><!--0.52/1.561-->
                                                     <td>
@@ -241,7 +241,11 @@
                                                         {% else %}
                                                             <span id="sparkline7" class="pie">{{projects_dict[session['username']][key]['days_consumed']}}/{{projects_dict[session['username']][key]['days_diff']}}</span>
                                                         {% endif %}
-                                                        <small>{{ projects_dict[session['username']][key]['percent_complete_days'] }}</small>
+                                                        {% if projects_dict[session['username']][key]['percent_complete_days'] %}
+                                                            <small>{{ '%100.2f' | format(projects_dict[session['username']][key]['percent_complete_days']|float) }}%</small>
+                                                        {% else %}
+                                                            <small>N/A</small>
+                                                        {% endif %}
                                                     </td> <!-- show small blue piechart displaying calendar time elapsed Start Date -Today/ End date -->
                                                     <td>
                                                         {%if projects_dict[session['username']][key] and bookings_dict[session['username']][key]%}
