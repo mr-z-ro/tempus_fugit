@@ -374,7 +374,7 @@
                             <a href="{{ url_for('mod_tempus_fugit.projects') }}">Home</a>
                         </li>
                         <li class="active">
-                            <strong>{{ projects_dict[project_id]['name'] }}</strong>
+                            <strong>{{ projects_dict[session['username']][project_id]['name'] }}</strong>
                         </li>
                     </ol>
                 </div>
@@ -385,10 +385,10 @@
                 <div class="ibox float-e-margins">
                     <div class="ibox-content text-center p-md">
 
-                        <h2><span class="text-navy"> {{ projects_dict[project_id]['tasks'][taskid]['name'] }} </span></h2>
+                        <h2><span class="text-navy"> {{ projects_dict[session['username']][project_id]['tasks'][taskid]['name'] }} </span></h2>
 
                         <p>
-                            Page under construction, values represented here are provisional {{ projects_dict[project_id]['tasks'][taskid]['startdate']  }}.
+                            Page under construction, values represented here are provisional {{ projects_dict[session['username']][project_id]['tasks'][taskid]['startdate']  }}.
                         </p>
 
 
@@ -426,8 +426,8 @@
                                 </div>
 
                                 <div>
-                                    <span>{{ projects_dict[project_id]['tasks'][taskid]['calcstartdate'] }}</span>
-                                    <small class="pull-right">{{ projects_dict[project_id]['tasks'][taskid]['calcenddate'] }}</small>
+                                    <span>{{ projects_dict[session['username']][project_id]['tasks'][taskid]['calcstartdate'] }}</span>
+                                    <small class="pull-right">{{ projects_dict[session['username']][project_id]['tasks'][taskid]['calcenddate'] }}</small>
                                 </div>
                                 <div class="progress progress-small">
                                     <div style="width: 50%;" class="progress-bar"></div>

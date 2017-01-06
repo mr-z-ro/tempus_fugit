@@ -166,7 +166,7 @@ def login():
                 session['currentpage'] = 'projects'
             return redirect(next or url_for('mod_tempus_fugit.index'))
 
-        flash('Sorry! Your password or username is invalid. Kindly try again..')
+        flash('Sorry! Your password or username is invalid. Kindly try again.')
     return render_template('login.html', form=form)
 
 # [END login submitted]
