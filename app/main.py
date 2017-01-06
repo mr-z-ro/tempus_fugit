@@ -21,7 +21,6 @@ from flask import Flask, render_template, session, Response
 from flask_login import LoginManager
 
 from app.controllers.tempus_fugit import mod_tempus_fugit
-from app.controllers.wrap_bootstrap_templates import mod_wrap_bootstrap_templates
 from datetime import timedelta
 # [END imports]
 from app.models import db
@@ -62,4 +61,3 @@ db.init_app(app)
 
 # Register Blueprints
 app.register_blueprint(mod_tempus_fugit)
-app.register_blueprint(mod_wrap_bootstrap_templates)
