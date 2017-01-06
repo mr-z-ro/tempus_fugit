@@ -126,8 +126,8 @@
                                                                 <small>{{projects_dict[session['username']][key]['fees_worked']}}/{{projects_dict[session['username']][key]['budget']}}</small>
                                                                 <!-- not started -->
                                                             {% else %}
-                                                                <span class="pie">{{projects_dict[session['username']][key]['fees_worked']}},{{projects_dict[session['username']][key]['budget']}}</span>
-                                                                {{ '{0:0.2f}%'.format(projects_dict[session['username']][key]['fees_worked'] / projects_dict[session['username']][key]['budget']) }}
+                                                                <span class="pie">{% if projects_dict[session['username']][key]['fees_worked']|float / projects_dict[session['username']][key]['budget']|float > 1 %}1.561/1.561{% else %}{{projects_dict[session['username']][key]['fees_worked']}},{{projects_dict[session['username']][key]['budget']}}{% endif %}</span>
+                                                                <small>{{ '%100.2f' | format(100 * projects_dict[session['username']][key]['fees_worked'] / projects_dict[session['username']][key]['budget']) }}%</small>
                                                             {% endif %}
                                                         {% else %}
                                                             <small>Budget not available</small>
