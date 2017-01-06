@@ -641,7 +641,7 @@ def project_detail(project_id):
         pid = long(pid)
         tid = long(tid)
 
-        return render_template('richtasks.html', project_id=pid, taskid=tid)
+        return render_template('richtasks.html', project_id=pid, task_id=tid)
     else:
         project_id = project_id.strip()  # remove any trailing spaces
         pid = long(project_id)
