@@ -79,7 +79,7 @@ def login_required(func):
 @mod_tempus_fugit.route('/', methods=['GET'])
 @mod_tempus_fugit.route('/index',methods=['GET','POST'])
 @mod_tempus_fugit.route('/index.html',methods=['GET','POST'])
-@login_required
+#@login_required
 def index():
     return render_template(url_for('mod_tempus_fugit.index'))
 # [END index]
@@ -621,13 +621,6 @@ def prepare_data():
     current_app.add_template_global(rates_dict, 'rates_dict')
     return render_template(url_for('mod_tempus_fugit.index'), users_dict=users_dict)
 
-# [START projects]
-@mod_tempus_fugit.route('/projects')
-@login_required
-def projects():
-    return render_template('projects.html')
-# [END projects]
-
 
 # [START project_detail]
 @mod_tempus_fugit.route('/projects/<project_id>', methods=['GET','POST'])
@@ -648,7 +641,7 @@ def project_detail(project_id):
 
         return render_template('richproject.html', project_id=pid)
 
-    return redirect(url_for('mod_tempus_fugit.projects'))
+    return redirect(url_for('mod_tempus_fugit.index'))
 # [END project_detail]
 
 
