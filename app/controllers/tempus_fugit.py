@@ -7,6 +7,7 @@ from flask import current_app
 from flask import flash
 from flask import render_template
 
+from app.models.Daily import Daily
 from app.models.Rate import Rate
 from app.models.Booking import Booking
 from app.models.Project import Project
@@ -79,7 +80,7 @@ def login_required(func):
 @mod_tempus_fugit.route('/', methods=['GET'])
 @mod_tempus_fugit.route('/index',methods=['GET','POST'])
 @mod_tempus_fugit.route('/index.html',methods=['GET','POST'])
-#@login_required
+@login_required
 def index():
     return render_template(url_for('mod_tempus_fugit.index'))
 # [END index]
@@ -96,7 +97,7 @@ def logout():
     session['password'] = ''
     session['projects'] = ''
     session['logged_in']=''
-    session.pop('username',None)
+    session.pop('username', None)
     session.pop('password', None)
     session.pop('logged_in',None)
     session.pop('projects', None)
@@ -655,8 +656,10 @@ def navbar():
 
 
 # [START resources]
-@mod_tempus_fugit.route('/resources/<user_id>', methods= ['GET', 'POST'])
+@mod_tempus_fugit.route('/update_booking/<project_name>/<task_name>/<user_name>', methods=['GET', 'POST'])
 @login_required
-def resources(user_id):
-    return render_template('profile.html', user_id = user_id)
+def resources(project_name, task_name, user_name):
+    dailies = Daily.get_dailies(project_name, task_name, user_name)
+
+    return render_template('dailies.html', dailies=dailies, project_name=project_name, task_name=task_name, user_name=user_name)
 # [END resources]

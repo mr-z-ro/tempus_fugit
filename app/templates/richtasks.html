@@ -254,7 +254,7 @@
                                             <!-- remember the user_rate-->
                                             {% set user_rate = 0 %}
                                             {%if user_id in users_dict[session['username']].iterkeys()%}
-                                                {{users_dict[session['username']][user_id]['name']}}
+                                                <a href="{{ url_for('mod_tempus_fugit.resources', project_name=projects_dict[session['username']][project_id]['name'], task_name=projects_dict[session['username']][project_id]['tasks'][task_id]['name'], user_name=users_dict[session['username']][user_id]['name'])}}">{{users_dict[session['username']][user_id]['name']}}</a>
                                                 {% set user_rate = rates_dict[session['username']][user_id, project_id]['rate'] if (rates_dict[session['username']] and rates_dict[session['username']][user_id, project_id]) else 0.00 %}
                                                 {% set user_currency = rates_dict[session['username']][user_id, project_id]['currency'] if (rates_dict[session['username']] and rates_dict[session['username']][user_id, project_id]) else "" %}
                                             {% else %}
