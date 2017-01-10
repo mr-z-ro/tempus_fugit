@@ -43,7 +43,7 @@ class Project(Base):
                                             LEFT JOIN project_task_assign pta ON pta.project_task_id = pt.id
                                             LEFT JOIN booking b ON b.project_id = p.id
                                             LEFT JOIN user u ON (p.user_id = u.id OR pta.user_id = u.id OR b.user_id = u.id)
-                                            WHERE u.email = "mgrasser@bankablefrontier.com" AND p.active="1") t2
+                                            WHERE u.email = :user_email AND p.active="1") t2
                     ON t1.id = t2.id;'''
         return Project.query.from_statement(text(query)).params(email=user_email).all()
 
