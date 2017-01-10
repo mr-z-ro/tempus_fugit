@@ -17,7 +17,7 @@
 # [START imports]
 from os import urandom
 
-from flask import Flask, render_template, session, Response
+from flask import Flask
 from flask_login import LoginManager
 
 from app.controllers.tempus_fugit import mod_tempus_fugit

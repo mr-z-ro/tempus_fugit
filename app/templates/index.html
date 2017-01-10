@@ -23,7 +23,6 @@
 
     <!-- jQuery -->
     <script src="js/jquery-2.1.1.js"></script>
-    <script src="js/data_loader.js"></script>
 
     <!-- loader -->
     <link href = "/css/tempus_widgets.css" rel= "stylesheet">
@@ -111,6 +110,7 @@
                                                 </tr>
                                                 </thead>
                                                 <tbody>
+                                                {% if projects_dict %}
                                                 {% for key in projects_dict[session['username']] if not projects_dict[session['username']][key].name in ('UnAllocated Time', 'PTO', 'Internal', 'Meetings - Internal')%}
                                                 <tr>
                                                     <td> {{ loop.index }} </td>
@@ -168,6 +168,8 @@
                                                     {% endif %}
                                                     <td>{{ projects_dict[session['username']][key]['updated'] }}</td>
                                                 </tr>
+                                                {% endfor %}
+
                                                 {% else %}
                                                     {# this should be an exception, an associate should not have an empty projects list#}
                                                     <tr>
@@ -175,8 +177,8 @@
                                                         <td><em>Please wait. Loading projects data may take up to 2 minutes.</em></td>
                                                         <td><div class="loader"></div></td>
                                                     </tr>
-                                                {% endfor %}
-
+                                                    <script src="js/data_loader.js"></script>
+                                                {% endif %}
                                                 </tbody>
                                             </table>
                                         </div>

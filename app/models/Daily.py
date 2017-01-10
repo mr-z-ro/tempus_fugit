@@ -5,6 +5,7 @@ from app.models import db, Base
 
 class Daily(Base):
 
+    # Multiple binds: http://flask-sqlalchemy.pocoo.org/2.1/binds/
     __bind_key__ = 'dailies'
     __tablename__ = 'timesheets_vs_bookings_daily'
 
