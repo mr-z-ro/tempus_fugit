@@ -173,9 +173,10 @@
                                                 {% else %}
                                                     {# this should be an exception, an associate should not have an empty projects list#}
                                                     <tr>
-
-                                                        <td><em>Please wait. Loading projects data may take up to 2 minutes.</em></td>
-                                                        <td><div class="loader"></div></td>
+                                                        <td colspan="8"><em>Please wait. Loading project data may take up to 2 minutes on first login, but will then be cached for 4 hours.</em></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="8"><div class="loader"></div></td>
                                                     </tr>
                                                     <script src="js/data_loader.js"></script>
                                                 {% endif %}
