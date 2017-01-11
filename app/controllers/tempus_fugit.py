@@ -1,6 +1,4 @@
-import json
 from datetime import timedelta
-import time
 
 from flask import Blueprint
 from flask import current_app
@@ -14,7 +12,6 @@ from app.models.Rate import Rate
 from app.models.Booking import Booking
 from app.models.Project import Project
 from app.models.Task import Task
-from app.models.TempusFugitUser import TempusFugitUser
 from app.models.Ticket import Ticket
 from app.models.User import User
 from login_form import LoginForm
@@ -25,13 +22,6 @@ from app.oaxmlapi.utils import date_percent_difference
 from app.oaxmlapi.wrapper import get_whoami
 
 mod_tempus_fugit = Blueprint('mod_tempus_fugit', __name__)
-
-## create a dictionary to hold projects, users and bookings info, create dummy user
-tempus_fugit_user = TempusFugitUser(
-            username=None,
-            password=None,
-            company=None
-        )
 
 # Set up cache
 cache = SimpleCache()
@@ -82,9 +72,9 @@ def login_required(func):
         try:
             # to catch keyerrors
 
-            if ('logged_in' not in session) and ('username' not in session) and (session['username']=='' or session['username']== None) and (not tempus_fugit_user.is_authenticated()) and (request.endpoint !=url_for('mod_tempus_fugit.login')):
+            if ('logged_in' not in session) or 'username' not in session or session['username'] is None or session['logged_in'] is None:
                 # session is non-existent but we still do the same
-                return redirect(url_for('mod_tempus_fugit.login',next=request.url))
+                return redirect(url_for('mod_tempus_fugit.login', next=request.url))
         except Exception, err:
             return redirect(url_for('mod_tempus_fugit.login', next=request.url))
         return func(*args, **kwargs)
@@ -106,10 +96,7 @@ def index():
 @login_required
 def logout():
     """Logout the current user"""
-    #user = current_user;
-    tempus_fugit_user.authenticated = False
     session['logged_in'] = False
-
     session['username']=''
     session['password'] = ''
     session['projects'] = ''
@@ -124,10 +111,7 @@ def logout():
     # set a timeout for the session  to 1 seconds of inactivity /this  can change
     current_app.permanent_session_lifetime = timedelta(seconds=1)
 
-    if 'username' not in session  or 'logged_in' not in session or session['username']=='' or session['logged_in']=='' and not tempus_fugit_user.is_authenticated():
-        return redirect(url_for('mod_tempus_fugit.login'))
-
-    return render_template(url_for('mod_tempus_fugit.login'))
+    return redirect(url_for('mod_tempus_fugit.login'))
 
 
 # [START login]
@@ -163,10 +147,8 @@ def login():
         json_obj = get_whoami(key=netsuite_key, un=username, pw=password, company=my_company)
         # flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
         auth = True if (json_obj['response']['Auth']['@status'])=='0' else False
-        # set authentication on the user instance
-        tempus_fugit_user.set_authentication(auth)
-        if tempus_fugit_user.is_authenticated():
 
+        if auth:
             session['associate'] = '%s, %s' % (json_obj['response']['Whoami']['User']['addr']['Address']['last'], json_obj['response']['Whoami']['User']['addr']['Address']['first'])
             session['associate_title'] = '%s' % (json_obj['response']['Whoami']['User']['type'])
             session['associate_email'] = '%s' % (json_obj['response']['Whoami']['User']['addr']['Address']['email'])
