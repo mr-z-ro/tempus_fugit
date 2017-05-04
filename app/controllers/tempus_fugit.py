@@ -1,3 +1,5 @@
+import logging
+
 from datetime import timedelta
 
 from flask import Blueprint
@@ -146,7 +148,14 @@ def login():
         netsuite_key = current_app.config['NETSUITE_API_KEY']  # Retrieve key from instance/config file
         json_obj = get_whoami(key=netsuite_key, un=username, pw=password, company=my_company)
         # flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
-        auth = True if (json_obj['response']['Auth']['@status'])=='0' else False
+
+        auth = False
+
+        if 'response' in json_obj and 'Auth' in json_obj['response']:
+            auth = True if (json_obj['response']['Auth']['@status'])=='0' else False
+        else:
+            flash('There seems to be a problem with the OpenAir or Netsuite Server:' + str(json_obj))
+            return render_template('login.html', form=form)
 
         if auth:
             session['associate'] = '%s, %s' % (json_obj['response']['Whoami']['User']['addr']['Address']['last'], json_obj['response']['Whoami']['User']['addr']['Address']['first'])
