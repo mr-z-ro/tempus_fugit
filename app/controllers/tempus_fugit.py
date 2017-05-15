@@ -1,4 +1,8 @@
 import logging
+import httplib2
+import os
+import json
+import pdb
 
 from datetime import timedelta
 
@@ -7,6 +11,7 @@ from flask import current_app
 from flask import flash
 from flask import g
 from flask import render_template
+from flask import session
 from werkzeug.contrib.cache import SimpleCache
 
 from app.models.Daily import Daily
@@ -22,6 +27,15 @@ from functools import wraps
 from flask import request, session, redirect, url_for
 from app.oaxmlapi.utils import date_percent_difference
 from app.oaxmlapi.wrapper import get_whoami
+
+from apiclient import discovery
+from apiclient.discovery import build
+from google.appengine.ext import webapp
+from oauth2client.contrib.appengine import OAuth2Decorator
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import OAuth2Credentials
+from googleapiclient import discovery
+
 
 mod_tempus_fugit = Blueprint('mod_tempus_fugit', __name__)
 
@@ -669,6 +683,98 @@ def project_detail(project_id):
     return redirect(url_for('mod_tempus_fugit.index'))
 # [END project_detail]
 
+#@mod_tempus_fugit.route('/projects/<project_id>/user_bookings/<user_id>', methods=['GET'])
+@mod_tempus_fugit.route('/user_bookings', methods=['GET'])
+@login_required
+def user_bookings():
+    if 'oauth_credentials' in session:
+        url = '/create_spreadsheet'
+    else:
+        flow = get_google_oauth_flow()
+        url = flow.step1_get_authorize_url()
+
+    return json.dumps({'oauth_url': url, 'spreadsheet_id': '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'})
+
+
+@mod_tempus_fugit.route('/oauth', methods=['GET'])
+@login_required
+def oauth_callback():
+    flash('Authorized: ' + request.args.get('code'))
+    return render_template('bookingtest.html', oauth_key=request.args.get('code'))
+
+
+@mod_tempus_fugit.route('/create_spreadsheet', methods=['GET'])
+@login_required
+def create_spreadsheet():
+    if('oauth_key' in request.args and 'oauth_credentials' not in session):
+        key = request.args.get('oauth_key')
+        flow = get_google_oauth_flow()
+
+        pdb.set_trace()
+        credentials = flow.step2_exchange(key)
+        session['oauth_credentials'] = credentials.to_json()
+    else:
+        credentials = OAuth2Credentials.from_json(session['oauth_credentials'])
+        http = httplib2.Http()
+        credentials.refresh(http)
+
+    service = discovery.build('sheets', 'v4', credentials=credentials)
+
+    spreadsheet_body = {
+        # TODO: Add desired entries to the request body.
+    }
+
+    google_request = service.spreadsheets().create(body=spreadsheet_body)
+    response = google_request.execute()
+
+    # Here we get the new id from the response
+    new_spreadsheet_id = response.get('spreadsheetId')
+    new_spreadsheet_url = response.get('spreadsheetUrl')
+    original_spreadsheet_id = '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'
+
+    sheet_id = 0
+
+    logging.warning("New Spreadsheet URL: " + new_spreadsheet_url)
+
+    copy_sheet_to_another_spreadsheet_request_body = {
+        # The ID of the spreadsheet to copy the sheet to.
+        'destination_spreadsheet_id': new_spreadsheet_id,  # TODO: Update placeholder value.
+
+        # TODO: Add desired entries to the request body.
+    }
+
+
+    google_request = service.spreadsheets().sheets().copyTo(spreadsheetId=original_spreadsheet_id, sheetId=sheet_id,
+                                                     body=copy_sheet_to_another_spreadsheet_request_body)
+    response = google_request.execute()
+
+    sheet_id = response.get('sheetId')
+
+    # This will delete the original sheet, name everything correctly and in general do cleanup.
+    batch_update_spreadsheet_request_body = {
+        # A list of updates to apply to the spreadsheet.
+        # Requests will be applied in the order they are specified.
+        # If any request is not valid, no requests will be applied.
+        'requests': [{'deleteSheet': {'sheetId': 0}},
+                     {'updateSheetProperties':
+                          {'properties':
+                               {'sheetId': sheet_id, 'title': 'Project Bookings'},
+                           'fields':
+                               'title'
+                           }
+                      }
+                     ]
+
+    }
+
+    #pdb.set_trace()
+
+    google_request = service.spreadsheets().batchUpdate(spreadsheetId=new_spreadsheet_id,
+                                                 body=batch_update_spreadsheet_request_body)
+    response = google_request.execute()
+
+    return json.dumps({'spreadsheet_url': new_spreadsheet_url})
+
 
 # [START navbar]
 @mod_tempus_fugit.route('/navbar', methods=['GET','POST'])
@@ -687,3 +793,11 @@ def resources(project_name, task_name, user_name):
 
     return render_template('dailies.html', dailies=dailies, project_name=project_name, task_name=task_name, user_name=user_name)
 # [END resources]
+
+def get_google_oauth_flow():
+    # Restrict access to users who've granted access to Calendar info.
+    flow = flow_from_clientsecrets(current_app.config["CLIENT_SECRET_FILE"],
+                                   scope='https://www.googleapis.com/auth/spreadsheets',
+                                   redirect_uri='https://tempusfugit-bfa.pagekite.me/oauth')
+    return flow
+
