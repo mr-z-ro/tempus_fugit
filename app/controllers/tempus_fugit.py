@@ -36,6 +36,10 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import OAuth2Credentials
 from googleapiclient import discovery
 
+import datetime
+
+from time import gmtime, strftime
+
 
 mod_tempus_fugit = Blueprint('mod_tempus_fugit', __name__)
 
@@ -688,10 +692,9 @@ def project_detail(project_id):
 @login_required
 def user_bookings():
     if 'oauth_credentials' in session:
-        url = '/create_spreadsheet'
+        url = '/oauth?code='
     else:
-        flow = get_google_oauth_flow()
-        url = flow.step1_get_authorize_url()
+        url = get_google_oauth_url()
 
     return json.dumps({'oauth_url': url, 'spreadsheet_id': '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'})
 
@@ -709,14 +712,13 @@ def create_spreadsheet():
     if('oauth_key' in request.args and 'oauth_credentials' not in session):
         key = request.args.get('oauth_key')
         flow = get_google_oauth_flow()
-
-        pdb.set_trace()
         credentials = flow.step2_exchange(key)
         session['oauth_credentials'] = credentials.to_json()
     else:
-        credentials = OAuth2Credentials.from_json(session['oauth_credentials'])
-        http = httplib2.Http()
-        credentials.refresh(http)
+        credentials = get_google_oauth_credentials()
+        if credentials is None:
+            url = get_google_oauth_url()
+            return json.dumps({'oauth_url': url, 'spreadsheet_id': '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'})
 
     service = discovery.build('sheets', 'v4', credentials=credentials)
 
@@ -801,3 +803,15 @@ def get_google_oauth_flow():
                                    redirect_uri='https://tempusfugit-bfa.pagekite.me/oauth')
     return flow
 
+# Returns none if not valid
+def get_google_oauth_credentials():
+    credentials = OAuth2Credentials.from_json(session['oauth_credentials'])
+    if credentials.token_expiry > datetime.datetime.now():
+        return credentials
+
+    return None
+
+def get_google_oauth_url():
+    flow = get_google_oauth_flow()
+    url = flow.step1_get_authorize_url()
+    return url

@@ -20,6 +20,13 @@
                 success: function(data){
                     console.log(data);
                     data = JSON.parse(data);
+
+//                    if('oauth_key' in data){
+//                        url = data['oauth_key'];
+//                        window.location(url);
+//                        return;
+//                    }
+
                     window.open(data['spreadsheet_url'], '_blank');
                     window.focus();
             }});
