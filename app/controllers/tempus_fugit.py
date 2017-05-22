@@ -835,7 +835,7 @@ def write_spreadsheet_row(service, spreadsheet_id, range, values):
     write_spreadsheet_request_body ={
         "range": range,
         "majorDimension": 'ROWS',
-        "values": values
+        "values": [values]
     }
 
     service.spreadsheets().values().update(
