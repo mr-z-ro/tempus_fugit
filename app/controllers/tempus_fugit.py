@@ -709,16 +709,29 @@ def oauth_callback():
 @mod_tempus_fugit.route('/create_spreadsheet', methods=['GET'])
 @login_required
 def create_spreadsheet():
-    if('oauth_key' in request.args and 'oauth_credentials' not in session):
+
+    # If we pass in OAuth stuff, then we need to do an exchange probably
+    credentials = None
+    if 'oauth_key' in request.args:
         key = request.args.get('oauth_key')
         flow = get_google_oauth_flow()
-        credentials = flow.step2_exchange(key)
-        session['oauth_credentials'] = credentials.to_json()
-    else:
-        credentials = get_google_oauth_credentials()
-        if credentials is None:
-            url = get_google_oauth_url()
-            return json.dumps({'oauth_url': url, 'spreadsheet_id': '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'})
+        if key is not None and len(key) > 0:
+            credentials = flow.step2_exchange(key)
+
+        # Save the credentials if we have nothing
+        if credentials is not None:
+            session['oauth_credentials'] = credentials.to_json()
+
+    # If we have no credentials we try to pull from storage
+    if credentials is None:
+        credentials = get_google_oauth_credentials();
+
+    # If there's nothing then we send it back to the auth cycle and bail
+    # pdb.set_trace()
+
+    if credentials is None:
+        url = get_google_oauth_url()
+        return json.dumps({'oauth_url': url, 'spreadsheet_id': '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'})
 
     service = discovery.build('sheets', 'v4', credentials=credentials)
 
@@ -766,14 +779,14 @@ def create_spreadsheet():
                            }
                       }
                      ]
-
     }
-
-    #pdb.set_trace()
 
     google_request = service.spreadsheets().batchUpdate(spreadsheetId=new_spreadsheet_id,
                                                  body=batch_update_spreadsheet_request_body)
+
     response = google_request.execute()
+
+    write_spreadsheet_row(service, new_spreadsheet_id, "A7", ['Test User'])
 
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
@@ -815,3 +828,17 @@ def get_google_oauth_url():
     flow = get_google_oauth_flow()
     url = flow.step1_get_authorize_url()
     return url
+
+def write_spreadsheet_row(service, spreadsheet_id, range, values):
+    sheet_range = range
+
+    write_spreadsheet_request_body ={
+        "range": range,
+        "majorDimension": 'ROWS',
+        "values": values
+    }
+
+    service.spreadsheets().values().update(
+        spreadsheetId=spreadsheet_id, range=range,
+        valueInputOption='RAW', body=write_spreadsheet_request_body).execute()
+

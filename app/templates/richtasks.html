@@ -62,7 +62,6 @@
                     </a>
                 </li>
             </ul>
-
         </nav>
         </div>
             <div class="row wrapper border-bottom white-bg page-heading">
@@ -78,7 +77,6 @@
                     </ol>
                 </div>
             </div>
-
         <div class="row">
             <div class="col-lg-12">
                 <div class="ibox float-e-margins">
@@ -90,10 +88,14 @@
                 </div>
             </div>
         </div>
+        <div class="row">
+            <div class="col-lg-3 float-e-margins">
+                <button class="btn btn-primary btn-block m-t" onclick="user_bookings('{{ project_id }}', '{{ task_id }}');">Edit Bookings</button>
+            </div>
+        </div>
 
         <div class="wrapper wrapper-content animated fadeInRight">
             {% set exists = [] %}
-
             <div class="row">
                 <div class="col-md-6">
                     <div class="ibox float-e-margins">
@@ -256,7 +258,7 @@
                                             <!-- remember the user_rate-->
                                             {% set user_rate = 0 %}
                                             {%if user_id in users_dict[session['username']].iterkeys()%}
-                                                <a href="#" onclick="user_bookings();">{{users_dict[session['username']][user_id]['name']}}</a>
+                                                <a href="#" onclick="">{{users_dict[session['username']][user_id]['name']}}</a>
                                                 <!--<a href="{{ url_for('mod_tempus_fugit.user_bookings', project_id=project_id, user_id=user_id, project_name=projects_dict[session['username']][project_id]['name'], task_name=projects_dict[session['username']][project_id]['tasks'][task_id]['name'], user_name=users_dict[session['username']][user_id]['name'])}}">{{users_dict[session['username']][user_id]['name']}}</a>-->
                                                 {% set user_rate = rates_dict[session['username']][user_id, project_id]['rate'] if (rates_dict[session['username']] and rates_dict[session['username']][user_id, project_id]) else 0.00 %}
                                                 {% set user_currency = rates_dict[session['username']][user_id, project_id]['currency'] if (rates_dict[session['username']] and rates_dict[session['username']][user_id, project_id]) else "" %}
