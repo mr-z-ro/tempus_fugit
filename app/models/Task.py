@@ -2,6 +2,8 @@ from sqlalchemy import text
 
 from app.models import db, Base
 
+import Project
+
 
 class Task(Base):
 
@@ -49,6 +51,30 @@ class Task(Base):
                          LEFT JOIN user u ON (p2.user_id = u.id OR pta.user_id = u.id OR b.user_id = u.id)
                          WHERE u.email = :email AND p2.active="1");'''
         return Task.query.from_statement(text(query)).params(email=user_email).all()
+
+
+    @staticmethod
+    def tasks_for_project_id(project_id):
+        query = '''SELECT
+                      t.id,
+                      t.project_id,
+                      p.name AS project_name,
+                      t.project_task_id,
+                      pt.name AS project_task_name,
+                      t.user_id,
+                      t.date,
+                      t.updated,
+                      t.hour,
+                      t.minute,
+                      t.timesheet_id,
+                      t.cost_center_id
+                    FROM task t
+                    INNER JOIN project_task pt ON t.project_task_id = pt.id
+                    INNER JOIN project p ON pt.project_id = p.id
+                    WHERE
+                    t.project_id = :project_id'''
+        return Task.query.from_statement(text(query)).params(project_id=project_id).all()
+
 
     def __repr__(self):
         return '<Task %r>' % self.id

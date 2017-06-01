@@ -13,5 +13,9 @@ class User(Base):
     line_manager_id = db.Column(db.Integer())
     department_id = db.Column(db.Integer())
 
+    @staticmethod
+    def get(id):
+        return User.query.filter_by(id=id).first()
+
     def __repr__(self):
         return '<User %r>' % self.id

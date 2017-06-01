@@ -199,6 +199,9 @@ def login():
 # [END login submitted]
 
 # create a route to be called by jQuery to process data
+#
+# At some point this needs to be refactored
+#
 # [START prepare_data]
 @mod_tempus_fugit.route('/prepare_data')
 @login_required
@@ -706,9 +709,19 @@ def oauth_callback():
     return render_template('bookingtest.html', oauth_key=request.args.get('code'))
 
 
-@mod_tempus_fugit.route('/create_spreadsheet', methods=['GET'])
+@mod_tempus_fugit.route('/create_spreadsheet/<project_id>', methods=['GET'])
 @login_required
-def create_spreadsheet():
+def create_spreadsheet(project_id):
+
+    if project_id and ("|" in project_id):
+
+        # separate the project and task id for template processing
+        project_id = project_id.strip()  # remove any trailing spaces
+        pid, tid = project_id.split('|')
+        pid = long(pid)
+        tid = long(tid)
+    else:
+        pid = project_id
 
     # If we pass in OAuth stuff, then we need to do an exchange probably
     credentials = None
@@ -735,59 +748,21 @@ def create_spreadsheet():
 
     service = discovery.build('sheets', 'v4', credentials=credentials)
 
-    spreadsheet_body = {
-        # TODO: Add desired entries to the request body.
-    }
-
-    google_request = service.spreadsheets().create(body=spreadsheet_body)
-    response = google_request.execute()
-
-    # Here we get the new id from the response
-    new_spreadsheet_id = response.get('spreadsheetId')
-    new_spreadsheet_url = response.get('spreadsheetUrl')
+    new_spreadsheet_id, new_spreadsheet_url = new_spreadsheet(service)
     original_spreadsheet_id = '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'
+    logging.warning("New Spreadsheet URL: " + new_spreadsheet_url)
 
     sheet_id = 0
 
-    logging.warning("New Spreadsheet URL: " + new_spreadsheet_url)
+    sheet_id = copy_sheet(service, original_spreadsheet_id, new_spreadsheet_id, sheet_id)
+    delete_sheet_and_rename(service, new_spreadsheet_id, sheet_id)
+    users = users_for_project(pid)
+    names = []
+    for user in users:
+        if user.name not in names:
+            names.append(user.name)
 
-    copy_sheet_to_another_spreadsheet_request_body = {
-        # The ID of the spreadsheet to copy the sheet to.
-        'destination_spreadsheet_id': new_spreadsheet_id,  # TODO: Update placeholder value.
-
-        # TODO: Add desired entries to the request body.
-    }
-
-
-    google_request = service.spreadsheets().sheets().copyTo(spreadsheetId=original_spreadsheet_id, sheetId=sheet_id,
-                                                     body=copy_sheet_to_another_spreadsheet_request_body)
-    response = google_request.execute()
-
-    sheet_id = response.get('sheetId')
-
-    # This will delete the original sheet, name everything correctly and in general do cleanup.
-    batch_update_spreadsheet_request_body = {
-        # A list of updates to apply to the spreadsheet.
-        # Requests will be applied in the order they are specified.
-        # If any request is not valid, no requests will be applied.
-        'requests': [{'deleteSheet': {'sheetId': 0}},
-                     {'updateSheetProperties':
-                          {'properties':
-                               {'sheetId': sheet_id, 'title': 'Project Bookings'},
-                           'fields':
-                               'title'
-                           }
-                      }
-                     ]
-    }
-
-    google_request = service.spreadsheets().batchUpdate(spreadsheetId=new_spreadsheet_id,
-                                                 body=batch_update_spreadsheet_request_body)
-
-    response = google_request.execute()
-
-    write_spreadsheet_row(service, new_spreadsheet_id, "A7", ['Test User'])
-
+    replace_consultants(service, new_spreadsheet_id, names)
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
 
@@ -809,12 +784,14 @@ def resources(project_name, task_name, user_name):
     return render_template('dailies.html', dailies=dailies, project_name=project_name, task_name=task_name, user_name=user_name)
 # [END resources]
 
+
 def get_google_oauth_flow():
     # Restrict access to users who've granted access to Calendar info.
     flow = flow_from_clientsecrets(current_app.config["CLIENT_SECRET_FILE"],
                                    scope='https://www.googleapis.com/auth/spreadsheets',
                                    redirect_uri='https://tempusfugit-bfa.pagekite.me/oauth')
     return flow
+
 
 # Returns none if not valid
 def get_google_oauth_credentials():
@@ -824,21 +801,132 @@ def get_google_oauth_credentials():
 
     return None
 
+
 def get_google_oauth_url():
     flow = get_google_oauth_flow()
     url = flow.step1_get_authorize_url()
     return url
 
-def write_spreadsheet_row(service, spreadsheet_id, range, values):
-    sheet_range = range
 
-    write_spreadsheet_request_body ={
-        "range": range,
-        "majorDimension": 'ROWS',
+# User management
+
+def users_for_project(project_id):
+    users = []
+
+    tasks = Task.tasks_for_project_id(project_id)
+    for task in tasks:
+        user = User.get(task.user_id)
+        users.append(user)
+
+    return users
+
+
+
+# Tempus Fugit specific functions
+def new_spreadsheet(service):
+    spreadsheet_body = {
+        # TODO: Add desired entries to the request body.
+    }
+
+    google_request = service.spreadsheets().create(body=spreadsheet_body)
+    response = google_request.execute()
+
+    # Here we get the new id from the response
+    return response.get('spreadsheetId'), response.get('spreadsheetUrl')
+
+
+def copy_sheet(service, original_spreadsheet_id, new_spreadsheet_id, sheet_id):
+    copy_sheet_to_another_spreadsheet_request_body = {
+        # The ID of the spreadsheet to copy the sheet to.
+        'destination_spreadsheet_id': new_spreadsheet_id,  # TODO: Update placeholder value.
+
+        # TODO: Add desired entries to the request body.
+    }
+    google_request = service.spreadsheets().sheets().copyTo(spreadsheetId=original_spreadsheet_id, sheetId=sheet_id,
+                                                     body=copy_sheet_to_another_spreadsheet_request_body)
+    response = google_request.execute()
+    return response.get('sheetId')
+
+
+def delete_sheet_and_rename(service, spreadsheet_id, sheet_id):
+    # This will delete the original sheet, name everything correctly and in general do cleanup.
+    batch_update_spreadsheet_request_body = {
+        # A list of updates to apply to the spreadsheet.
+        # Requests will be applied in the order they are specified.
+        # If any request is not valid, no requests will be applied.
+        'requests': [{'deleteSheet': {'sheetId': 0}},
+                     {'updateSheetProperties':
+                          {'properties':
+                               {'sheetId': sheet_id, 'title': 'Project Bookings'},
+                           'fields':
+                               'title'
+                           }
+                      }
+                     ]
+    }
+
+    google_request = service.spreadsheets().batchUpdate(spreadsheetId=spreadsheet_id,
+                                                 body=batch_update_spreadsheet_request_body)
+
+    google_request.execute()
+
+
+
+def get_consultant_names(service, spreadsheet_id):
+    results = read_spreadsheet(service, spreadsheet_id, 'A7:A5000')
+    names = results.get('values')
+    return names
+
+
+def add_consultant(service, spreadsheet_id, name):
+    names = get_consultant_names(service, spreadsheet_id)
+    next_cell = "A" + str(len(names) + 7)
+    write_spreadsheet_row(service, spreadsheet_id, next_cell, [name])
+
+
+def add_consultants(service, spreadsheet_id, names):
+    current_names = get_consultant_names(service, spreadsheet_id)
+    next_cell = "A" + str(len(current_names) + 7)
+    final_cell = "A" + str(len(current_names) + 7 + len(names))
+    write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, names)
+
+
+def replace_consultants(service, spreadsheet_id, names):
+    next_cell = "A7"
+    final_cell = "A" + str(7 + len(names))
+    write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, names)
+
+
+# Helper functions
+def read_spreadsheet(service, spreadsheet_id, range):
+    result = service.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id, range=range).execute()
+
+    return result
+
+
+def write_spreadsheet_row(service, spreadsheet_id, spreadsheet_range, values):
+    write_spreadsheet_range(service, spreadsheet_id, spreadsheet_range, 'ROWS', values)
+
+
+def write_spreadsheet_column(service, spreadsheet_id, spreadsheet_range, values):
+    write_spreadsheet_range(service, spreadsheet_id, spreadsheet_range, 'COLUMNS', values)
+
+
+def write_spreadsheet_range(service, spreadsheet_id, spreadsheet_range, dimension, values):
+    if dimension != 'ROWS' and dimension != 'COLUMNS':
+        raise Exception
+
+    sheet_range = spreadsheet_range
+
+    write_spreadsheet_request_body = {
+        "range": sheet_range,
+        "majorDimension": dimension,
         "values": [values]
     }
 
     service.spreadsheets().values().update(
-        spreadsheetId=spreadsheet_id, range=range,
+        spreadsheetId=spreadsheet_id, range=spreadsheet_range,
         valueInputOption='RAW', body=write_spreadsheet_request_body).execute()
+
 

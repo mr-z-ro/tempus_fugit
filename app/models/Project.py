@@ -47,5 +47,12 @@ class Project(Base):
                     ON t1.id = t2.id;'''
         return Project.query.from_statement(text(query)).params(email=user_email).all()
 
+
+    @staticmethod
+    def get(id):
+        return Project.query.filter_by(id=id).first()
+
+
     def __repr__(self):
         return '<Project %r>' % self.id
+

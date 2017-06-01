@@ -17,8 +17,8 @@
 
         function create_spreadsheet(oauth_key){
             console.log("Creating Spreadsheet");
-
-            $.ajax({url: "/create_spreadsheet?oauth_key=" + oauth_key,
+            var project_id = getCookie("project_id");
+            $.ajax({url: "/create_spreadsheet/"+project_id+"?oauth_key=" + oauth_key,
                 context: document.body,
                 success: function(data){
                     console.log(data);
