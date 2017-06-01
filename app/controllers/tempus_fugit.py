@@ -757,8 +757,15 @@ def create_spreadsheet(project_id):
     sheet_id = copy_sheet(service, original_spreadsheet_id, new_spreadsheet_id, sheet_id)
     delete_sheet_and_rename(service, new_spreadsheet_id, sheet_id)
     users = users_for_project(pid)
+    project = Project.get(pid)
     names = []
     rates = []
+    hours = []
+
+    start_date = project.start_date
+    end_date = project.finish_date
+
+    # Booking hours
     for user in users:
         if user.name not in names:
             names.append(user.name)
@@ -768,9 +775,16 @@ def create_spreadsheet(project_id):
             else:
                 rates.append(str(rate.rate))
 
+            booking = Booking.get_booking(user.id, pid, tid)
+            if not booking:
+                hours.append("")
+            else:
+                hours.append(str(booking.hours))
 
     replace_consultants(service, new_spreadsheet_id, names)
     replace_rates(service, new_spreadsheet_id, rates)
+    replace_hours(service, new_spreadsheet_id, hours)
+    replace_dates(service, new_spreadsheet_id, start_date, end_date)
 
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
@@ -905,10 +919,30 @@ def replace_consultants(service, spreadsheet_id, names):
     final_cell = "A" + str(7 + len(names))
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, names)
 
+
 def replace_rates(service, spreadsheet_id, rates):
     next_cell = "B7"
     final_cell = "B" + str(7 + len(rates))
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, rates)
+
+
+def replace_hours(service, spreadsheet_id, hours):
+    next_cell = "C7"
+    final_cell = "C" + str(7 + len(hours))
+    write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, hours)
+
+
+def replace_dates(service, spreadsheet_id, start_date, end_date):
+
+    weeks = [start_date.strftime('%x')]
+    compare_date = start_date
+    while (compare_date + timedelta(days=7)) < end_date:
+        compare_date += timedelta(days=1)
+        weeks.append(compare_date.strftime('%x'))
+
+    next_cell = "H6"
+    final_cell = "6"
+    write_spreadsheet_row(service, spreadsheet_id, next_cell + ":" + final_cell, weeks)
 
 
 # Helper functions
