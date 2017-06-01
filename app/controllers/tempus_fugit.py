@@ -758,11 +758,20 @@ def create_spreadsheet(project_id):
     delete_sheet_and_rename(service, new_spreadsheet_id, sheet_id)
     users = users_for_project(pid)
     names = []
+    rates = []
     for user in users:
         if user.name not in names:
             names.append(user.name)
+            rate = Rate.get_rate(user.id, pid)
+            if not rate:
+                rates.append("")
+            else:
+                rates.append(str(rate.rate))
+
 
     replace_consultants(service, new_spreadsheet_id, names)
+    replace_rates(service, new_spreadsheet_id, rates)
+
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
 
@@ -895,6 +904,11 @@ def replace_consultants(service, spreadsheet_id, names):
     next_cell = "A7"
     final_cell = "A" + str(7 + len(names))
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, names)
+
+def replace_rates(service, spreadsheet_id, rates):
+    next_cell = "B7"
+    final_cell = "B" + str(7 + len(rates))
+    write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, rates)
 
 
 # Helper functions
