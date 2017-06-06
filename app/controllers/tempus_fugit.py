@@ -14,6 +14,7 @@ from flask import render_template
 from flask import session
 from werkzeug.contrib.cache import SimpleCache
 
+from app.models import ProjectTask
 from app.models.Daily import Daily
 from app.models.Rate import Rate
 from app.models.Booking import Booking
@@ -762,7 +763,7 @@ def create_spreadsheet(project_id):
     hours = []
     weekly_breakdowns = []
 
-    task = Task.get_task(tid)
+    project_task = ProjectTask.get_by_id(tid)
 
     start_date = project.start_date
     end_date = project.finish_date
