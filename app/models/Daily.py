@@ -50,6 +50,31 @@ class Daily(Base):
         return Daily.query.from_statement(text(query)).params(project_name=project_name,
                                                               task_name=task_name,
                                                               associate=associate).all()
+    @staticmethod
+    def get_dailies_by_task(project_name, task_name):
+        query = '''SELECT DISTINCT
+                      id,
+                      timesheets_id,
+                      bookings_daily_id,
+                      associate,
+                      practice,
+                      client_name,
+                      project_name,
+                      task_name,
+                      date,
+                      week_of_booking,
+                      week_of_year_iso,
+                      booking_hours
+                      booking_fees,
+                      timesheet_hours,
+                      associate_currency
+                    FROM timesheets_vs_bookings_daily
+                    WHERE project_name=:project_name AND task_name=:task_name
+                    ORDER BY date ASC'''
+        return Daily.query.from_statement(text(query)).params(project_name=project_name,
+                                                              task_name=task_name).all()
+
+
 
     def __repr__(self):
         return '<Daily %r>' % self.id

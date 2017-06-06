@@ -714,7 +714,6 @@ def oauth_callback():
 def create_spreadsheet(project_id):
 
     if project_id and ("|" in project_id):
-
         # separate the project and task id for template processing
         project_id = project_id.strip()  # remove any trailing spaces
         pid, tid = project_id.split('|')
@@ -761,13 +760,19 @@ def create_spreadsheet(project_id):
     names = []
     rates = []
     hours = []
+    weekly_breakdowns = []
+
+    task = Task.get_task(tid)
 
     start_date = project.start_date
     end_date = project.finish_date
+    weeks = replace_dates(service, new_spreadsheet_id, start_date, end_date)
 
     # Booking hours
     for user in users:
         if user.name not in names:
+            pdb.set_trace()
+
             names.append(user.name)
             rate = Rate.get_rate(user.id, pid)
             if not rate:
@@ -780,11 +785,18 @@ def create_spreadsheet(project_id):
                 hours.append("")
             else:
                 hours.append(str(booking.hours))
+                average_hours = len(hours)/weeks
+                x = 0
+                user_weeks = []
+                while x < weeks:
+                    user_weeks.append(average_hours)
+                weekly_breakdowns.append(user_weeks)
+
 
     replace_consultants(service, new_spreadsheet_id, names)
     replace_rates(service, new_spreadsheet_id, rates)
     replace_hours(service, new_spreadsheet_id, hours)
-    replace_dates(service, new_spreadsheet_id, start_date, end_date)
+    replace_weekly_breakdowns(service, new_spreadsheet_id, weekly_breakdowns)
 
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
@@ -936,6 +948,7 @@ def replace_dates(service, spreadsheet_id, start_date, end_date):
 
     weeks = [start_date.strftime('%x')]
     compare_date = start_date
+
     while (compare_date + timedelta(days=7)) < end_date:
         compare_date += timedelta(days=1)
         weeks.append(compare_date.strftime('%x'))
@@ -943,6 +956,17 @@ def replace_dates(service, spreadsheet_id, start_date, end_date):
     next_cell = "H6"
     final_cell = "6"
     write_spreadsheet_row(service, spreadsheet_id, next_cell + ":" + final_cell, weeks)
+
+    return len(weeks)
+
+
+def replace_weekly_breakdowns(service, spreadsheet_id, weekly_breakdowns):
+    for weekly_breakdown in weekly_breakdowns:
+        row = weekly_breakdowns.index(weekly_breakdown) + 7
+        next_cell = "H" + str(row)
+        final_cell = str(row)
+        write_spreadsheet_row(service, spreadsheet_id, next_cell + ":" + final_cell, weekly_breakdown)
+
 
 
 # Helper functions

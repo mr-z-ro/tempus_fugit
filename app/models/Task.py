@@ -54,6 +54,29 @@ class Task(Base):
 
 
     @staticmethod
+    def get_task(task_id):
+        query = '''SELECT
+                      t.id,
+                      t.project_id,
+                      p.name AS project_name,
+                      t.project_task_id,
+                      pt.name AS project_task_name,
+                      t.user_id,
+                      t.date,
+                      t.updated,
+                      t.hour,
+                      t.minute,
+                      t.timesheet_id,
+                      t.cost_center_id
+                    FROM task t
+                    INNER JOIN project_task pt ON t.project_task_id = pt.id
+                    INNER JOIN project p ON pt.project_id = p.id
+                    WHERE
+                    t.id = :task_id'''
+        return Task.query.from_statement(text(query)).params(task_id=task_id).first()
+
+
+    @staticmethod
     def tasks_for_project_id(project_id):
         query = '''SELECT
                       t.id,
