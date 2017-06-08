@@ -14,7 +14,7 @@ from flask import render_template
 from flask import session
 from werkzeug.contrib.cache import SimpleCache
 
-from app.models import ProjectTask
+from app.models.ProjectTask import ProjectTask
 from app.models.Daily import Daily
 from app.models.Rate import Rate
 from app.models.Booking import Booking
@@ -768,12 +768,12 @@ def create_spreadsheet(project_id):
     start_date = project.start_date
     end_date = project.finish_date
     weeks = replace_dates(service, new_spreadsheet_id, start_date, end_date)
+    burnt_hours = []
+    hours_left = []
 
     # Booking hours
     for user in users:
         if user.name not in names:
-            pdb.set_trace()
-
             names.append(user.name)
             rate = Rate.get_rate(user.id, pid)
             if not rate:
@@ -781,23 +781,44 @@ def create_spreadsheet(project_id):
             else:
                 rates.append(str(rate.rate))
 
+            dailies = Daily.get_dailies(project.name, project_task.name, user.name)
+            user_weeks = []
+            burnt_hours_for_user = 0
+            for daily in dailies:
+                burnt_hours_for_user += daily.timesheet_hours
+                user_weeks.insert(daily.week_of_booking, str(daily.timesheet_hours))
+            weekly_breakdowns.append(user_weeks)
+
             booking = Booking.get_booking(user.id, pid, tid)
             if not booking:
                 hours.append("")
             else:
+                burnt_hours.append(str(burnt_hours_for_user))
+                hours_left.append(str(booking.hours - burnt_hours_for_user))
                 hours.append(str(booking.hours))
-                average_hours = len(hours)/weeks
-                x = 0
-                user_weeks = []
-                while x < weeks:
-                    user_weeks.append(average_hours)
-                weekly_breakdowns.append(user_weeks)
-
 
     replace_consultants(service, new_spreadsheet_id, names)
     replace_rates(service, new_spreadsheet_id, rates)
     replace_hours(service, new_spreadsheet_id, hours)
+    replace_burnt_hours(service, new_spreadsheet_id, burnt_hours)
+    #replace_hours_left(service, new_spreadsheet_id, hours_left)
     replace_weekly_breakdowns(service, new_spreadsheet_id, weekly_breakdowns)
+
+    replace_name_of_project(service, new_spreadsheet_id, project.name)
+    replace_name_of_task(service, new_spreadsheet_id, project_task.name)
+
+    #start_date = ''
+    #end_date = ''
+    #length = ''
+
+    #if(project_task.start_date != None and project_task.fnlt_date != None):
+    #    start_date = str(project_task.start_date)
+    #    end_date = str(project_task.fnlt_date)
+    #    length = timedelta(project_task.start_date, project_task.fnlt_date).days / 7
+    length = (end_date-start_date).days / 7
+    replace_start_date(service, new_spreadsheet_id, str(start_date))
+    replace_end_date(service, new_spreadsheet_id, str(end_date))
+    replace_length(service, new_spreadsheet_id, str(length))
 
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
@@ -945,6 +966,18 @@ def replace_hours(service, spreadsheet_id, hours):
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, hours)
 
 
+def replace_burnt_hours(service, spreadsheet_id, burnt_hours):
+    next_cell = "D7"
+    final_cell = "D" + str(7 + len(burnt_hours))
+    write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, burnt_hours)
+
+
+def replace_hours_left(service, spreadsheet_id, hours_left):
+    next_cell = "E7"
+    final_cell = "E" + str(7 + len(burnt_hours))
+    write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, hours_left)
+
+
 def replace_dates(service, spreadsheet_id, start_date, end_date):
 
     weeks = [start_date.strftime('%x')]
@@ -968,6 +1001,30 @@ def replace_weekly_breakdowns(service, spreadsheet_id, weekly_breakdowns):
         final_cell = str(row)
         write_spreadsheet_row(service, spreadsheet_id, next_cell + ":" + final_cell, weekly_breakdown)
 
+
+def replace_name_of_project(service, spreadsheet_id, name):
+    next_cell = "B1"
+    write_spreadsheet_row(service, spreadsheet_id, next_cell, [name])
+
+
+def replace_name_of_task(service, spreadsheet_id, name):
+    next_cell = "B2"
+    write_spreadsheet_row(service, spreadsheet_id, next_cell, [name])
+
+
+def replace_start_date(service, spreadsheet_id, date):
+    next_cell = "G1"
+    write_spreadsheet_column(service, spreadsheet_id, next_cell, [date])
+
+
+def replace_end_date(service, spreadsheet_id, date):
+    next_cell = "G3"
+    write_spreadsheet_column(service, spreadsheet_id, next_cell, [date])
+
+
+def replace_length(service, spreadsheet_id, length):
+    next_cell = "G2"
+    write_spreadsheet_column(service, spreadsheet_id, next_cell, [length])
 
 
 # Helper functions

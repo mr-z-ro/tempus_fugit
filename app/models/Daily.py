@@ -50,6 +50,7 @@ class Daily(Base):
         return Daily.query.from_statement(text(query)).params(project_name=project_name,
                                                               task_name=task_name,
                                                               associate=associate).all()
+
     @staticmethod
     def get_dailies_by_task(project_name, task_name):
         query = '''SELECT DISTINCT
