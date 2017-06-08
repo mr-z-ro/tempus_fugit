@@ -770,6 +770,7 @@ def create_spreadsheet(project_id):
     weeks = replace_dates(service, new_spreadsheet_id, start_date, end_date)
     burnt_hours = []
     hours_left = []
+    total_budget = 0
 
     # Booking hours
     for user in users:
@@ -796,6 +797,9 @@ def create_spreadsheet(project_id):
                 burnt_hours.append(str(burnt_hours_for_user))
                 hours_left.append(str(booking.hours - burnt_hours_for_user))
                 hours.append(str(booking.hours))
+                if rate is not None:
+                    total_budget += rate.rate * booking.hours
+
 
     replace_consultants(service, new_spreadsheet_id, names)
     replace_rates(service, new_spreadsheet_id, rates)
@@ -819,6 +823,8 @@ def create_spreadsheet(project_id):
     replace_start_date(service, new_spreadsheet_id, str(start_date))
     replace_end_date(service, new_spreadsheet_id, str(end_date))
     replace_length(service, new_spreadsheet_id, str(length))
+
+    replace_total_project_budget(service, new_spreadsheet_id, "$" + str(total_budget))
 
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
@@ -1027,6 +1033,11 @@ def replace_length(service, spreadsheet_id, length):
     write_spreadsheet_column(service, spreadsheet_id, next_cell, [length])
 
 
+def replace_total_project_budget(service, spreadsheet_id, budget):
+    next_cell = "K1"
+    write_spreadsheet_column(service, spreadsheet_id, next_cell, [budget])
+
+
 # Helper functions
 def read_spreadsheet(service, spreadsheet_id, range):
     result = service.spreadsheets().values().get(
@@ -1057,6 +1068,6 @@ def write_spreadsheet_range(service, spreadsheet_id, spreadsheet_range, dimensio
 
     service.spreadsheets().values().update(
         spreadsheetId=spreadsheet_id, range=spreadsheet_range,
-        valueInputOption='RAW', body=write_spreadsheet_request_body).execute()
+        valueInputOption='USER_ENTERED', body=write_spreadsheet_request_body).execute()
 
 
