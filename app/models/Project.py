@@ -17,10 +17,11 @@ class Project(Base):
     finish_date = db.Column(db.Date())
     project_stage_id = db.Column(db.Integer())
     updated = db.Column(db.DateTime())
+    custom_93 = db.Column(db.Integer())
 
     @staticmethod
     def get_my_projects(user_email):
-        query = '''SELECT t1.id, name, active, budget, budget_time, user_id, currency, start_date, finish_date, project_stage_id, updated FROM
+        query = '''SELECT t1.id, name, active, budget, budget_time, user_id, currency, start_date, finish_date, project_stage_id, custom_93, updated FROM
                     (SELECT
                         p.id,
                         MIN(b.startdate) AS start_date,
@@ -37,7 +38,8 @@ class Project(Base):
                                               p.user_id,
                                               p.currency,
                                               p.project_stage_id,
-                                              p.updated
+                                              p.updated,
+                                              p.custom_93
                                             FROM project p
                                             LEFT JOIN project_task pt ON pt.project_id = p.id
                                             LEFT JOIN project_task_assign pta ON pta.project_task_id = pt.id

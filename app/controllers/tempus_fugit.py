@@ -824,7 +824,7 @@ def create_spreadsheet(project_id):
     replace_end_date(service, new_spreadsheet_id, str(end_date))
     replace_length(service, new_spreadsheet_id, str(length))
 
-    replace_total_project_budget(service, new_spreadsheet_id, "$" + str(total_budget))
+    replace_total_project_budget(service, new_spreadsheet_id, "$" + str(project.budget - project.custom_93))
 
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
