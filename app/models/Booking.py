@@ -77,5 +77,31 @@ class Booking(Base):
         return Booking.query.from_statement(text(query)).params(user_id=user_id, project_id=project_id,
                                                                 project_task_id=project_task_id).first()
 
+    @staticmethod
+    def get_active_booking(user_id, project_id, project_task_id):
+        query = '''SELECT DISTINCT
+                      b.id,
+                      b.owner_id,
+                      b.user_id,
+                      b.project_id,
+                      p.name AS "project_name",
+                      b.startdate,
+                      b.enddate,
+                      b.percentage,
+                      b.hours,
+                      b.project_task_id,
+                      pt.name AS "project_task_name",
+                      b.as_percentage,
+                      b.approval_status
+                    FROM booking b
+                    INNER JOIN project_task pt ON b.project_task_id = pt.id
+                    INNER JOIN project p ON b.project_id = p.id
+                    LEFT JOIN user u ON b.user_id = u.id
+                    WHERE
+                    b.user_id = :user_id AND b.project_id = :project_id AND b.project_task_id = :project_task_id AND b.deleted = 0;'''
+        return Booking.query.from_statement(text(query)).params(user_id=user_id, project_id=project_id,
+                                                                project_task_id=project_task_id).first()
+
+
     def __repr__(self):
         return '<Booking %r>' % self.id

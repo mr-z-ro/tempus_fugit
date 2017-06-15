@@ -782,19 +782,27 @@ def create_spreadsheet(project_id):
             else:
                 rates.append(str(rate.rate))
 
-            dailies = Daily.get_dailies(project.name, project_task.name, user.name)
-            user_weeks = []
+            dailies = Daily.get_dailies(project.name, project_task.name, user.name, project.start_date)
+            user_weeks = [0] * (project.finish_date - project.start_date).days
             burnt_hours_for_user = 0
+
+
             for daily in dailies:
                 burnt_hours_for_user += daily.timesheet_hours
-                user_weeks.insert(daily.week_of_booking, str(daily.timesheet_hours))
+                day_of_project = daily.day_of_project
+                if day_of_project >= 0:
+                   user_weeks.insert(int(day_of_project), str(daily.booking_hours))
+
             weekly_breakdowns.append(user_weeks)
 
-            booking = Booking.get_booking(user.id, pid, tid)
+            burnt_hours.append(str(burnt_hours_for_user))
+
+            # Use the booking model ONLY here, nowhere else for any other purpose.
+            booking = Booking.get_active_booking(user.id, pid, tid)
             if not booking:
-                hours.append("")
+                hours.append(str(0))
+                hours_left.append(str(0 - burnt_hours_for_user))
             else:
-                burnt_hours.append(str(burnt_hours_for_user))
                 hours_left.append(str(booking.hours - burnt_hours_for_user))
                 hours.append(str(booking.hours))
                 if rate is not None:
@@ -969,6 +977,13 @@ def replace_rates(service, spreadsheet_id, rates):
 def replace_hours(service, spreadsheet_id, hours):
     next_cell = "C7"
     final_cell = "C" + str(7 + len(hours))
+
+    x = 0
+    while x < len(hours):
+        if hours[x] is None:
+            hours[x] = ''
+        x += 1
+
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, hours)
 
 

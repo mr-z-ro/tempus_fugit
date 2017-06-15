@@ -2,7 +2,6 @@ from sqlalchemy import text
 
 from app.models import db, Base
 
-
 class Daily(Base):
 
     # Multiple binds: http://flask-sqlalchemy.pocoo.org/2.1/binds/
@@ -24,35 +23,60 @@ class Daily(Base):
     booking_fees = db.Column(db.Float(scale=12, precision=2))
     timesheet_hours = db.Column(db.Float(scale=12, precision=2))
     associate_currency = db.Column(db.String(3))
-
+    day_of_project = db.Column(db.Integer())
 
     @staticmethod
-    def get_dailies(project_name, task_name, associate):
-        query = '''SELECT DISTINCT
-                      id,
-                      timesheets_id,
-                      bookings_daily_id,
-                      associate,
-                      practice,
-                      client_name,
-                      project_name,
-                      task_name,
-                      date,
-                      week_of_booking,
-                      week_of_year_iso,
-                      booking_hours
-                      booking_fees,
-                      timesheet_hours,
-                      associate_currency
-                    FROM timesheets_vs_bookings_daily
-                    WHERE project_name=:project_name AND task_name=:task_name AND associate=:associate
-                    ORDER BY date ASC'''
+    def get_dailies(project_name, task_name, associate, project_start_date=None):
+        if not project_start_date:
+            query = '''SELECT DISTINCT
+                          id,
+                          timesheets_id,
+                          bookings_daily_id,
+                          associate,
+                          practice,
+                          client_name,
+                          project_name,
+                          task_name,
+                          date,
+                          -1 AS day_of_project,
+                          week_of_booking,
+                          week_of_year_iso,
+                          booking_hours
+                          booking_fees,
+                          timesheet_hours,
+                          associate_currency
+                        FROM timesheets_vs_bookings_daily
+                        WHERE project_name=:project_name AND task_name=:task_name AND associate=:associate
+                        ORDER BY date ASC'''
+        else:
+            query = '''SELECT DISTINCT
+                         id,
+                         timesheets_id,
+                         bookings_daily_id,
+                         associate,
+                         practice,
+                         client_name,
+                         project_name,
+                         task_name,
+                         date,
+                         DATEDIFF(date, :project_start_date) AS day_of_project,
+                         week_of_booking,
+                         week_of_year_iso,
+                         booking_hours
+                         booking_fees,
+                         timesheet_hours,
+                         associate_currency
+                       FROM timesheets_vs_bookings_daily
+                       WHERE project_name=:project_name AND task_name=:task_name AND associate=:associate
+                       ORDER BY date ASC'''
         return Daily.query.from_statement(text(query)).params(project_name=project_name,
                                                               task_name=task_name,
-                                                              associate=associate).all()
+                                                              associate=associate,
+                                                              project_start_date=project_start_date).all()
 
     @staticmethod
     def get_dailies_by_task(project_name, task_name):
+
         query = '''SELECT DISTINCT
                       id,
                       timesheets_id,
@@ -63,6 +87,7 @@ class Daily(Base):
                       project_name,
                       task_name,
                       date,
+                      -1 AS day_of_project,
                       week_of_booking,
                       week_of_year_iso,
                       booking_hours
@@ -72,6 +97,7 @@ class Daily(Base):
                     FROM timesheets_vs_bookings_daily
                     WHERE project_name=:project_name AND task_name=:task_name
                     ORDER BY date ASC'''
+
         return Daily.query.from_statement(text(query)).params(project_name=project_name,
                                                               task_name=task_name).all()
 
