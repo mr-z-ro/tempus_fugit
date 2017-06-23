@@ -786,8 +786,10 @@ def create_spreadsheet(project_id):
             user_weeks = [0] * (project.finish_date - project.start_date).days
             burnt_hours_for_user = 0
 
-
             for daily in dailies:
+                if daily.date.weekday() > 4:
+                    continue;
+
                 burnt_hours_for_user += daily.timesheet_hours
                 day_of_project = daily.day_of_project
                 if day_of_project >= 0:
@@ -1006,7 +1008,8 @@ def replace_dates(service, spreadsheet_id, start_date, end_date):
 
     while (compare_date + timedelta(days=7)) < end_date:
         compare_date += timedelta(days=1)
-        weeks.append(compare_date.strftime('%x'))
+        if(compare_date.weekday() < 5):
+            weeks.append(compare_date.strftime('%x'))
 
     next_cell = "H6"
     final_cell = "6"
