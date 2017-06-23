@@ -786,14 +786,21 @@ def create_spreadsheet(project_id):
             user_weeks = [0] * (project.finish_date - project.start_date).days
             burnt_hours_for_user = 0
 
+            week_of_project = 0
+            weekly_total = 0
             for daily in dailies:
-                if daily.date.weekday() > 4:
-                    continue;
-
                 burnt_hours_for_user += daily.timesheet_hours
                 day_of_project = daily.day_of_project
-                if day_of_project >= 0:
-                   user_weeks.insert(int(day_of_project), str(daily.booking_hours))
+
+                print daily.date
+                if day_of_project >= 0 and daily.date > datetime.date.today():
+                    pdb.set_trace()
+                    if week_of_project != daily.week_of_booking:
+                        user_weeks.append(str(weekly_total))
+                        weekly_total = 0
+                        week_of_project = daily.week_of_booking
+
+                    weekly_total += daily.booking_hours
 
             weekly_breakdowns.append(user_weeks)
 
@@ -1003,13 +1010,21 @@ def replace_hours_left(service, spreadsheet_id, hours_left):
 
 def replace_dates(service, spreadsheet_id, start_date, end_date):
 
-    weeks = [start_date.strftime('%x')]
+    #weeks = [start_date.strftime('%x')]
+    weeks = []
     compare_date = start_date
+
+    start = datetime.date.today()
 
     while (compare_date + timedelta(days=7)) < end_date:
         compare_date += timedelta(days=1)
-        if(compare_date.weekday() < 5):
-            weeks.append(compare_date.strftime('%x'))
+        if compare_date.weekday() < 5 and compare_date > datetime.date.today():
+            new_start = compare_date - timedelta(days=compare_date.weekday())
+            new_end = start + timedelta(days=4)
+            if start != new_start:
+                weeks.append(new_start.strftime('%x') + ' - ' + new_end.strftime('%x'))
+                start = new_start
+
 
     next_cell = "H6"
     final_cell = "6"

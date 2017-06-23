@@ -293,17 +293,19 @@
                                             {% set user_hours_booked = 0.0 %}<!-- remember the hours booked per user-->
                                             {% if project_id in bookings_dict[session['username']] %}
                                             <!-- project_id exists, then check if  --->
-                                                {% if 'total_task_hrs' in bookings_dict[session['username']][project_id][task_id].iterkeys() %}
+                                                {% if 'task_id' in bookings_dict[session['username']][project_id].iterkeys() %}
+                                                    {% if 'total_task_hrs' in bookings_dict[session['username']][project_id][task_id].iterkeys() %}
                                                     <!-- check if the user id is booked for this project id-->
-                                                    {% if user_id in bookings_dict[session['username']][project_id][task_id].iterkeys() %}
-                                                        {% set user_hours_booked = bookings_dict[session['username']][project_id][task_id][user_id]['hours'] %}
-                                                        {{ (user_hours_booked - total_hrs_used) / 8.00 }}
-                                                        {% if exists.append(user_hours_booked) %} {% endif %}
+                                                        {% if user_id in bookings_dict[session['username']][project_id][task_id].iterkeys() %}
+                                                            {% set user_hours_booked = bookings_dict[session['username']][project_id][task_id][user_id]['hours'] %}
+                                                            {{ (user_hours_booked - total_hrs_used) / 8.00 }}
+                                                            {% if exists.append(user_hours_booked) %} {% endif %}
+                                                        {% else %}
+                                                            <small>[User not booked]</small>
+                                                        {% endif %}
                                                     {% else %}
-                                                        <small>[User not booked]</small>
+                                                        <small>[No User Project Hours]</small>
                                                     {% endif %}
-                                                {% else %}
-                                                    <small>[No User Project Hours]</small>
                                                 {% endif %}
                                             {% endif %}
                                         </td>
