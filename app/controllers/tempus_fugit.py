@@ -836,6 +836,7 @@ def create_spreadsheet(project_id):
     #    start_date = str(project_task.start_date)
     #    end_date = str(project_task.fnlt_date)
     #    length = timedelta(project_task.start_date, project_task.fnlt_date).days / 7
+    pdb.set_trace()
     length = (end_date-start_date).days / 7
     replace_start_date(service, new_spreadsheet_id, str(start_date))
     replace_end_date(service, new_spreadsheet_id, str(end_date))
@@ -843,7 +844,20 @@ def create_spreadsheet(project_id):
 
     replace_total_project_budget(service, new_spreadsheet_id, "$" + str(project.budget - project.custom_93))
 
+
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
+
+
+# [START update_booking]
+@mod_tempus_fugit.route('/update_booking/<project_name>/<task_name>', methods=['POST'])
+# THIS IS A BAD IDEA, BUT I HAVE NO IDEA WHAT ELSE TO DO!
+@login_required
+def update_booking(project_name, task_name):
+    json_data = request.get_json();
+    for user in json_data:
+        pdb.set_trace()
+        print(user[0])
+        # do nothing now,
 
 
 # [START navbar]
