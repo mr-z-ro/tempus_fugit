@@ -831,7 +831,7 @@ def create_spreadsheet(project_id):
     #start_date = ''
     #end_date = ''
     #length = ''
-
+d
     #if(project_task.start_date != None and project_task.fnlt_date != None):
     #    start_date = str(project_task.start_date)
     #    end_date = str(project_task.fnlt_date)
@@ -850,8 +850,6 @@ def create_spreadsheet(project_id):
 
 # [START update_booking]
 @mod_tempus_fugit.route('/update_booking/<project_name>/<task_name>', methods=['POST'])
-# THIS IS A BAD IDEA, BUT I HAVE NO IDEA WHAT ELSE TO DO!
-@login_required
 def update_booking(project_name, task_name):
     json_data = request.get_json();
     for user in json_data:
