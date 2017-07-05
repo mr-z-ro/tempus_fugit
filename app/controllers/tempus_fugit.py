@@ -22,6 +22,7 @@ from app.models.Project import Project
 from app.models.Task import Task
 from app.models.Ticket import Ticket
 from app.models.User import User
+from oauth2client.client import OAuth2WebServerFlow
 from login_form import LoginForm
 
 from functools import wraps
@@ -794,7 +795,6 @@ def create_spreadsheet(project_id):
 
                 print daily.date
                 if day_of_project >= 0 and daily.date > datetime.date.today():
-                    pdb.set_trace()
                     if week_of_project != daily.week_of_booking:
                         user_weeks.append(str(weekly_total))
                         weekly_total = 0
@@ -836,7 +836,6 @@ d
     #    start_date = str(project_task.start_date)
     #    end_date = str(project_task.fnlt_date)
     #    length = timedelta(project_task.start_date, project_task.fnlt_date).days / 7
-    pdb.set_trace()
     length = (end_date-start_date).days / 7
     replace_start_date(service, new_spreadsheet_id, str(start_date))
     replace_end_date(service, new_spreadsheet_id, str(end_date))
@@ -853,7 +852,6 @@ d
 def update_booking(project_name, task_name):
     json_data = request.get_json();
     for user in json_data:
-        pdb.set_trace()
         print(user[0])
         # do nothing now,
 
@@ -879,9 +877,11 @@ def resources(project_name, task_name, user_name):
 
 def get_google_oauth_flow():
     # Restrict access to users who've granted access to Calendar info.
-    flow = flow_from_clientsecrets(current_app.config["CLIENT_SECRET_FILE"],
-                                   scope='https://www.googleapis.com/auth/spreadsheets',
-                                   redirect_uri='https://tempusfugit-bfa.pagekite.me/oauth')
+
+    flow = OAuth2WebServerFlow(client_id=current_app.config["G_CLIENT_ID"],
+                               client_secret=current_app.config["G_CLIENT_SECRET"],
+                               scope=current_app.config["G_SCOPE"],
+                               redirect_uri=current_app.config["G_REDIRECT_URI"])
     return flow
 
 
