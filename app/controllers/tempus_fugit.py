@@ -168,7 +168,6 @@ def login():
         netsuite_key = current_app.config['NETSUITE_API_KEY']  # Retrieve key from instance/config file
         json_obj = get_whoami(key=netsuite_key, un=username, pw=password, company=my_company)
         # flash("json_obj : {}".format(json_obj['response']['Read']['Project']))
-
         auth = False
 
         if 'response' in json_obj and 'Auth' in json_obj['response']:
@@ -748,15 +747,15 @@ def create_spreadsheet(project_id):
         return json.dumps({'oauth_url': url, 'spreadsheet_id': '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'})
 
     service = discovery.build('sheets', 'v4', credentials=credentials)
+    drive_service = discovery.build('drive', 'v3', credentials=credentials)
 
-    new_spreadsheet_id, new_spreadsheet_url = new_spreadsheet(service)
-    original_spreadsheet_id = '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'
+    new_spreadsheet_id, new_spreadsheet_url = new_spreadsheet(drive_service)
     logging.warning("New Spreadsheet URL: " + new_spreadsheet_url)
 
     sheet_id = 0
 
-    sheet_id = copy_sheet(service, original_spreadsheet_id, new_spreadsheet_id, sheet_id)
-    delete_sheet_and_rename(service, new_spreadsheet_id, sheet_id)
+    #sheet_id = get_sheet_id(service, new_spreadsheet_id)
+    #delete_sheet_and_rename(service, new_spreadsheet_id, sheet_id)
     users = users_for_project(pid)
     project = Project.get(pid)
     names = []
@@ -831,7 +830,7 @@ def create_spreadsheet(project_id):
     #start_date = ''
     #end_date = ''
     #length = ''
-d
+
     #if(project_task.start_date != None and project_task.fnlt_date != None):
     #    start_date = str(project_task.start_date)
     #    end_date = str(project_task.fnlt_date)
@@ -920,14 +919,14 @@ def new_spreadsheet(service):
         # TODO: Add desired entries to the request body.
     }
 
-    google_request = service.spreadsheets().create(body=spreadsheet_body)
+    google_request = service.files().copy(fileId='1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM', body={})
     response = google_request.execute()
 
     # Here we get the new id from the response
-    return response.get('spreadsheetId'), response.get('spreadsheetUrl')
+    return response.get('id'), 'https://docs.google.com/spreadsheets/d/' + response.get('id')
 
 
-def copy_sheet(service, original_spreadsheet_id, new_spreadsheet_id, sheet_id):
+def get_sheet_id(service, spreadsheet_id):
     copy_sheet_to_another_spreadsheet_request_body = {
         # The ID of the spreadsheet to copy the sheet to.
         'destination_spreadsheet_id': new_spreadsheet_id,  # TODO: Update placeholder value.
