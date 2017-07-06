@@ -26,7 +26,7 @@ from oauth2client.client import OAuth2WebServerFlow
 from login_form import LoginForm
 
 from functools import wraps
-from flask import request, session, redirect, url_for
+from flask import request, session, redirect, url_for, jsonify
 from app.oaxmlapi.utils import date_percent_difference
 from app.oaxmlapi.wrapper import get_whoami
 
@@ -842,17 +842,10 @@ def create_spreadsheet(project_id):
 
     replace_total_project_budget(service, new_spreadsheet_id, "$" + str(project.budget - project.custom_93))
 
+    add_api_string(service, new_spreadsheet_id, [project_id])
 
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
-
-# [START update_booking]
-@mod_tempus_fugit.route('/update_booking/<project_name>/<task_name>', methods=['POST'])
-def update_booking(project_name, task_name):
-    json_data = request.get_json();
-    for user in json_data:
-        print(user[0])
-        # do nothing now,
 
 
 # [START navbar]
@@ -872,6 +865,25 @@ def resources(project_name, task_name, user_name):
 
     return render_template('dailies.html', dailies=dailies, project_name=project_name, task_name=task_name, user_name=user_name)
 # [END resources]
+
+
+# [START update_booking]
+@mod_tempus_fugit.route('/update_booking/<project_id>', methods=['POST'])
+def update_booking(project_id):
+    if project_id and ("|" in project_id):
+
+        # separate the project and task id for template processing
+        project_id = project_id.strip()  # remove any trailing spaces
+        pid, tid = project_id.split('|')
+        pid = long(pid)
+        tid = long(tid)
+
+    json_data = request.get_json();
+    for user in json_data:
+        print(user[0])
+        # do nothing now,
+
+    return jsonify(success=True)
 
 
 def get_google_oauth_flow():
@@ -1080,6 +1092,11 @@ def replace_length(service, spreadsheet_id, length):
 def replace_total_project_budget(service, spreadsheet_id, budget):
     next_cell = "K1"
     write_spreadsheet_column(service, spreadsheet_id, next_cell, [budget])
+
+
+def add_api_string(service, spreadsheet_id, api_string):
+    next_cell = "O1"
+    write_spreadsheet_column(service, spreadsheet_id, next_cell, api_string)
 
 
 # Helper functions
