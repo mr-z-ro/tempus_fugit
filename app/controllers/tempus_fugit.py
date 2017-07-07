@@ -3,6 +3,7 @@ import httplib2
 import os
 import json
 import pdb
+import uuid
 
 from datetime import timedelta
 
@@ -22,6 +23,7 @@ from app.models.Project import Project
 from app.models.Task import Task
 from app.models.Ticket import Ticket
 from app.models.User import User
+from app.models.AccessKey import AccessKey
 from oauth2client.client import OAuth2WebServerFlow
 from login_form import LoginForm
 
@@ -37,6 +39,9 @@ from oauth2client.contrib.appengine import OAuth2Decorator
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import OAuth2Credentials
 from googleapiclient import discovery
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 import datetime
 
@@ -842,7 +847,17 @@ def create_spreadsheet(project_id):
 
     replace_total_project_budget(service, new_spreadsheet_id, "$" + str(project.budget - project.custom_93))
 
-    add_api_string(service, new_spreadsheet_id, [project_id])
+    access_key = AccessKey(tid=tid, pid=pid)
+
+    # Create an access key
+    engine = create_engine(current_app.config['SQLALCHEMY_BINDS']['access_keys'])
+    DBSession = sessionmaker(bind=engine)
+    db_session = DBSession()
+
+    db_session.add(access_key)
+    pdb.set_trace()
+
+    add_api_string(service, new_spreadsheet_id, [access_key.uuid])
 
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
@@ -870,6 +885,7 @@ def resources(project_name, task_name, user_name):
 # [START update_booking]
 @mod_tempus_fugit.route('/update_booking/<project_id>', methods=['POST'])
 def update_booking(project_id):
+    pdb.set_trace()
     if project_id and ("|" in project_id):
 
         # separate the project and task id for template processing
