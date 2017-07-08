@@ -751,6 +751,16 @@ def create_spreadsheet(project_id):
         url = get_google_oauth_url()
         return json.dumps({'oauth_url': url, 'spreadsheet_id': '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'})
 
+    access_key = AccessKey(tid=tid, pid=pid)
+
+    # Create an access key
+    engine = create_engine(current_app.config['SQLALCHEMY_BINDS']['access_keys'])
+    DBSession = sessionmaker(bind=engine)
+    db_session = DBSession()
+
+    db_session.add(access_key)
+    db_session.commit()
+
     service = discovery.build('sheets', 'v4', credentials=credentials)
     drive_service = discovery.build('drive', 'v3', credentials=credentials)
 
@@ -847,16 +857,6 @@ def create_spreadsheet(project_id):
 
     replace_total_project_budget(service, new_spreadsheet_id, "$" + str(project.budget - project.custom_93))
 
-    access_key = AccessKey(tid=tid, pid=pid)
-
-    # Create an access key
-    engine = create_engine(current_app.config['SQLALCHEMY_BINDS']['access_keys'])
-    DBSession = sessionmaker(bind=engine)
-    db_session = DBSession()
-
-    db_session.add(access_key)
-    pdb.set_trace()
-
     add_api_string(service, new_spreadsheet_id, [access_key.uuid])
 
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
@@ -883,16 +883,18 @@ def resources(project_name, task_name, user_name):
 
 
 # [START update_booking]
-@mod_tempus_fugit.route('/update_booking/<project_id>', methods=['POST'])
-def update_booking(project_id):
-    pdb.set_trace()
-    if project_id and ("|" in project_id):
+@mod_tempus_fugit.route('/update_booking/<access_key_uuid>', methods=['POST'])
+def update_booking(access_key_uuid):
+    if access_key_uuid is None:
+        return jsonify(error="authentication error")
 
-        # separate the project and task id for template processing
-        project_id = project_id.strip()  # remove any trailing spaces
-        pid, tid = project_id.split('|')
-        pid = long(pid)
-        tid = long(tid)
+    access_key_uuid = access_key_uuid.strip()  # remove any trailing spaces
+    access_key = AccessKey.info_for_access_key(access_key_uuid)[0]
+    if(access_key is None):
+        return jsonify(error="authentication error")
+
+    pid = access_key.pid
+    tid = access_key.tid
 
     json_data = request.get_json();
     for user in json_data:

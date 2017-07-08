@@ -4,9 +4,11 @@ from app.models import db, Base
 import uuid
 import pdb
 
+
 class AccessKey(Base):
 
     __bind_key__ = 'access_keys'
+    __table_name__ = 'access_keys'
 
     id = db.Column(db.Integer(), primary_key=True)
     pid = db.Column(db.Integer())
@@ -23,18 +25,15 @@ class AccessKey(Base):
 
     @staticmethod
     def info_for_access_key(uuid):
-        pdb.set_trace()
-
-        query = '''SELECT 
-                      tid, pid
-                    FROM access_keys
+        query = '''SELECT *
+                    FROM access_key
                     WHERE
                     uuid = :uuid'''
         return AccessKey.query.from_statement(text(query)).params(uuid=uuid).all()
 
     @staticmethod
     def all():
-        query = '''SELECT * FROM access_keys'''
+        query = '''SELECT * FROM access_key'''
         return AccessKey.query.from_statement(text(query)).params().all()
 
 
