@@ -1,6 +1,5 @@
 <!-- hide script from old browsers
         function user_bookings(pid, tid){
-            console.log("User Booking Clicked!");
             $.ajax({url: "/user_bookings",
 
                     context: document.body,
@@ -15,6 +14,8 @@
                     }});
         };
 
+        // Creates a spreadsheet given an oauth key. Waits for the backend and then
+        // opens a new window with the returned spreadsheet url
         function create_spreadsheet(oauth_key){
             console.log("Creating Spreadsheet");
             var project_id = getCookie("project_id");
@@ -41,6 +42,9 @@
             }});
         };
 
+        // Generic set cookie, but used to save the project that's being worked on
+        // This is so that after authenticating via google, the call back can get where
+        // we were before.
         function setCookie(cname, cvalue, exdays) {
             var d = new Date();
             d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
@@ -48,7 +52,9 @@
             document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
         }
 
-
+        // Generic get cookie, but used to save the project that's being worked on
+        // This is so that after authenticating via google, the call back can get where
+        // we were before.
         function getCookie(cname) {
             var name = cname + "=";
             var decodedCookie = decodeURIComponent(document.cookie);

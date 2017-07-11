@@ -715,12 +715,13 @@ def oauth_callback():
     return render_template('bookingtest.html', oauth_key=request.args.get('code'))
 
 
+# Call back from javascript generate the spreadsheet given a project_id
+# Usually called from the "Edit Bookings" button
 @mod_tempus_fugit.route('/create_spreadsheet/<project_id>', methods=['GET'])
 @login_required
 def create_spreadsheet(project_id):
-
+    # separate the project and task id for template processing
     if project_id and ("|" in project_id):
-        # separate the project and task id for template processing
         project_id = project_id.strip()  # remove any trailing spaces
         pid, tid = project_id.split('|')
         pid = long(pid)
@@ -728,7 +729,7 @@ def create_spreadsheet(project_id):
     else:
         pid = project_id
 
-    # If we pass in OAuth stuff, then we need to do an exchange probably
+    # If we pass in OAuth credentials from a previous authentications, then we need to do an exchange probably
     credentials = None
     if 'oauth_key' in request.args:
         key = request.args.get('oauth_key')
@@ -744,33 +745,44 @@ def create_spreadsheet(project_id):
     if credentials is None:
         credentials = get_google_oauth_credentials();
 
-    # If there's nothing then we send it back to the auth cycle and bail
-    # pdb.set_trace()
-
+    # If there's nothing then we send it back to the auth cycle and bail out
+    # We'll come back after they authenticate
     if credentials is None:
         url = get_google_oauth_url()
         return json.dumps({'oauth_url': url, 'spreadsheet_id': '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'})
 
+    # Create an access key for the spreadsheet to call back to after saving
     access_key = AccessKey(tid=tid, pid=pid)
 
-    # Create an access key
+    # Save the access key
+    # All the set up has to be done because it's a "bind" address for the google db
+    # We don't use the openair database because it's best not to add anything to the
+    # very large amount of tables already balanced in there
     engine = create_engine(current_app.config['SQLALCHEMY_BINDS']['access_keys'])
     DBSession = sessionmaker(bind=engine)
     db_session = DBSession()
 
+    # Save the access key to the database
     db_session.add(access_key)
     db_session.commit()
 
+    # Build the google services for interacting withe API via the Python SDK
+    # 'service is the Google Sheet's access, which is used for manipulating the data
     service = discovery.build('sheets', 'v4', credentials=credentials)
+    # 'drive_service' is for the Google Drive access, used for copying the spreadsheet.
     drive_service = discovery.build('drive', 'v3', credentials=credentials)
 
+    # Copy the spreadsheet from the template, getting back the ID to edit it
+    # and the url for opening it up via javascript call back
     new_spreadsheet_id, new_spreadsheet_url = new_spreadsheet(drive_service)
     logging.warning("New Spreadsheet URL: " + new_spreadsheet_url)
 
-    sheet_id = 0
-
-    #sheet_id = get_sheet_id(service, new_spreadsheet_id)
-    #delete_sheet_and_rename(service, new_spreadsheet_id, sheet_id)
+    # Get all the users for the project and set up the various arrays we'll
+    # insert into the spreadsheet after populating
+    # The way that inserting data works is you set a range (e.g. A5:A12) and
+    # then pass in an array. So, we want the arrays to line up properly so the data
+    # shows up in the right row. This whole thing we check for a lot of empties
+    # and enter blanks where needed. Seems to work out.
     users = users_for_project(pid)
     project = Project.get(pid)
     names = []
@@ -778,48 +790,71 @@ def create_spreadsheet(project_id):
     hours = []
     weekly_breakdowns = []
 
+    # We need the project
     project_task = ProjectTask.get_by_id(tid)
 
+    # We need to figure out where the dates start and end
     start_date = project.start_date
     end_date = project.finish_date
+    # Due to some legacy stuff replace_dates returns some data but we don't need it
     weeks = replace_dates(service, new_spreadsheet_id, start_date, end_date)
     burnt_hours = []
     hours_left = []
     total_budget = 0
 
-    # Booking hours
+    # Get the booking hours per user for the project and task
     for user in users:
+        # Sometimes a user awkwardly appeared duplicated, so if it's already been added, ingore it
         if user.name not in names:
+            # Add the user to the names
             names.append(user.name)
             rate = Rate.get_rate(user.id, pid)
+            # Some users do not have rates set, so we'll just make them blank
             if not rate:
                 rates.append("")
             else:
                 rates.append(str(rate.rate))
 
+            # Get all the dailies from a user for a taks
             dailies = Daily.get_dailies(project.name, project_task.name, user.name, project.start_date)
+            # Create an array, zero filled, for the entirety of the project,
             user_weeks = [0] * (project.finish_date - project.start_date).days
+            # Set burnt, weeks and weekly_totals to zero, for now
             burnt_hours_for_user = 0
-
+            # Which week of the project is this date range?
             week_of_project = 0
+            # Total amount of booking hours for that that week
             weekly_total = 0
+            # Go through each daily period
             for daily in dailies:
+                # We'll add all the hours fort his day to the total burnt
                 burnt_hours_for_user += daily.timesheet_hours
+                # Self explanatory
                 day_of_project = daily.day_of_project
 
-                print daily.date
+                # This will show only dates after today. This is all we want to show
                 if day_of_project >= 0 and daily.date > datetime.date.today():
+
+                    # This is a bit awkward, but what we need to do is add weekly totals, not the daily as shown
+                    # in the database. To do this, we keep track of what week we're currently
+                    # looking at in 'week_of_project' above. We then keep going through days
+                    # until the week is added up. when the week in the daily column doesn't equal what
+                    # we set above, we dump everything into the proper array, reset our checks
+                    # and keep going.
                     if week_of_project != daily.week_of_booking:
                         user_weeks.append(str(weekly_total))
                         weekly_total = 0
                         week_of_project = daily.week_of_booking
 
+                    # add the daily booking hours to this week's on going counter.
                     weekly_total += daily.booking_hours
 
+            # add the users weeks to the breakdowns for the spreadsheet.
             weekly_breakdowns.append(user_weeks)
-
+            # do the same here for the burnt hours
             burnt_hours.append(str(burnt_hours_for_user))
 
+            # This handles making sure the burnt and left hours align, so we can repurpose already spent hours.
             # Use the booking model ONLY here, nowhere else for any other purpose.
             booking = Booking.get_active_booking(user.id, pid, tid)
             if not booking:
@@ -831,25 +866,19 @@ def create_spreadsheet(project_id):
                 if rate is not None:
                     total_budget += rate.rate * booking.hours
 
-
+    # This goes through and runs all the proper inserts on the sheets
+    # At some point this, I believe, can be consolidated into a single batch
+    # request, but the documentation is extremely lacking. If the process is too slow
+    # this is what's causing it.
     replace_consultants(service, new_spreadsheet_id, names)
     replace_rates(service, new_spreadsheet_id, rates)
     replace_hours(service, new_spreadsheet_id, hours)
     replace_burnt_hours(service, new_spreadsheet_id, burnt_hours)
-    #replace_hours_left(service, new_spreadsheet_id, hours_left)
     replace_weekly_breakdowns(service, new_spreadsheet_id, weekly_breakdowns)
 
     replace_name_of_project(service, new_spreadsheet_id, project.name)
     replace_name_of_task(service, new_spreadsheet_id, project_task.name)
 
-    #start_date = ''
-    #end_date = ''
-    #length = ''
-
-    #if(project_task.start_date != None and project_task.fnlt_date != None):
-    #    start_date = str(project_task.start_date)
-    #    end_date = str(project_task.fnlt_date)
-    #    length = timedelta(project_task.start_date, project_task.fnlt_date).days / 7
     length = (end_date-start_date).days / 7
     replace_start_date(service, new_spreadsheet_id, str(start_date))
     replace_end_date(service, new_spreadsheet_id, str(end_date))
@@ -857,8 +886,11 @@ def create_spreadsheet(project_id):
 
     replace_total_project_budget(service, new_spreadsheet_id, "$" + str(project.budget - project.custom_93))
 
+    # Add the api string auth keys in.
     add_api_string(service, new_spreadsheet_id, [access_key.uuid])
 
+    # Returns a JSON version of the new spreadsheet url
+    # The javascript will then open this up automatically when received.
     return json.dumps({'spreadsheet_url': new_spreadsheet_url})
 
 
@@ -882,28 +914,38 @@ def resources(project_name, task_name, user_name):
 # [END resources]
 
 
+# This is a call back that will be called from a Google App Script.
+# The access_key_uuid is pre-entered into the google sheet, and called back here.
 # [START update_booking]
 @mod_tempus_fugit.route('/update_booking/<access_key_uuid>', methods=['POST'])
 def update_booking(access_key_uuid):
+
+    # if there's no key put in, return an error so the scripts can log it
     if access_key_uuid is None:
         return jsonify(error="authentication error")
 
+    # Get the access key from the db, returning an error if there's not one.
+    # Since this is a uuid, it's highly unlikely and attacker would be able to brute force it
     access_key_uuid = access_key_uuid.strip()  # remove any trailing spaces
     access_key = AccessKey.info_for_access_key(access_key_uuid)[0]
     if(access_key is None):
         return jsonify(error="authentication error")
 
+    # These will be used for getting the booking database properly.
     pid = access_key.pid
     tid = access_key.tid
 
+    # Everything gets passed in as a json object, by user
     json_data = request.get_json();
     for user in json_data:
         print(user[0])
         # do nothing now,
 
+    # Return a standard response.
     return jsonify(success=True)
 
 
+# This starts off the oauth flow
 def get_google_oauth_flow():
     # Restrict access to users who've granted access to Calendar info.
 
@@ -923,6 +965,8 @@ def get_google_oauth_credentials():
     return None
 
 
+# The google flow starts with a URL, which we have to redirect to
+# This gets it.
 def get_google_oauth_url():
     flow = get_google_oauth_flow()
     url = flow.step1_get_authorize_url()
@@ -944,6 +988,8 @@ def users_for_project(project_id):
 
 
 # Tempus Fugit specific functions
+
+# Copies the spreadsheet, which is hardcoded because it's always the same template.
 def new_spreadsheet(service):
     spreadsheet_body = {
         # TODO: Add desired entries to the request body.
@@ -956,6 +1002,7 @@ def new_spreadsheet(service):
     return response.get('id'), 'https://docs.google.com/spreadsheets/d/' + response.get('id')
 
 
+# This is unused since the new copy methods, but kept for reference in future.
 def get_sheet_id(service, spreadsheet_id):
     copy_sheet_to_another_spreadsheet_request_body = {
         # The ID of the spreadsheet to copy the sheet to.
@@ -969,8 +1016,9 @@ def get_sheet_id(service, spreadsheet_id):
     return response.get('sheetId')
 
 
+# This will delete the original sheet, name everything correctly and in general do cleanup.
+# Unused but kept for reference purposes
 def delete_sheet_and_rename(service, spreadsheet_id, sheet_id):
-    # This will delete the original sheet, name everything correctly and in general do cleanup.
     batch_update_spreadsheet_request_body = {
         # A list of updates to apply to the spreadsheet.
         # Requests will be applied in the order they are specified.
@@ -992,19 +1040,22 @@ def delete_sheet_and_rename(service, spreadsheet_id, sheet_id):
     google_request.execute()
 
 
-
+# Get the names from the spreadsheet
 def get_consultant_names(service, spreadsheet_id):
+    # We grab all of them as far as possible, can be truncated with a very quick loop later
     results = read_spreadsheet(service, spreadsheet_id, 'A7:A5000')
     names = results.get('values')
     return names
 
 
+# Add a consultant name to the spreadsheet
 def add_consultant(service, spreadsheet_id, name):
     names = get_consultant_names(service, spreadsheet_id)
     next_cell = "A" + str(len(names) + 7)
     write_spreadsheet_row(service, spreadsheet_id, next_cell, [name])
 
 
+# Add multiple consultants at once to a list already existent
 def add_consultants(service, spreadsheet_id, names):
     current_names = get_consultant_names(service, spreadsheet_id)
     next_cell = "A" + str(len(current_names) + 7)
@@ -1012,18 +1063,21 @@ def add_consultants(service, spreadsheet_id, names):
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, names)
 
 
+# Clear out previous consultants and overwrites the column
 def replace_consultants(service, spreadsheet_id, names):
     next_cell = "A7"
     final_cell = "A" + str(7 + len(names))
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, names)
 
 
+# Replaces all the rates for consultants
 def replace_rates(service, spreadsheet_id, rates):
     next_cell = "B7"
     final_cell = "B" + str(7 + len(rates))
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, rates)
 
 
+# Replace all the hours in the sheet
 def replace_hours(service, spreadsheet_id, hours):
     next_cell = "C7"
     final_cell = "C" + str(7 + len(hours))
@@ -1037,18 +1091,21 @@ def replace_hours(service, spreadsheet_id, hours):
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, hours)
 
 
+# Replacing burnt hours per user
 def replace_burnt_hours(service, spreadsheet_id, burnt_hours):
     next_cell = "D7"
     final_cell = "D" + str(7 + len(burnt_hours))
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, burnt_hours)
 
 
+# Replace hours left per user
 def replace_hours_left(service, spreadsheet_id, hours_left):
     next_cell = "E7"
     final_cell = "E" + str(7 + len(burnt_hours))
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, hours_left)
 
 
+# Replace all the dates in the database with dates between start_date and end_date
 def replace_dates(service, spreadsheet_id, start_date, end_date):
 
     #weeks = [start_date.strftime('%x')]
@@ -1074,6 +1131,7 @@ def replace_dates(service, spreadsheet_id, start_date, end_date):
     return len(weeks)
 
 
+# Replace weekly breakdowns. Expects a 2-dimensional array of weekly breakdowns per user row
 def replace_weekly_breakdowns(service, spreadsheet_id, weekly_breakdowns):
     for weekly_breakdown in weekly_breakdowns:
         row = weekly_breakdowns.index(weekly_breakdown) + 7
@@ -1082,6 +1140,7 @@ def replace_weekly_breakdowns(service, spreadsheet_id, weekly_breakdowns):
         write_spreadsheet_row(service, spreadsheet_id, next_cell + ":" + final_cell, weekly_breakdown)
 
 
+# These next functions do what you expect, just filling in information
 def replace_name_of_project(service, spreadsheet_id, name):
     next_cell = "B1"
     write_spreadsheet_row(service, spreadsheet_id, next_cell, [name])
@@ -1117,7 +1176,9 @@ def add_api_string(service, spreadsheet_id, api_string):
     write_spreadsheet_column(service, spreadsheet_id, next_cell, api_string)
 
 
-# Helper functions
+# Helper functions, these are very general
+
+# Read in a specific range
 def read_spreadsheet(service, spreadsheet_id, range):
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id, range=range).execute()
@@ -1133,6 +1194,7 @@ def write_spreadsheet_column(service, spreadsheet_id, spreadsheet_range, values)
     write_spreadsheet_range(service, spreadsheet_id, spreadsheet_range, 'COLUMNS', values)
 
 
+# Where everything funnels to.
 def write_spreadsheet_range(service, spreadsheet_id, spreadsheet_range, dimension, values):
     if dimension != 'ROWS' and dimension != 'COLUMNS':
         raise Exception
