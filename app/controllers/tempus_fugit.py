@@ -705,7 +705,7 @@ def user_bookings():
     else:
         url = get_google_oauth_url()
 
-    return json.dumps({'oauth_url': url, 'spreadsheet_id': '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'})
+    return json.dumps({'oauth_url': url, 'spreadsheet_id': current_app.config['G_TEMPLATE_SHEET_ID']})
 
 
 @mod_tempus_fugit.route('/oauth', methods=['GET'])
@@ -749,7 +749,7 @@ def create_spreadsheet(project_id):
     # We'll come back after they authenticate
     if credentials is None:
         url = get_google_oauth_url()
-        return json.dumps({'oauth_url': url, 'spreadsheet_id': '1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM'})
+        return json.dumps({'oauth_url': url, 'spreadsheet_id': current_app.config['G_TEMPLATE_SHEET_ID']})
 
     # Create an access key for the spreadsheet to call back to after saving
     access_key = AccessKey(tid=tid, pid=pid)
@@ -995,7 +995,7 @@ def new_spreadsheet(service):
         # TODO: Add desired entries to the request body.
     }
 
-    google_request = service.files().copy(fileId='1bnZvQ6QCMmuBc_QX4YmSi3askdty9oi_eZiZ6BCqbCM', body={})
+    google_request = service.files().copy(fileId=current_app.config['G_TEMPLATE_SHEET_ID'], body={})
     response = google_request.execute()
 
     # Here we get the new id from the response
