@@ -8,7 +8,7 @@ import pdb
 class AccessKey(Base):
 
     __bind_key__ = 'access_keys'
-    __table_name__ = 'access_keys'
+    __tablename__ = 'access_keys'
 
     id = db.Column(db.Integer(), primary_key=True)
     pid = db.Column(db.Integer())
@@ -26,14 +26,14 @@ class AccessKey(Base):
     @staticmethod
     def info_for_access_key(uuid):
         query = '''SELECT *
-                    FROM access_key
+                    FROM access_keys
                     WHERE
                     uuid = :uuid'''
         return AccessKey.query.from_statement(text(query)).params(uuid=uuid).all()
 
     @staticmethod
     def all():
-        query = '''SELECT * FROM access_key'''
+        query = '''SELECT * FROM access_keys'''
         return AccessKey.query.from_statement(text(query)).params().all()
 
 
