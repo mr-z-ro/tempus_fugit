@@ -818,7 +818,7 @@ def create_spreadsheet(project_id):
             # Get all the dailies from a user for a taks
             dailies = Daily.get_dailies(project.name, project_task.name, user.name, project.start_date)
             # Create an array, zero filled, for the entirety of the project,
-            user_weeks = [0] * (project.finish_date - project.start_date).days
+            user_weeks = [0] * ((project.finish_date - project.start_date).days/7 + 1)
             # Set burnt, weeks and weekly_totals to zero, for now
             burnt_hours_for_user = 0
             # Which week of the project is this date range?
@@ -856,15 +856,15 @@ def create_spreadsheet(project_id):
 
             # This handles making sure the burnt and left hours align, so we can repurpose already spent hours.
             # Use the booking model ONLY here, nowhere else for any other purpose.
-            booking = Booking.get_active_booking(user.id, pid, tid)
-            if not booking:
+            active_bookings_sum = Booking.get_active_booking_sum(user.id, pid, tid)
+            if not active_bookings_sum:
                 hours.append(str(0))
                 hours_left.append(str(0 - burnt_hours_for_user))
             else:
-                hours_left.append(str(booking.hours - burnt_hours_for_user))
-                hours.append(str(booking.hours))
+                hours_left.append(str(active_bookings_sum.hours - burnt_hours_for_user))
+                hours.append(str(active_bookings_sum.hours))
                 if rate is not None:
-                    total_budget += rate.rate * booking.hours
+                    total_budget += rate.rate * active_bookings_sum.hours
 
     # This goes through and runs all the proper inserts on the sheets
     # At some point this, I believe, can be consolidated into a single batch
@@ -1081,13 +1081,6 @@ def replace_rates(service, spreadsheet_id, rates):
 def replace_hours(service, spreadsheet_id, hours):
     next_cell = "C7"
     final_cell = "C" + str(7 + len(hours))
-
-    x = 0
-    while x < len(hours):
-        if hours[x] is None:
-            hours[x] = ''
-        x += 1
-
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, hours)
 
 
