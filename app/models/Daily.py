@@ -39,7 +39,7 @@ class Daily(Base):
                           task_name,
                           date,
                           -1 AS day_of_project,
-                          week_of_booking,
+                          CONCAT(YEAR(date), SUBSTR(week_of_year_iso, 2)) AS week_of_booking,
                           week_of_year_iso,
                           booking_hours
                           booking_fees,
@@ -60,7 +60,7 @@ class Daily(Base):
                          task_name,
                          date,
                          DATEDIFF(date, :project_start_date) AS day_of_project,
-                         week_of_booking,
+                         CONCAT(YEAR(date), SUBSTR(week_of_year_iso, 2)) AS week_of_booking,
                          week_of_year_iso,
                          booking_hours
                          booking_fees,

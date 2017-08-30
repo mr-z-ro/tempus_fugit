@@ -796,11 +796,12 @@ def create_spreadsheet(project_id):
     # We need to figure out where the dates start and end
     start_date = project.start_date
     end_date = project.finish_date
-    # Due to some legacy stuff replace_dates returns some data but we don't need it
-    weeks = replace_dates(service, new_spreadsheet_id, start_date, end_date)
     burnt_hours = []
     hours_left = []
     total_budget = 0
+    weeks_by_year_dict = {}
+    for d in range(datetime.date.today().year - 20, datetime.date.today().year + 20):
+        weeks_by_year_dict[d] = datetime.date(d, 12, 28).isocalendar()[1]
 
     # Get the booking hours per user for the project and task
     for user in users:
@@ -815,39 +816,60 @@ def create_spreadsheet(project_id):
             else:
                 rates.append(str(rate.rate))
 
-            # Get all the dailies from a user for a taks
+            # Get all the dailies from a user for a task
             dailies = Daily.get_dailies(project.name, project_task.name, user.name, project.start_date)
-            # Create an array, zero filled, for the entirety of the project,
-            user_weeks = [0] * ((project.finish_date - project.start_date).days/7 + 1)
+            # Create an array, zero filled, for the rest of the project (after today
+            num_weeks = (project.finish_date - datetime.date.today()).days/7 + 1
+            user_weeks = [0] * num_weeks
             # Set burnt, weeks and weekly_totals to zero, for now
             burnt_hours_for_user = 0
             # Which week of the project is this date range?
-            week_of_project = 0
+            week_index = 0
             # Total amount of booking hours for that that week
             weekly_total = 0
+
+            # Week of year today
+            today_year, today_week_of_year, _ = datetime.date.today().isocalendar()
+
             # Go through each daily period
             for daily in dailies:
-                # We'll add all the hours fort his day to the total burnt
+                # We'll add all the hours for this day to the total burnt
                 burnt_hours_for_user += daily.timesheet_hours
                 # Self explanatory
                 day_of_project = daily.day_of_project
 
-                # This will show only dates after today. This is all we want to show
-                if day_of_project >= 0 and daily.date > datetime.date.today():
+                # Get the year and week_of_year as integers
+                daily_year = int(daily.week_of_booking) / 100
+                daily_week_of_year = int(daily.week_of_booking) % 100
 
-                    # This is a bit awkward, but what we need to do is add weekly totals, not the daily as shown
-                    # in the database. To do this, we keep track of what week we're currently
-                    # looking at in 'week_of_project' above. We then keep going through days
-                    # until the week is added up. when the week in the daily column doesn't equal what
-                    # we set above, we dump everything into the proper array, reset our checks
-                    # and keep going.
-                    if week_of_project != daily.week_of_booking:
-                        user_weeks.append(str(weekly_total))
-                        weekly_total = 0
-                        week_of_project = daily.week_of_booking
+                if daily_year > today_year or (daily_year == today_year and daily_week_of_year >= today_week_of_year):
+                    # Subtraction using week of year to calculate week of project index
+                    # (calibrated with 0 as next week, which we want to start with)
+                    if (daily_week_of_year < today_week_of_year):
+                        daily_year = daily_year - 1
+                        daily_week_of_year = daily_week_of_year + datetime.date(daily_year, 12, 28).isocalendar()[1]
+                    week_of_project = (daily_week_of_year - today_week_of_year) - 1
+                    for year_of_weeks in range(today_year, daily_year):
+                        week_of_project = week_of_project + datetime.date(year_of_weeks, 12, 28).isocalendar()[1]
 
-                    # add the daily booking hours to this week's on going counter.
-                    weekly_total += daily.booking_hours
+                    # This will show only bookings by week starting next week (index 0)
+                    # Note: might be redundant given the if block we're already inside
+                    if week_of_project >= 0:
+
+                        # This is a bit awkward, but what we need to do is add weekly totals, not the daily as shown
+                        # in the database. To do this, we keep track of what week we're currently
+                        # looking at in 'week_of_project' above. We then keep going through days
+                        # until the week is added up. when the week in the daily column doesn't equal what
+                        # we set above, we dump everything into the proper array, reset our checks
+                        # and keep going.
+                        if week_of_project != week_index:
+                            # Set the value to be placed in the spreadsheet and reset for the next week
+                            user_weeks[week_index] = str(weekly_total)
+                            weekly_total = 0
+                            week_index = week_of_project
+
+                        # add the daily booking hours to this week's on going counter.
+                        weekly_total += daily.booking_hours
 
             # add the users weeks to the breakdowns for the spreadsheet.
             weekly_breakdowns.append(user_weeks)
@@ -1098,32 +1120,6 @@ def replace_hours_left(service, spreadsheet_id, hours_left):
     write_spreadsheet_column(service, spreadsheet_id, next_cell + ":" + final_cell, hours_left)
 
 
-# Replace all the dates in the database with dates between start_date and end_date
-def replace_dates(service, spreadsheet_id, start_date, end_date):
-
-    #weeks = [start_date.strftime('%x')]
-    weeks = []
-    compare_date = start_date
-
-    start = datetime.date.today()
-
-    while (compare_date + timedelta(days=7)) < end_date:
-        compare_date += timedelta(days=1)
-        if compare_date.weekday() < 5 and compare_date > datetime.date.today():
-            new_start = compare_date - timedelta(days=compare_date.weekday())
-            new_end = start + timedelta(days=4)
-            if start != new_start:
-                weeks.append(new_start.strftime('%x') + ' - ' + new_end.strftime('%x'))
-                start = new_start
-
-
-    next_cell = "H6"
-    final_cell = "6"
-    write_spreadsheet_row(service, spreadsheet_id, next_cell + ":" + final_cell, weeks)
-
-    return len(weeks)
-
-
 # Replace weekly breakdowns. Expects a 2-dimensional array of weekly breakdowns per user row
 def replace_weekly_breakdowns(service, spreadsheet_id, weekly_breakdowns):
     for weekly_breakdown in weekly_breakdowns:
@@ -1135,12 +1131,14 @@ def replace_weekly_breakdowns(service, spreadsheet_id, weekly_breakdowns):
 
 # These next functions do what you expect, just filling in information
 def replace_name_of_project(service, spreadsheet_id, name):
-    next_cell = "B1"
+    next_cell = "A1"
+    name = "Project: {}".format(name)
     write_spreadsheet_row(service, spreadsheet_id, next_cell, [name])
 
 
 def replace_name_of_task(service, spreadsheet_id, name):
-    next_cell = "B2"
+    next_cell = "A2"
+    name = "Task: {}".format(name)
     write_spreadsheet_row(service, spreadsheet_id, next_cell, [name])
 
 
