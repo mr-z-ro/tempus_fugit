@@ -909,7 +909,10 @@ def create_spreadsheet(project_id):
     replace_total_project_budget(service, new_spreadsheet_id, "$" + str(project.budget - project.custom_93))
 
     # Add the api string auth keys in.
-    add_api_string(service, new_spreadsheet_id, [access_key.uuid])
+    add_api_string(service, new_spreadsheet_id, access_key.uuid)
+
+    # Add the date string in.
+    add_date_string(service, new_spreadsheet_id, str(datetime.date.today()))
 
     # Returns a JSON version of the new spreadsheet url
     # The javascript will then open this up automatically when received.
@@ -1164,7 +1167,11 @@ def replace_total_project_budget(service, spreadsheet_id, budget):
 
 def add_api_string(service, spreadsheet_id, api_string):
     next_cell = "O1"
-    write_spreadsheet_column(service, spreadsheet_id, next_cell, api_string)
+    write_spreadsheet_column(service, spreadsheet_id, next_cell, [api_string])
+
+def add_date_string(service, spreadsheet_id, date_string):
+    next_cell = "O2"
+    write_spreadsheet_column(service, spreadsheet_id, next_cell, [date_string])
 
 
 # Helper functions, these are very general
